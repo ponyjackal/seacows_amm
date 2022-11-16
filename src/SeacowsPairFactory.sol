@@ -1,49 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
 
 // @dev Solmate's ERC20 is used instead of OZ's ERC20 so we can use safeTransferLib for cheaper safeTransfers for
 // ETH and ERC20 tokens
-import {ERC20} from "./solmate/ERC20.sol";
-import {SafeTransferLib} from "./solmate/SafeTransferLib.sol";
+import { ERC20 } from "./solmate/ERC20.sol";
+import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
 
-import {SeacowsPair} from "./SeacowsPair.sol";
-import {SeacowsRouter} from "./SeacowsRouter.sol";
-import {SeacowsPairETH} from "./SeacowsPairETH.sol";
-import {ICurve} from "./bondingcurve/ICurve.sol";
-import {SeacowsPairERC20} from "./SeacowsPairERC20.sol";
-import {SeacowsPairCloner} from "./lib/SeacowsPairCloner.sol";
-import {ISeacowsPairFactoryLike} from "./ISeacowsPairFactoryLike.sol";
-import {SeacowsPairEnumerableETH} from "./SeacowsPairEnumerableETH.sol";
-import {SeacowsPairEnumerableERC20} from "./SeacowsPairEnumerableERC20.sol";
-import {SeacowsPairMissingEnumerableETH} from "./SeacowsPairMissingEnumerableETH.sol";
-import {SeacowsPairMissingEnumerableERC20} from "./SeacowsPairMissingEnumerableERC20.sol";
-///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm 
+import { SeacowsPair } from "./SeacowsPair.sol";
+import { SeacowsRouter } from "./SeacowsRouter.sol";
+import { SeacowsPairETH } from "./SeacowsPairETH.sol";
+import { ICurve } from "./bondingcurve/ICurve.sol";
+import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
+import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
+import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { SeacowsPairEnumerableETH } from "./SeacowsPairEnumerableETH.sol";
+import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
+import { SeacowsPairMissingEnumerableETH } from "./SeacowsPairMissingEnumerableETH.sol";
+import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
+
+///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     using SeacowsPairCloner for address;
     using SafeTransferLib for address payable;
     using SafeTransferLib for ERC20;
 
-    bytes4 private constant INTERFACE_ID_ERC721_ENUMERABLE =
-        type(IERC721Enumerable).interfaceId;
+    bytes4 private constant INTERFACE_ID_ERC721_ENUMERABLE = type(IERC721Enumerable).interfaceId;
 
     uint256 internal constant MAX_PROTOCOL_FEE = 0.10e18; // 10%, must <= 1 - MAX_FEE
 
     SeacowsPairEnumerableETH public immutable enumerableETHTemplate;
     SeacowsPairMissingEnumerableETH public immutable missingEnumerableETHTemplate;
     SeacowsPairEnumerableERC20 public immutable enumerableERC20Template;
-    SeacowsPairMissingEnumerableERC20
-        public immutable missingEnumerableERC20Template;
+    SeacowsPairMissingEnumerableERC20 public immutable missingEnumerableERC20Template;
     address payable public override protocolFeeRecipient;
 
     // Units are in base 1e18
     uint256 public override protocolFeeMultiplier;
-    
+
     address public override priceOracleRegistry;
 
     mapping(ICurve => bool) public bondingCurveAllowed;
@@ -113,45 +112,19 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint128 _spotPrice,
         uint256[] calldata _initialNFTIDs
     ) external payable returns (SeacowsPairETH pair) {
-        require(
-            bondingCurveAllowed[_bondingCurve],
-            "Bonding curve not whitelisted"
-        );
+        require(bondingCurveAllowed[_bondingCurve], "Bonding curve not whitelisted");
 
         // Check to see if the NFT supports Enumerable to determine which template to use
         address template;
-        try
-            IERC165(address(_nft)).supportsInterface(
-                INTERFACE_ID_ERC721_ENUMERABLE
-            )
-        returns (bool isEnumerable) {
-            template = isEnumerable
-                ? address(enumerableETHTemplate)
-                : address(missingEnumerableETHTemplate);
+        try IERC165(address(_nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
+            template = isEnumerable ? address(enumerableETHTemplate) : address(missingEnumerableETHTemplate);
         } catch {
             template = address(missingEnumerableETHTemplate);
         }
 
-        pair = SeacowsPairETH(
-            payable(
-                template.cloneETHPair(
-                    this,
-                    _bondingCurve,
-                    _nft,
-                    uint8(_poolType)
-                )
-            )
-        );
+        pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
 
-        _initializePairETH(
-            pair,
-            _nft,
-            _assetRecipient,
-            _delta,
-            _fee,
-            _spotPrice,
-            _initialNFTIDs
-        );
+        _initializePairETH(pair, _nft, _assetRecipient, _delta, _fee, _spotPrice, _initialNFTIDs);
         emit NewPair(address(pair));
     }
 
@@ -184,38 +157,20 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint256 initialTokenBalance;
     }
 
-    function createPairERC20(CreateERC20PairParams calldata params)
-        external
-        returns (SeacowsPairERC20 pair)
-    {
-        require(
-            bondingCurveAllowed[params.bondingCurve],
-            "Bonding curve not whitelisted"
-        );
+    function createPairERC20(CreateERC20PairParams calldata params) external returns (SeacowsPairERC20 pair) {
+        require(bondingCurveAllowed[params.bondingCurve], "Bonding curve not whitelisted");
 
         // Check to see if the NFT supports Enumerable to determine which template to use
         address template;
-        try
-            IERC165(address(params.nft)).supportsInterface(
-                INTERFACE_ID_ERC721_ENUMERABLE
-            )
-        returns (bool isEnumerable) {
-            template = isEnumerable
-                ? address(enumerableERC20Template)
-                : address(missingEnumerableERC20Template);
+        try IERC165(address(params.nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
+            template = isEnumerable ? address(enumerableERC20Template) : address(missingEnumerableERC20Template);
         } catch {
             template = address(missingEnumerableERC20Template);
         }
 
         pair = SeacowsPairERC20(
             payable(
-                template.cloneERC20Pair(
-                    this,
-                    params.bondingCurve,
-                    params.nft,
-                    uint8(params.poolType),
-                    params.token
-                )
+                template.cloneERC20Pair(this, params.bondingCurve, params.nft, uint8(params.poolType), params.token)
             )
         );
 
@@ -239,19 +194,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @param variant The pair variant (NFT is enumerable or not, pair uses ETH or ERC20)
         @return True if the address is the specified pair variant, false otherwise
      */
-    function isPair(address potentialPair, PairVariant variant)
-        public
-        view
-        override
-        returns (bool)
-    {
+    function isPair(address potentialPair, PairVariant variant) public view override returns (bool) {
         if (variant == PairVariant.ENUMERABLE_ERC20) {
-            return
-                SeacowsPairCloner.isERC20PairClone(
-                    address(this),
-                    address(enumerableERC20Template),
-                    potentialPair
-                );
+            return SeacowsPairCloner.isERC20PairClone(address(this), address(enumerableERC20Template), potentialPair);
         } else if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
             return
                 SeacowsPairCloner.isERC20PairClone(
@@ -260,19 +205,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                     potentialPair
                 );
         } else if (variant == PairVariant.ENUMERABLE_ETH) {
-            return
-                SeacowsPairCloner.isETHPairClone(
-                    address(this),
-                    address(enumerableETHTemplate),
-                    potentialPair
-                );
+            return SeacowsPairCloner.isETHPairClone(address(this), address(enumerableETHTemplate), potentialPair);
         } else if (variant == PairVariant.MISSING_ENUMERABLE_ETH) {
             return
-                SeacowsPairCloner.isETHPairClone(
-                    address(this),
-                    address(missingEnumerableETHTemplate),
-                    potentialPair
-                );
+                SeacowsPairCloner.isETHPairClone(address(this), address(missingEnumerableETHTemplate), potentialPair);
         } else {
             // invalid input
             return false;
@@ -301,10 +237,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @param token The token to transfer
         @param amount The amount of tokens to transfer
      */
-    function withdrawERC20ProtocolFees(ERC20 token, uint256 amount)
-        external
-        onlyOwner
-    {
+    function withdrawERC20ProtocolFees(ERC20 token, uint256 amount) external onlyOwner {
         token.safeTransfer(protocolFeeRecipient, amount);
     }
 
@@ -312,24 +245,17 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @notice Changes the protocol fee recipient address. Only callable by the owner.
         @param _protocolFeeRecipient The new fee recipient
      */
-    function changeProtocolFeeRecipient(address payable _protocolFeeRecipient)
-        external
-        onlyOwner
-    {
+    function changeProtocolFeeRecipient(address payable _protocolFeeRecipient) external onlyOwner {
         require(_protocolFeeRecipient != address(0), "0 address");
         protocolFeeRecipient = _protocolFeeRecipient;
         emit ProtocolFeeRecipientUpdate(_protocolFeeRecipient);
     }
 
-
     /**
         @notice Changes the price oracle registry address. Only callable by the owner.
         @param _priceOracleRegistry The new fee recipient
      */
-    function changePriceOracleRegistry(address _priceOracleRegistry)
-        external
-        onlyOwner
-    {
+    function changePriceOracleRegistry(address _priceOracleRegistry) external onlyOwner {
         require(_priceOracleRegistry != address(0), "0 address");
         priceOracleRegistry = _priceOracleRegistry;
         emit PriceOracleRegistryUpdate(_priceOracleRegistry);
@@ -339,10 +265,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @notice Changes the protocol fee multiplier. Only callable by the owner.
         @param _protocolFeeMultiplier The new fee multiplier, 18 decimals
      */
-    function changeProtocolFeeMultiplier(uint256 _protocolFeeMultiplier)
-        external
-        onlyOwner
-    {
+    function changeProtocolFeeMultiplier(uint256 _protocolFeeMultiplier) external onlyOwner {
         require(_protocolFeeMultiplier <= MAX_PROTOCOL_FEE, "Fee too large");
         protocolFeeMultiplier = _protocolFeeMultiplier;
         emit ProtocolFeeMultiplierUpdate(_protocolFeeMultiplier);
@@ -353,10 +276,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @param bondingCurve The bonding curve contract
         @param isAllowed True to whitelist, false to remove from whitelist
      */
-    function setBondingCurveAllowed(ICurve bondingCurve, bool isAllowed)
-        external
-        onlyOwner
-    {
+    function setBondingCurveAllowed(ICurve bondingCurve, bool isAllowed) external onlyOwner {
         bondingCurveAllowed[bondingCurve] = isAllowed;
         emit BondingCurveStatusUpdate(bondingCurve, isAllowed);
     }
@@ -367,16 +287,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @param target The target contract
         @param isAllowed True to whitelist, false to remove from whitelist
      */
-    function setCallAllowed(address payable target, bool isAllowed)
-        external
-        onlyOwner
-    {
+    function setCallAllowed(address payable target, bool isAllowed) external onlyOwner {
         // ensure target is not / was not ever a router
         if (isAllowed) {
-            require(
-                !routerStatus[SeacowsRouter(target)].wasEverAllowed,
-                "Can't call router"
-            );
+            require(!routerStatus[SeacowsRouter(target)].wasEverAllowed, "Can't call router");
         }
 
         callAllowed[target] = isAllowed;
@@ -388,18 +302,12 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @param _router The router
         @param isAllowed True to whitelist, false to remove from whitelist
      */
-    function setRouterAllowed(SeacowsRouter _router, bool isAllowed)
-        external
-        onlyOwner
-    {
+    function setRouterAllowed(SeacowsRouter _router, bool isAllowed) external onlyOwner {
         // ensure target is not arbitrarily callable by pairs
         if (isAllowed) {
             require(!callAllowed[address(_router)], "Can't call router");
         }
-        routerStatus[_router] = RouterStatus({
-            allowed: isAllowed,
-            wasEverAllowed: true
-        });
+        routerStatus[_router] = RouterStatus({ allowed: isAllowed, wasEverAllowed: true });
 
         emit RouterStatusUpdate(_router, isAllowed);
     }
@@ -426,11 +334,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         // transfer initial NFTs from sender to pair
         uint256 numNFTs = _initialNFTIDs.length;
         for (uint256 i; i < numNFTs; ) {
-            _nft.safeTransferFrom(
-                msg.sender,
-                address(_pair),
-                _initialNFTIDs[i]
-            );
+            _nft.safeTransferFrom(msg.sender, address(_pair), _initialNFTIDs[i]);
 
             unchecked {
                 ++i;
@@ -453,20 +357,12 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         _pair.initialize(msg.sender, _assetRecipient, _delta, _fee, _spotPrice);
 
         // transfer initial tokens to pair
-        _token.safeTransferFrom(
-            msg.sender,
-            address(_pair),
-            _initialTokenBalance
-        );
+        _token.safeTransferFrom(msg.sender, address(_pair), _initialTokenBalance);
 
         // transfer initial NFTs from sender to pair
         uint256 numNFTs = _initialNFTIDs.length;
         for (uint256 i; i < numNFTs; ) {
-            _nft.safeTransferFrom(
-                msg.sender,
-                address(_pair),
-                _initialNFTIDs[i]
-            );
+            _nft.safeTransferFrom(msg.sender, address(_pair), _initialNFTIDs[i]);
 
             unchecked {
                 ++i;
@@ -477,11 +373,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     /** 
       @dev Used to deposit NFTs into a pair after creation and emit an event for indexing (if recipient is indeed a pair)
     */
-    function depositNFTs(
-        IERC721 _nft,
-        uint256[] calldata ids,
-        address recipient
-    ) external {
+    function depositNFTs(IERC721 _nft, uint256[] calldata ids, address recipient) external {
         // transfer NFTs from caller to recipient
         uint256 numNFTs = ids.length;
         for (uint256 i; i < numNFTs; ) {
@@ -504,15 +396,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     /**
       @dev Used to deposit ERC20s into a pair after creation and emit an event for indexing (if recipient is indeed an ERC20 pair and the token matches)
      */
-    function depositERC20(
-        ERC20 token,
-        address recipient,
-        uint256 amount
-    ) external {
+    function depositERC20(ERC20 token, address recipient, uint256 amount) external {
         token.safeTransferFrom(msg.sender, recipient, amount);
         if (
-            isPair(recipient, PairVariant.ENUMERABLE_ERC20) ||
-            isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)
+            isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)
         ) {
             if (token == SeacowsPairERC20(recipient).token()) {
                 emit TokenDeposit(recipient);

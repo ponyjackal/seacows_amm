@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {CurveErrorCodes} from "./CurveErrorCodes.sol";
+import { CurveErrorCodes } from "./CurveErrorCodes.sol";
 
 interface ICurve {
     /**
@@ -18,10 +18,7 @@ interface ICurve {
         @param newSpotPrice The new spot price to be set
         @return valid True if the new spot price is valid, false otherwise
      */
-    function validateSpotPrice(uint128 newSpotPrice)
-        external
-        view
-        returns (bool valid);
+    function validateSpotPrice(uint128 newSpotPrice) external view returns (bool valid);
 
     /**
         @notice Given the current state of the pair and the trade, computes how much the user

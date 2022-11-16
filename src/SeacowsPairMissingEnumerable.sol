@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {SeacowsPair} from "./SeacowsPair.sol";
-import {SeacowsRouter} from "./SeacowsRouter.sol";
-import {ISeacowsPairFactoryLike} from "./ISeacowsPairFactoryLike.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { SeacowsPair } from "./SeacowsPair.sol";
+import { SeacowsRouter } from "./SeacowsRouter.sol";
+import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 
 /**
     @title An NFT/Token pair for an NFT that does not implement ERC721Enumerable
@@ -18,11 +18,7 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
     EnumerableSet.UintSet private idSet;
 
     /// @inheritdoc SeacowsPair
-    function _sendAnyNFTsToRecipient(
-        IERC721 _nft,
-        address nftRecipient,
-        uint256 numNFTs
-    ) internal override {
+    function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal override {
         // Send NFTs to recipient
         // We're missing enumerable, so we also update the pair's own ID set
         // NOTE: We start from last index to first index to save on gas
@@ -40,11 +36,10 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function _sendSpecificNFTsToRecipient(
-        IERC721 _nft,
-        address nftRecipient,
-        uint256[] calldata nftIds
-    ) internal override {
+    function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds)
+        internal
+        override
+    {
         // Send NFTs to caller
         // If missing enumerable, update pool's own ID set
         uint256 numNFTs = nftIds.length;
@@ -77,12 +72,7 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
         @dev When safeTransfering an ERC721 in, we add ID to the idSet
         if it's the same collection used by pool. (As it doesn't auto-track because no ERC721Enumerable)
      */
-    function onERC721Received(
-        address,
-        address,
-        uint256 id,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC721Received(address, address, uint256 id, bytes memory) public virtual returns (bytes4) {
         IERC721 _nft = nft();
         // If it's from the pair's NFT, add the ID to ID set
         if (msg.sender == address(_nft)) {
@@ -92,11 +82,7 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds)
-        external
-        override
-        onlyOwner
-    {
+    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external override onlyOwner {
         IERC721 _nft = nft();
         uint256 numNFTs = nftIds.length;
 

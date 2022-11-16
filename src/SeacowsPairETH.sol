@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {ERC20} from "./solmate/ERC20.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {SafeTransferLib} from "./solmate/SafeTransferLib.sol";
-import {SeacowsPair} from "./SeacowsPair.sol";
-import {ISeacowsPairFactoryLike} from "./ISeacowsPairFactoryLike.sol";
-import {ICurve} from "./bondingcurve/ICurve.sol";
+import { ERC20 } from "./solmate/ERC20.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
+import { SeacowsPair } from "./SeacowsPair.sol";
+import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { ICurve } from "./bondingcurve/ICurve.sol";
 
 /**
     @title An NFT/Token pair where the token is ETH
@@ -21,8 +21,8 @@ abstract contract SeacowsPairETH is SeacowsPair {
     /// @inheritdoc SeacowsPair
     function _pullTokenInputAndPayProtocolFee(
         uint256 inputAmount,
-        bool, /*isRouter*/
-        address, /*routerCaller*/
+        bool /*isRouter*/,
+        address /*routerCaller*/,
         ISeacowsPairFactoryLike _factory,
         uint256 protocolFee
     ) internal override {
@@ -56,10 +56,7 @@ abstract contract SeacowsPairETH is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function _payProtocolFeeFromPair(
-        ISeacowsPairFactoryLike _factory,
-        uint256 protocolFee
-    ) internal override {
+    function _payProtocolFeeFromPair(ISeacowsPairFactoryLike _factory, uint256 protocolFee) internal override {
         // Take protocol fee
         if (protocolFee > 0) {
             // Round down to the actual ETH balance if there are numerical stability issues with the bonding curve calculations
@@ -74,10 +71,7 @@ abstract contract SeacowsPairETH is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function _sendTokenOutput(
-        address payable tokenRecipient,
-        uint256 outputAmount
-    ) internal override {
+    function _sendTokenOutput(address payable tokenRecipient, uint256 outputAmount) internal override {
         // Send ETH to caller
         if (outputAmount > 0) {
             tokenRecipient.safeTransferETH(outputAmount);
@@ -112,11 +106,7 @@ abstract contract SeacowsPairETH is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function withdrawERC20(ERC20 a, uint256 amount)
-        external
-        override
-        onlyOwner
-    {
+    function withdrawERC20(ERC20 a, uint256 amount) external override onlyOwner {
         a.safeTransfer(msg.sender, amount);
     }
 

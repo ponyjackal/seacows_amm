@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "./SeacowsGroupFeed.sol";
 
 contract SeacowsCollectionRegistry {
-
     address public admin;
     mapping(address => mapping(uint256 => address)) public getFeeds;
     mapping(address => bytes32) public getMerkleRoot;
@@ -19,18 +18,18 @@ contract SeacowsCollectionRegistry {
         admin = msg.sender;
     }
 
-    function setMerkleRoot(address collection, bytes32 _merkleRoot) public onlyAdmin() {
+    function setMerkleRoot(address collection, bytes32 _merkleRoot) public onlyAdmin {
         // require(getMerkleRoot[collection] == bytes32(0), "CollectionRegistry: Merkle root already set");
         getMerkleRoot[collection] = _merkleRoot;
         emit MerkleRootChanged(collection, _merkleRoot);
     }
 
-    function MerkleProofURI(address collection, string memory uri) public onlyAdmin() {
+    function MerkleProofURI(address collection, string memory uri) public onlyAdmin {
         getMerkleProof[collection] = uri;
     }
 
-    function createFeed(address collection, uint256 groupId) public onlyAdmin() returns (address feed) {
-        require(getFeeds[collection][groupId] == address(0), 'CollectionRegistry: FEED_EXISTS');
+    function createFeed(address collection, uint256 groupId) public onlyAdmin returns (address feed) {
+        require(getFeeds[collection][groupId] == address(0), "CollectionRegistry: FEED_EXISTS");
         feed = address(new SeacowsGroupFeed());
         SeacowsGroupFeed(feed).initialize(collection, groupId);
         getFeeds[collection][groupId] = feed;
@@ -38,7 +37,7 @@ contract SeacowsCollectionRegistry {
         emit FeedCreated(collection, groupId, feed, allFeeds.length);
     }
 
-    function updateAnswer(address collection, uint256 groupId, int256 _answer) public onlyAdmin() {
+    function updateAnswer(address collection, uint256 groupId, int256 _answer) public onlyAdmin {
         _updateAnswer(collection, groupId, _answer);
     }
 
@@ -52,21 +51,16 @@ contract SeacowsCollectionRegistry {
         SeacowsGroupFeed(feed).updateAnswer(_answer);
     }
 
-    function batchUpdateAnswer(address[] memory collection, uint256[] memory groupId, int256[] memory _answer) public onlyAdmin() {
+    function batchUpdateAnswer(address[] memory collection, uint256[] memory groupId, int256[] memory _answer)
+        public
+        onlyAdmin
+    {
         for (uint j = 0; j < collection.length; j++) {
             _updateAnswer(collection[j], groupId[j], _answer[j]);
         }
     }
 
-    function verifyProof(
-        bytes32 root,
-        bytes32 leaf,
-        bytes32[] memory proof
-    )
-        private
-        pure
-        returns (bool)
-    {
+    function verifyProof(bytes32 root, bytes32 leaf, bytes32[] memory proof) private pure returns (bool) {
         bytes32 computedHash = leaf;
 
         for (uint256 i = 0; i < proof.length; i++) {
@@ -85,35 +79,38 @@ contract SeacowsCollectionRegistry {
         return computedHash == root;
     }
 
-    function getAssetPrice(address collection, uint256 tokenId, uint256 groupId, bytes32[] calldata merkleProof) external view returns (int256) {
+    function getAssetPrice(address collection, uint256 tokenId, uint256 groupId, bytes32[] calldata merkleProof)
+        external
+        view
+        returns (int256)
+    {
         address feed = getFeeds[collection][groupId];
         bytes32 merkleRoot = getMerkleRoot[collection];
-        require(feed != address(0), 'CollectionRegistry: FEED_NOT_EXISTS');
+        require(feed != address(0), "CollectionRegistry: FEED_NOT_EXISTS");
         require(merkleRoot != bytes32(0), "CollectionRegistry: Merkle root not set");
-        // verify mapping tokenId -> groupId 
+        // verify mapping tokenId -> groupId
         bytes32 leaf = keccak256(abi.encodePacked(tokenId, groupId));
         bool valid = verifyProof(merkleRoot, leaf, merkleProof);
         require(valid, "CollectionRegistry: Valid proof required.");
         return SeacowsGroupFeed(feed).latestAnswer();
     }
 
-
-    function getGroupPrice(address collection,  uint256 groupId) external view returns (int256) {
+    function getGroupPrice(address collection, uint256 groupId) external view returns (int256) {
         address feed = getFeeds[collection][groupId];
         bytes32 merkleRoot = getMerkleRoot[collection];
-        require(feed != address(0), 'CollectionRegistry: FEED_NOT_EXISTS');
+        require(feed != address(0), "CollectionRegistry: FEED_NOT_EXISTS");
         require(merkleRoot != bytes32(0), "CollectionRegistry: Merkle root not set");
         return SeacowsGroupFeed(feed).latestAnswer();
     }
 
-    function setAdmin(address newAdmin) external onlyAdmin() {
+    function setAdmin(address newAdmin) external onlyAdmin {
         address oldAdmin = admin;
         admin = newAdmin;
         emit NewAdmin(oldAdmin, newAdmin);
     }
 
     modifier onlyAdmin() {
-      require(msg.sender == admin, "only admin may call");
-      _;
+        require(msg.sender == admin, "only admin may call");
+        _;
     }
 }

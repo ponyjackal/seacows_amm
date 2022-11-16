@@ -17,11 +17,7 @@ library FixedPointMathLib {
                          FIXED POINT OPERATIONS
     //////////////////////////////////////////////////////////////*/
 
-    function fmul(
-        uint256 x,
-        uint256 y,
-        uint256 baseUnit
-    ) internal pure returns (uint256 z) {
+    function fmul(uint256 x, uint256 y, uint256 baseUnit) internal pure returns (uint256 z) {
         assembly {
             // Store x * y in z for now.
             z := mul(x, y)
@@ -36,11 +32,7 @@ library FixedPointMathLib {
         }
     }
 
-    function fdiv(
-        uint256 x,
-        uint256 y,
-        uint256 baseUnit
-    ) internal pure returns (uint256 z) {
+    function fdiv(uint256 x, uint256 y, uint256 baseUnit) internal pure returns (uint256 z) {
         assembly {
             // Store x * baseUnit in z for now.
             z := mul(x, baseUnit)
@@ -55,11 +47,7 @@ library FixedPointMathLib {
         }
     }
 
-    function fpow(
-        uint256 x,
-        uint256 n,
-        uint256 baseUnit
-    ) internal pure returns (uint256 z) {
+    function fpow(uint256 x, uint256 n, uint256 baseUnit) internal pure returns (uint256 z) {
         assembly {
             switch x
             case 0 {

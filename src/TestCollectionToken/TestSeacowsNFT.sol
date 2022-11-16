@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MyNFT is ERC721, Ownable {
     uint256 public totalSupply;
+
     constructor() ERC721("MyNFT", "SEACOWSTESTERC721") {}
 
     function safeMint(address to) public {

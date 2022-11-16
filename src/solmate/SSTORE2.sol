@@ -33,11 +33,7 @@ library SSTORE2 {
         return readBytecode(pointer, start, pointer.code.length - start);
     }
 
-    function read(
-        address pointer,
-        uint256 start,
-        uint256 end
-    ) internal view returns (bytes memory) {
+    function read(address pointer, uint256 start, uint256 end) internal view returns (bytes memory) {
         start += DATA_OFFSET;
         end += DATA_OFFSET;
 
@@ -46,11 +42,7 @@ library SSTORE2 {
         return readBytecode(pointer, start, end - start);
     }
 
-    function readBytecode(
-        address pointer,
-        uint256 start,
-        uint256 size
-    ) private view returns (bytes memory data) {
+    function readBytecode(address pointer, uint256 start, uint256 size) private view returns (bytes memory data) {
         assembly {
             data := mload(0x40)
             mstore(0x40, add(data, and(add(add(size, add(start, 0x20)), 0x1f), not(0x1f))))

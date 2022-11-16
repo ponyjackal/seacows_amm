@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {SafeTransferLib} from "./solmate/SafeTransferLib.sol";
-import {ERC20} from "./solmate/ERC20.sol";
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {SeacowsPair} from "./SeacowsPair.sol";
-import {ISeacowsPairFactoryLike} from "./ISeacowsPairFactoryLike.sol";
-import {SeacowsRouter} from "./SeacowsRouter.sol";
-import {ICurve} from "./bondingcurve/ICurve.sol";
-import {CurveErrorCodes} from "./bondingcurve/CurveErrorCodes.sol";
+import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
+import { ERC20 } from "./solmate/ERC20.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { SeacowsPair } from "./SeacowsPair.sol";
+import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { SeacowsRouter } from "./SeacowsRouter.sol";
+import { ICurve } from "./bondingcurve/ICurve.sol";
+import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
 /**
     @title An NFT/Token pair where the token is an ERC20
@@ -26,10 +26,7 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
     function token() public pure returns (ERC20 _token) {
         uint256 paramsLength = _immutableParamsLength();
         assembly {
-            _token := shr(
-                0x60,
-                calldataload(add(sub(calldatasize(), paramsLength), 61))
-            )
+            _token := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 61)))
         }
     }
 
@@ -68,36 +65,21 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
 
             // Verify token transfer (protect pair against malicious router)
             require(
-                _token.balanceOf(_assetRecipient) - beforeBalance ==
-                    inputAmount - protocolFee,
+                _token.balanceOf(_assetRecipient) - beforeBalance == inputAmount - protocolFee,
                 "ERC20 not transferred in"
             );
 
-            router.pairTransferERC20From(
-                _token,
-                routerCaller,
-                address(_factory),
-                protocolFee,
-                pairVariant()
-            );
+            router.pairTransferERC20From(_token, routerCaller, address(_factory), protocolFee, pairVariant());
 
             // Note: no check for factory balance's because router is assumed to be set by factory owner
             // so there is no incentive to *not* pay protocol fee
         } else {
             // Transfer tokens directly
-            _token.safeTransferFrom(
-                msg.sender,
-                _assetRecipient,
-                inputAmount - protocolFee
-            );
+            _token.safeTransferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
 
             // Take protocol fee (if it exists)
             if (protocolFee > 0) {
-                _token.safeTransferFrom(
-                    msg.sender,
-                    address(_factory),
-                    protocolFee
-                );
+                _token.safeTransferFrom(msg.sender, address(_factory), protocolFee);
             }
         }
     }
@@ -108,10 +90,7 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function _payProtocolFeeFromPair(
-        ISeacowsPairFactoryLike _factory,
-        uint256 protocolFee
-    ) internal override {
+    function _payProtocolFeeFromPair(ISeacowsPairFactoryLike _factory, uint256 protocolFee) internal override {
         // Take protocol fee (if it exists)
         if (protocolFee > 0) {
             ERC20 _token = token();
@@ -128,10 +107,7 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function _sendTokenOutput(
-        address payable tokenRecipient,
-        uint256 outputAmount
-    ) internal override {
+    function _sendTokenOutput(address payable tokenRecipient, uint256 outputAmount) internal override {
         // Send tokens to caller
         if (outputAmount > 0) {
             token().safeTransfer(tokenRecipient, outputAmount);
@@ -145,11 +121,7 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function withdrawERC20(ERC20 a, uint256 amount)
-        external
-        override
-        onlyOwner
-    {
+    function withdrawERC20(ERC20 a, uint256 amount) external override onlyOwner {
         a.safeTransfer(msg.sender, amount);
 
         if (a == token()) {

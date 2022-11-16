@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import {ERC20} from "./solmate/ERC20.sol";
-import {SafeTransferLib} from "./solmate/SafeTransferLib.sol";
-import {SeacowsPair} from "./SeacowsPair.sol";
-import {ISeacowsPairFactoryLike} from "./ISeacowsPairFactoryLike.sol";
-import {CurveErrorCodes} from "./bondingcurve/CurveErrorCodes.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { ERC20 } from "./solmate/ERC20.sol";
+import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
+import { SeacowsPair } from "./SeacowsPair.sol";
+import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
 contract SeacowsRouter {
     using SafeTransferLib for address payable;
@@ -89,14 +89,8 @@ contract SeacowsRouter {
         address payable ethRecipient,
         address nftRecipient,
         uint256 deadline
-    )
-        external
-        payable
-        checkDeadline(deadline)
-        returns (uint256 remainingValue)
-    {
-        return
-            _swapETHForAnyNFTs(swapList, msg.value, ethRecipient, nftRecipient);
+    ) external payable checkDeadline(deadline) returns (uint256 remainingValue) {
+        return _swapETHForAnyNFTs(swapList, msg.value, ethRecipient, nftRecipient);
     }
 
     /**
@@ -112,19 +106,8 @@ contract SeacowsRouter {
         address payable ethRecipient,
         address nftRecipient,
         uint256 deadline
-    )
-        external
-        payable
-        checkDeadline(deadline)
-        returns (uint256 remainingValue)
-    {
-        return
-            _swapETHForSpecificNFTs(
-                swapList,
-                msg.value,
-                ethRecipient,
-                nftRecipient
-            );
+    ) external payable checkDeadline(deadline) returns (uint256 remainingValue) {
+        return _swapETHForSpecificNFTs(swapList, msg.value, ethRecipient, nftRecipient);
     }
 
     /**
@@ -146,11 +129,7 @@ contract SeacowsRouter {
     ) external payable checkDeadline(deadline) returns (uint256 outputAmount) {
         // Swap NFTs for ETH
         // minOutput of swap set to 0 since we're doing an aggregate slippage check
-        outputAmount = _swapNFTsForToken(
-            trade.nftToTokenTrades,
-            0,
-            payable(address(this))
-        );
+        outputAmount = _swapNFTsForToken(trade.nftToTokenTrades, 0, payable(address(this)));
 
         // Add extra value to buy NFTs
         outputAmount += msg.value;
@@ -158,12 +137,7 @@ contract SeacowsRouter {
         // Swap ETH for any NFTs
         // cost <= inputValue = outputAmount - minOutput, so outputAmount' = (outputAmount - minOutput - cost) + minOutput >= minOutput
         outputAmount =
-            _swapETHForAnyNFTs(
-                trade.tokenToNFTTrades,
-                outputAmount - minOutput,
-                ethRecipient,
-                nftRecipient
-            ) +
+            _swapETHForAnyNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, ethRecipient, nftRecipient) +
             minOutput;
     }
 
@@ -186,11 +160,7 @@ contract SeacowsRouter {
     ) external payable checkDeadline(deadline) returns (uint256 outputAmount) {
         // Swap NFTs for ETH
         // minOutput of swap set to 0 since we're doing an aggregate slippage check
-        outputAmount = _swapNFTsForToken(
-            trade.nftToTokenTrades,
-            0,
-            payable(address(this))
-        );
+        outputAmount = _swapNFTsForToken(trade.nftToTokenTrades, 0, payable(address(this)));
 
         // Add extra value to buy NFTs
         outputAmount += msg.value;
@@ -198,12 +168,7 @@ contract SeacowsRouter {
         // Swap ETH for specific NFTs
         // cost <= inputValue = outputAmount - minOutput, so outputAmount' = (outputAmount - minOutput - cost) + minOutput >= minOutput
         outputAmount =
-            _swapETHForSpecificNFTs(
-                trade.tokenToNFTTrades,
-                outputAmount - minOutput,
-                ethRecipient,
-                nftRecipient
-            ) +
+            _swapETHForSpecificNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, ethRecipient, nftRecipient) +
             minOutput;
     }
 
@@ -289,11 +254,7 @@ contract SeacowsRouter {
         // Swap NFTs for ERC20
         // minOutput of swap set to 0 since we're doing an aggregate slippage check
         // output tokens are sent to msg.sender
-        outputAmount = _swapNFTsForToken(
-            trade.nftToTokenTrades,
-            0,
-            payable(msg.sender)
-        );
+        outputAmount = _swapNFTsForToken(trade.nftToTokenTrades, 0, payable(msg.sender));
 
         // Add extra value to buy NFTs
         outputAmount += inputAmount;
@@ -301,13 +262,7 @@ contract SeacowsRouter {
         // Swap ERC20 for any NFTs
         // cost <= maxCost = outputAmount - minOutput, so outputAmount' = outputAmount - cost >= minOutput
         // input tokens are taken directly from msg.sender
-        outputAmount =
-            _swapERC20ForAnyNFTs(
-                trade.tokenToNFTTrades,
-                outputAmount - minOutput,
-                nftRecipient
-            ) +
-            minOutput;
+        outputAmount = _swapERC20ForAnyNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, nftRecipient) + minOutput;
     }
 
     /**
@@ -330,11 +285,7 @@ contract SeacowsRouter {
         // Swap NFTs for ERC20
         // minOutput of swap set to 0 since we're doing an aggregate slippage check
         // output tokens are sent to msg.sender
-        outputAmount = _swapNFTsForToken(
-            trade.nftToTokenTrades,
-            0,
-            payable(msg.sender)
-        );
+        outputAmount = _swapNFTsForToken(trade.nftToTokenTrades, 0, payable(msg.sender));
 
         // Add extra value to buy NFTs
         outputAmount += inputAmount;
@@ -343,11 +294,7 @@ contract SeacowsRouter {
         // cost <= maxCost = outputAmount - minOutput, so outputAmount' = outputAmount - cost >= minOutput
         // input tokens are taken directly from msg.sender
         outputAmount =
-            _swapERC20ForSpecificNFTs(
-                trade.tokenToNFTTrades,
-                outputAmount - minOutput,
-                nftRecipient
-            ) +
+            _swapERC20ForSpecificNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, nftRecipient) +
             minOutput;
     }
 
@@ -371,12 +318,7 @@ contract SeacowsRouter {
         address payable ethRecipient,
         address nftRecipient,
         uint256 deadline
-    )
-        external
-        payable
-        checkDeadline(deadline)
-        returns (uint256 remainingValue)
-    {
+    ) external payable checkDeadline(deadline) returns (uint256 remainingValue) {
         remainingValue = msg.value;
 
         // Try doing each swap
@@ -392,15 +334,10 @@ contract SeacowsRouter {
             );
 
             // If within our maxCost and no error, proceed
-            if (
-                pairCost <= swapList[i].maxCost &&
-                error == CurveErrorCodes.Error.OK
-            ) {
+            if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
                 // We know how much ETH to send because we already did the math above
                 // So we just send that much
-                remainingValue -= swapList[i].swapInfo.pair.swapTokenForAnyNFTs{
-                    value: pairCost
-                }(
+                remainingValue -= swapList[i].swapInfo.pair.swapTokenForAnyNFTs{ value: pairCost }(
                     swapList[i].swapInfo.numItems,
                     pairCost,
                     nftRecipient,
@@ -448,16 +385,10 @@ contract SeacowsRouter {
             );
 
             // If within our maxCost and no error, proceed
-            if (
-                pairCost <= swapList[i].maxCost &&
-                error == CurveErrorCodes.Error.OK
-            ) {
+            if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
                 // We know how much ETH to send because we already did the math above
                 // So we just send that much
-                remainingValue -= swapList[i]
-                    .swapInfo
-                    .pair
-                    .swapTokenForSpecificNFTs{value: pairCost}(
+                remainingValue -= swapList[i].swapInfo.pair.swapTokenForSpecificNFTs{ value: pairCost }(
                     swapList[i].swapInfo.nftIds,
                     swapList[i].swapInfo.details,
                     pairCost,
@@ -502,23 +433,17 @@ contract SeacowsRouter {
         for (uint256 i; i < numSwaps; ) {
             // Calculate actual cost per swap
             // swapList[i].swapInfo.numItems
-            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(
-                new uint256[](0),
-                new NFTDetail[](0)
-            );
+            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(new uint256[](0), new NFTDetail[](0));
 
             // If within our maxCost and no error, proceed
-            if (
-                pairCost <= swapList[i].maxCost &&
-                error == CurveErrorCodes.Error.OK
-            ) {
+            if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
                 remainingValue -= swapList[i].swapInfo.pair.swapTokenForAnyNFTs(
-                        swapList[i].swapInfo.numItems,
-                        pairCost,
-                        nftRecipient,
-                        true,
-                        msg.sender
-                    );
+                    swapList[i].swapInfo.numItems,
+                    pairCost,
+                    nftRecipient,
+                    true,
+                    msg.sender
+                );
             }
 
             unchecked {
@@ -556,21 +481,15 @@ contract SeacowsRouter {
             );
 
             // If within our maxCost and no error, proceed
-            if (
-                pairCost <= swapList[i].maxCost &&
-                error == CurveErrorCodes.Error.OK
-            ) {
-                remainingValue -= swapList[i]
-                    .swapInfo
-                    .pair
-                    .swapTokenForSpecificNFTs(
-                        swapList[i].swapInfo.nftIds,
-                        swapList[i].swapInfo.details,
-                        pairCost,
-                        nftRecipient,
-                        true,
-                        msg.sender
-                    );
+            if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
+                remainingValue -= swapList[i].swapInfo.pair.swapTokenForSpecificNFTs(
+                    swapList[i].swapInfo.nftIds,
+                    swapList[i].swapInfo.details,
+                    pairCost,
+                    nftRecipient,
+                    true,
+                    msg.sender
+                );
             }
 
             unchecked {
@@ -599,13 +518,10 @@ contract SeacowsRouter {
             // Locally scoped to avoid stack too deep error
             {
                 CurveErrorCodes.Error error;
-                (error, , , pairOutput, ) = swapList[i]
-                    .swapInfo
-                    .pair
-                    .getSellNFTQuote(
-                        swapList[i].swapInfo.nftIds,
-                        swapList[i].swapInfo.details
-                    );
+                (error, , , pairOutput, ) = swapList[i].swapInfo.pair.getSellNFTQuote(
+                    swapList[i].swapInfo.nftIds,
+                    swapList[i].swapInfo.details
+                );
                 if (error != CurveErrorCodes.Error.OK) {
                     unchecked {
                         ++i;
@@ -643,9 +559,11 @@ contract SeacowsRouter {
         - nftRecipient The address that receives NFTs
         - deadline UNIX timestamp deadline for the swap
      */
-    function robustSwapETHForSpecificNFTsAndNFTsToToken(
-        RobustPairNFTsFoTokenAndTokenforNFTsTrade calldata params
-    ) external payable returns (uint256 remainingValue, uint256 outputAmount) {
+    function robustSwapETHForSpecificNFTsAndNFTsToToken(RobustPairNFTsFoTokenAndTokenforNFTsTrade calldata params)
+        external
+        payable
+        returns (uint256 remainingValue, uint256 outputAmount)
+    {
         {
             remainingValue = msg.value;
             uint256 pairCost;
@@ -655,27 +573,18 @@ contract SeacowsRouter {
             uint256 numSwaps = params.tokenToNFTTrades.length;
             for (uint256 i; i < numSwaps; ) {
                 // Calculate actual cost per swap
-                (error, , , pairCost, ) = params
-                    .tokenToNFTTrades[i]
-                    .swapInfo
-                    .pair
-                    .getBuyNFTQuote(
-                        params.tokenToNFTTrades[i].swapInfo.nftIds,
-                        params.tokenToNFTTrades[i].swapInfo.details
-                    );
+                (error, , , pairCost, ) = params.tokenToNFTTrades[i].swapInfo.pair.getBuyNFTQuote(
+                    params.tokenToNFTTrades[i].swapInfo.nftIds,
+                    params.tokenToNFTTrades[i].swapInfo.details
+                );
 
                 // If within our maxCost and no error, proceed
-                if (
-                    pairCost <= params.tokenToNFTTrades[i].maxCost &&
-                    error == CurveErrorCodes.Error.OK
-                ) {
+                if (pairCost <= params.tokenToNFTTrades[i].maxCost && error == CurveErrorCodes.Error.OK) {
                     // We know how much ETH to send because we already did the math above
                     // So we just send that much
-                    remainingValue -= params
-                        .tokenToNFTTrades[i]
-                        .swapInfo
-                        .pair
-                        .swapTokenForSpecificNFTs{value: pairCost}(
+                    remainingValue -= params.tokenToNFTTrades[i].swapInfo.pair.swapTokenForSpecificNFTs{
+                        value: pairCost
+                    }(
                         params.tokenToNFTTrades[i].swapInfo.nftIds,
                         params.tokenToNFTTrades[i].swapInfo.details,
                         pairCost,
@@ -704,14 +613,10 @@ contract SeacowsRouter {
                 // Locally scoped to avoid stack too deep error
                 {
                     CurveErrorCodes.Error error;
-                    (error, , , pairOutput, ) = params
-                        .nftToTokenTrades[i]
-                        .swapInfo
-                        .pair
-                        .getSellNFTQuote(
-                            params.nftToTokenTrades[i].swapInfo.nftIds,
-                            params.nftToTokenTrades[i].swapInfo.details
-                        );
+                    (error, , , pairOutput, ) = params.nftToTokenTrades[i].swapInfo.pair.getSellNFTQuote(
+                        params.nftToTokenTrades[i].swapInfo.nftIds,
+                        params.nftToTokenTrades[i].swapInfo.details
+                    );
                     if (error != CurveErrorCodes.Error.OK) {
                         unchecked {
                             ++i;
@@ -723,18 +628,14 @@ contract SeacowsRouter {
                 // If at least equal to our minOutput, proceed
                 if (pairOutput >= params.nftToTokenTrades[i].minOutput) {
                     // Do the swap and update outputAmount with how many tokens we got
-                    outputAmount += params
-                        .nftToTokenTrades[i]
-                        .swapInfo
-                        .pair
-                        .swapNFTsForToken(
-                            params.nftToTokenTrades[i].swapInfo.nftIds,
-                            params.nftToTokenTrades[i].swapInfo.details,
-                            0,
-                            params.tokenRecipient,
-                            true,
-                            msg.sender
-                        );
+                    outputAmount += params.nftToTokenTrades[i].swapInfo.pair.swapNFTsForToken(
+                        params.nftToTokenTrades[i].swapInfo.nftIds,
+                        params.nftToTokenTrades[i].swapInfo.details,
+                        0,
+                        params.tokenRecipient,
+                        true,
+                        msg.sender
+                    );
                 }
 
                 unchecked {
@@ -754,9 +655,11 @@ contract SeacowsRouter {
         - nftRecipient The address that receives NFTs
         - deadline UNIX timestamp deadline for the swap
      */
-    function robustSwapERC20ForSpecificNFTsAndNFTsToToken(
-        RobustPairNFTsFoTokenAndTokenforNFTsTrade calldata params
-    ) external payable returns (uint256 remainingValue, uint256 outputAmount) {
+    function robustSwapERC20ForSpecificNFTsAndNFTsToToken(RobustPairNFTsFoTokenAndTokenforNFTsTrade calldata params)
+        external
+        payable
+        returns (uint256 remainingValue, uint256 outputAmount)
+    {
         {
             remainingValue = params.inputAmount;
             uint256 pairCost;
@@ -766,32 +669,21 @@ contract SeacowsRouter {
             uint256 numSwaps = params.tokenToNFTTrades.length;
             for (uint256 i; i < numSwaps; ) {
                 // Calculate actual cost per swap
-                (error, , , pairCost, ) = params
-                    .tokenToNFTTrades[i]
-                    .swapInfo
-                    .pair
-                    .getBuyNFTQuote(
-                        params.tokenToNFTTrades[i].swapInfo.nftIds,
-                        params.tokenToNFTTrades[i].swapInfo.details
-                    );
+                (error, , , pairCost, ) = params.tokenToNFTTrades[i].swapInfo.pair.getBuyNFTQuote(
+                    params.tokenToNFTTrades[i].swapInfo.nftIds,
+                    params.tokenToNFTTrades[i].swapInfo.details
+                );
 
                 // If within our maxCost and no error, proceed
-                if (
-                    pairCost <= params.tokenToNFTTrades[i].maxCost &&
-                    error == CurveErrorCodes.Error.OK
-                ) {
-                    remainingValue -= params
-                        .tokenToNFTTrades[i]
-                        .swapInfo
-                        .pair
-                        .swapTokenForSpecificNFTs(
-                            params.tokenToNFTTrades[i].swapInfo.nftIds,
-                            params.tokenToNFTTrades[i].swapInfo.details,
-                            pairCost,
-                            params.nftRecipient,
-                            true,
-                            msg.sender
-                        );
+                if (pairCost <= params.tokenToNFTTrades[i].maxCost && error == CurveErrorCodes.Error.OK) {
+                    remainingValue -= params.tokenToNFTTrades[i].swapInfo.pair.swapTokenForSpecificNFTs(
+                        params.tokenToNFTTrades[i].swapInfo.nftIds,
+                        params.tokenToNFTTrades[i].swapInfo.details,
+                        pairCost,
+                        params.nftRecipient,
+                        true,
+                        msg.sender
+                    );
                 }
 
                 unchecked {
@@ -808,14 +700,10 @@ contract SeacowsRouter {
                 // Locally scoped to avoid stack too deep error
                 {
                     CurveErrorCodes.Error error;
-                    (error, , , pairOutput, ) = params
-                        .nftToTokenTrades[i]
-                        .swapInfo
-                        .pair
-                        .getSellNFTQuote(
-                            params.nftToTokenTrades[i].swapInfo.nftIds,
-                            params.nftToTokenTrades[i].swapInfo.details
-                        );
+                    (error, , , pairOutput, ) = params.nftToTokenTrades[i].swapInfo.pair.getSellNFTQuote(
+                        params.nftToTokenTrades[i].swapInfo.nftIds,
+                        params.nftToTokenTrades[i].swapInfo.details
+                    );
                     if (error != CurveErrorCodes.Error.OK) {
                         unchecked {
                             ++i;
@@ -827,18 +715,14 @@ contract SeacowsRouter {
                 // If at least equal to our minOutput, proceed
                 if (pairOutput >= params.nftToTokenTrades[i].minOutput) {
                     // Do the swap and update outputAmount with how many tokens we got
-                    outputAmount += params
-                        .nftToTokenTrades[i]
-                        .swapInfo
-                        .pair
-                        .swapNFTsForToken(
-                            params.nftToTokenTrades[i].swapInfo.nftIds,
-                            params.nftToTokenTrades[i].swapInfo.details,
-                            0,
-                            params.tokenRecipient,
-                            true,
-                            msg.sender
-                        );
+                    outputAmount += params.nftToTokenTrades[i].swapInfo.pair.swapNFTsForToken(
+                        params.nftToTokenTrades[i].swapInfo.nftIds,
+                        params.nftToTokenTrades[i].swapInfo.details,
+                        0,
+                        params.tokenRecipient,
+                        true,
+                        msg.sender
+                    );
                 }
 
                 unchecked {
@@ -876,8 +760,7 @@ contract SeacowsRouter {
         // verify caller is an ERC20 pair
         require(
             variant == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
-                variant ==
-                ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20,
+                variant == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20,
             "Not ERC20 pair"
         );
 
@@ -942,19 +825,14 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate the cost per swap first to send exact amount of ETH over, saves gas by avoiding the need to send back excess ETH
-            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(
-                new uint256[](0),
-                new NFTDetail[](0)
-            );
+            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(new uint256[](0), new NFTDetail[](0));
 
             // Require no error
             require(error == CurveErrorCodes.Error.OK, "Bonding curve error");
 
             // Total ETH taken from sender cannot exceed inputAmount
             // because otherwise the deduction from remainingValue will fail
-            remainingValue -= swapList[i].pair.swapTokenForAnyNFTs{
-                value: pairCost
-            }(
+            remainingValue -= swapList[i].pair.swapTokenForAnyNFTs{ value: pairCost }(
                 swapList[i].numItems,
                 remainingValue,
                 nftRecipient,
@@ -996,19 +874,14 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate the cost per swap first to send exact amount of ETH over, saves gas by avoiding the need to send back excess ETH
-            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(
-                swapList[i].nftIds,
-                swapList[i].details
-            );
+            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(swapList[i].nftIds, swapList[i].details);
 
             // Require no errors
             require(error == CurveErrorCodes.Error.OK, "Bonding curve error");
 
             // Total ETH taken from sender cannot exceed inputAmount
             // because otherwise the deduction from remainingValue will fail
-            remainingValue -= swapList[i].pair.swapTokenForSpecificNFTs{
-                value: pairCost
-            }(
+            remainingValue -= swapList[i].pair.swapTokenForSpecificNFTs{ value: pairCost }(
                 swapList[i].nftIds,
                 swapList[i].details,
                 remainingValue,
@@ -1039,11 +912,10 @@ contract SeacowsRouter {
         @param nftRecipient The address receiving the NFTs from the pairs
         @return remainingValue The unspent token amount
      */
-    function _swapERC20ForAnyNFTs(
-        PairSwapAny[] calldata swapList,
-        uint256 inputAmount,
-        address nftRecipient
-    ) internal returns (uint256 remainingValue) {
+    function _swapERC20ForAnyNFTs(PairSwapAny[] calldata swapList, uint256 inputAmount, address nftRecipient)
+        internal
+        returns (uint256 remainingValue)
+    {
         remainingValue = inputAmount;
 
         // Do swaps
@@ -1077,11 +949,10 @@ contract SeacowsRouter {
         @param nftRecipient The address receiving the NFTs from the pairs
         @return remainingValue The unspent token amount
      */
-    function _swapERC20ForSpecificNFTs(
-        PairSwapSpecific[] calldata swapList,
-        uint256 inputAmount,
-        address nftRecipient
-    ) internal returns (uint256 remainingValue) {
+    function _swapERC20ForSpecificNFTs(PairSwapSpecific[] calldata swapList, uint256 inputAmount, address nftRecipient)
+        internal
+        returns (uint256 remainingValue)
+    {
         remainingValue = inputAmount;
 
         // Do swaps
@@ -1114,11 +985,10 @@ contract SeacowsRouter {
         @param tokenRecipient The address that receives the tokens
         @return outputAmount The number of tokens to be received
      */
-    function _swapNFTsForToken(
-        PairSwapSpecific[] calldata swapList,
-        uint256 minOutput,
-        address payable tokenRecipient
-    ) internal returns (uint256 outputAmount) {
+    function _swapNFTsForToken(PairSwapSpecific[] calldata swapList, uint256 minOutput, address payable tokenRecipient)
+        internal
+        returns (uint256 outputAmount)
+    {
         // Do swaps
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
