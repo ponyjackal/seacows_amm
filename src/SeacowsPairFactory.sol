@@ -124,6 +124,11 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
 
+        // mint LP tokens if trade pair
+        if (_poolType == SeacowsPair.PoolType.TRADE) {
+            pair.mintLPToken(msg.sender, _initialNFTIDs.length);
+        }
+
         _initializePairETH(pair, _nft, _assetRecipient, _delta, _fee, _spotPrice, _initialNFTIDs);
         emit NewPair(address(pair));
     }
@@ -173,6 +178,11 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                 template.cloneERC20Pair(this, params.bondingCurve, params.nft, uint8(params.poolType), params.token)
             )
         );
+
+        // mint LP tokens if trade pair
+        if (params.poolType == SeacowsPair.PoolType.TRADE) {
+            pair.mintLPToken(msg.sender, params.initialNFTIDs.length);
+        }
 
         _initializePairERC20(
             pair,
