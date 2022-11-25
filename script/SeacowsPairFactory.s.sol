@@ -23,15 +23,15 @@ contract DeploySeacowsPairFactory is Script {
         ) = helperConfig.activeNetworkConfig();
 
         vm.startBroadcast();
-        seacowsPairFactory = new SeacowsPairFactory(
-            seacowsPairEnumerableETH,
-            seacowsPairMissingEnumerableETH,
-            seacowsPairEnumerableERC20,
-            seacowsPairMissingEnumerableERC20,
-            protocolFeeRecipient,
-            protocol_feemultiplier,
-            seacowscollectionRegistry
-        );
+        // seacowsPairFactory = new SeacowsPairFactory(
+        //     seacowsPairEnumerableETH,
+        //     seacowsPairMissingEnumerableETH,
+        //     seacowsPairEnumerableERC20,
+        //     seacowsPairMissingEnumerableERC20,
+        //     protocolFeeRecipient,
+        //     protocol_feemultiplier,
+        //     seacowscollectionRegistry
+        // );
         vm.stopBroadcast();
     }
 }
