@@ -470,4 +470,39 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         // mint LP tokens
         _pair.mintLPToken(msg.sender, numNFTs);
     }
+
+    /**
+     * @dev remove ERC20 liquidity from trading pair
+     * @param _amount lp token amount to remove
+     */
+    function removeLiquidityERC20(SeacowsPairERC20 _pair, uint256 _amount) external {
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(_amount > 0, "Invalid amount");
+
+        // burn LP token
+        _pair.burnLPToken(msg.sender, _amount);
+
+        // transfer tokens to the user
+        uint256 tokenAmount = _amount * _pair.spotPrice();
+        _pair.token().safeTransferFrom(address(_pair), msg.sender, tokenAmount);
+
+        // TODO; transfer random _amount nfts from the pair to the user
+    }
+
+    /**
+     * @dev remove ETH liquidity from trading pair
+     * @param _amount lp token amount to remove
+     */
+    function removeLiquidityETH(SeacowsPairETH _pair, uint256 _amount) external {
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(_amount > 0, "Invalid amount");
+
+        // burn LP token
+        _pair.burnLPToken(msg.sender, _amount);
+
+        // TODO; transfer eth from the pair to the user
+        uint256 ethAmount = _amount * _pair.spotPrice();
+
+        // TODO; transfer random _amount nfts from the pair to the user
+    }
 }

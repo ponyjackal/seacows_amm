@@ -858,6 +858,20 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         _mint(recipient, LP_TOKEN, amount, "");
     }
 
+    /**
+     * note only used trade pair
+     * @dev burn LP token from LP provider
+     * @param recipient LP token recipient address
+     * @param amount LP token amount to mint
+     */
+    function burnLPToken(address recipient, uint256 amount) external onlyFactory {
+        require(recipient != address(0), "Invalid recipient");
+        require(balanceOf(recipient, LP_TOKEN) >= amount, "Insufficient LP token");
+        require(amount > 0, "Invliad amount");
+        // burn LP from the user
+        _burn(recipient, LP_TOKEN, amount);
+    }
+
     // -----------------------------------------
     // Overriden functions
     // -----------------------------------------
