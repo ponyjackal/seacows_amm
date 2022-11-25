@@ -6,6 +6,8 @@ import { SeacowsPairMissingEnumerable } from "./SeacowsPairMissingEnumerable.sol
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 
 contract SeacowsPairMissingEnumerableETH is SeacowsPairMissingEnumerable, SeacowsPairETH {
+    constructor(string memory _uri) SeacowsPairMissingEnumerable(_uri) {}
+
     function pairVariant() public pure override returns (ISeacowsPairFactoryLike.PairVariant) {
         return ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ETH;
     }

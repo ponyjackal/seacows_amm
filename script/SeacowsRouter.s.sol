@@ -12,7 +12,7 @@ contract DeploySeacowsRouter is Script {
 
     function run() public {
         HelperConfig helperConfig = new HelperConfig();
-        (, , , , , , , address seacowsPairFactory) = helperConfig.activeNetworkConfig();
+        (, , , , , , , , address seacowsPairFactory) = helperConfig.activeNetworkConfig();
 
         vm.startBroadcast();
         seacowsRouter = new SeacowsRouter(ISeacowsPairFactoryLike(seacowsPairFactory));

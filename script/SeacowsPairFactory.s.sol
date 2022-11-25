@@ -12,6 +12,7 @@ contract DeploySeacowsPairFactory is Script {
     function run() public {
         HelperConfig helperConfig = new HelperConfig();
         (
+            ,
             address seacowsPairEnumerableETH,
             address seacowsPairMissingEnumerableETH,
             address seacowsPairEnumerableERC20,
