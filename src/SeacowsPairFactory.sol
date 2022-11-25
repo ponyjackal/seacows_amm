@@ -416,4 +416,58 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             }
         }
     }
+
+    /** Liquidity functions */
+
+    /**
+     * @dev add ERC20 liquidity into trading pair
+     * @param _nftIDs NFT ids
+     * @param _amount ERC20 token amount
+     */
+    function addLiquidityERC20(SeacowsPairERC20 _pair, uint256[] calldata _nftIDs, uint256 _amount) external {
+        uint256 numNFTs = _nftIDs.length;
+
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(numNFTs > 0, "Invalid NFT amount");
+        require(numNFTs * _pair.spotPrice() <= _amount, "Insufficient token amount");
+
+        // transfer tokens to pair
+        _pair.token().safeTransferFrom(msg.sender, address(_pair), _amount);
+
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        // mint LP tokens
+        _pair.mintLPToken(msg.sender, numNFTs);
+    }
+
+    /**
+     * @dev add ETH liquidity into trading pair
+     * @param _nftIDs NFT ids
+     */
+    function addLiquidityETH(SeacowsPairETH _pair, uint256[] calldata _nftIDs) external payable {
+        uint256 numNFTs = _nftIDs.length;
+
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(numNFTs > 0, "Invalid NFT amount");
+        require(numNFTs * _pair.spotPrice() <= msg.value, "Insufficient token amount");
+
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        // mint LP tokens
+        _pair.mintLPToken(msg.sender, numNFTs);
+    }
 }
