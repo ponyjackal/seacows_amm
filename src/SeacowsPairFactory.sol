@@ -502,6 +502,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // TODO; transfer eth from the pair to the user
         uint256 ethAmount = _amount * _pair.spotPrice();
+        _pair.removeLPETH(msg.sender, ethAmount);
 
         // TODO; transfer random _amount nfts from the pair to the user
     }

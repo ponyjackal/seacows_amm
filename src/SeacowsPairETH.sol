@@ -105,6 +105,16 @@ abstract contract SeacowsPairETH is SeacowsPair {
         emit TokenWithdrawal(amount);
     }
 
+    /**
+        @notice Withdraws a specified amount of token owned by the pair to the LP provider.
+        @dev Only callable by the factory.
+        @param amount The amount of token to send to the owner. If the pair's balance is less than
+        this value, the transaction will be reverted.
+     */
+    function removeLPETH(address recipient, uint256 amount) public onlyFactory {
+        payable(recipient).safeTransferETH(amount);
+    }
+
     /// @inheritdoc SeacowsPair
     function withdrawERC20(ERC20 a, uint256 amount) external override onlyOwner {
         a.safeTransfer(msg.sender, amount);
