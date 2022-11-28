@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.4;
+pragma solidity >=0.8.0;
 
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 
@@ -75,6 +75,7 @@ contract ChainlinkAggregator is ChainlinkClient {
         recordChainlinkFulfillment(_requestId)
     {
         spotPrices[requests[_requestId].collection] = _price;
+        // TODO; call back to pair factory in order to create a pair
 
         delete requests[_requestId];
     }
