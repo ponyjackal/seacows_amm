@@ -2,6 +2,11 @@
 pragma solidity >=0.8.0;
 
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+
+import { ISeacowsPairFactoryLike } from "../ISeacowsPairFactoryLike.sol";
+import { SeacowsPairETH } from "../SeacowsPairETH.sol";
 
 contract ChainlinkAggregator is ChainlinkClient {
     using Chainlink for Chainlink.Request;
@@ -11,12 +16,17 @@ contract ChainlinkAggregator is ChainlinkClient {
     // Do not allow the oracle to submit times any further forward into the future than this constant.
     uint256 public constant ORACLE_FUTURE_LIMIT = 10 minutes;
 
-    address internal factory;
+    ISeacowsPairFactoryLike public factory;
     bytes32 public oracleJobId;
 
     struct Request {
+        SeacowsPairETH pair;
+        IERC721 nft;
+        address payable assetRecipient;
+        uint128 delta;
+        uint96 fee;
+        uint256[] initialNFTIDs;
         uint256 timestamp;
-        address collection;
     }
     // request id => Request info
     mapping(bytes32 => Request) private requests;
@@ -24,7 +34,7 @@ contract ChainlinkAggregator is ChainlinkClient {
     mapping(address => uint256) public spotPrices;
 
     constructor(
-        address _factory,
+        ISeacowsPairFactoryLike _factory,
         // Chainlink requirementss
         address _chainlinkToken,
         address _chainlinkOracle,
@@ -39,7 +49,7 @@ contract ChainlinkAggregator is ChainlinkClient {
 
     /** MODIFIER */
     modifier onlyFactory() {
-        require(msg.sender == factory, "Not a factory");
+        require(msg.sender == address(factory), "Not a factory");
         _;
     }
 
@@ -50,12 +60,30 @@ contract ChainlinkAggregator is ChainlinkClient {
 
     /**
      * @notice Initiatiate a price request via chainlink. Provide both the
-     * @param collection nft collection address
+       @param _pair The NFT contract of the collection the pair trades
+       @param _nft The NFT contract of the collection the pair trades
+       @param _assetRecipient The address that will receive the assets traders give during trades.
+                            If set to address(0), assets will be sent to the pool address.
+                              Not available to TRADE pools. 
+       @param _delta The delta value used by the bonding curve. The meaning of delta depends
+        on the specific curve.
+       @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
+       @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
      */
-    function requestCryptoPrice(address collection) external onlyFactory returns (bytes32) {
+    function requestCryptoPrice(
+        SeacowsPairETH _pair,
+        IERC721 _nft,
+        address payable _assetRecipient,
+        uint128 _delta,
+        uint96 _fee,
+        uint256[] calldata _initialNFTIDs
+    ) external onlyFactory returns (bytes32) {
         Chainlink.Request memory req = buildChainlinkRequest(oracleJobId, address(this), this.fulfill.selector);
         string memory requestURL = string(
-            abi.encodePacked("https://api.reservoir.tools/oracle/collections/floor-ask/v4?collection=", collection)
+            abi.encodePacked(
+                "https://api.reservoir.tools/oracle/collections/floor-ask/v4?collection=",
+                Strings.toHexString(address(_nft))
+            )
         );
         req.add("get", requestURL);
 
@@ -64,7 +92,7 @@ contract ChainlinkAggregator is ChainlinkClient {
         req.addInt("times", int256(ORACLE_PRECISION));
 
         bytes32 requestId = sendChainlinkRequest(req, ORACLE_PAYMENT);
-        requests[requestId] = Request(block.timestamp, collection);
+        requests[requestId] = Request(_pair, _nft, _assetRecipient, _delta, _fee, _initialNFTIDs, block.timestamp);
 
         return requestId;
     }
@@ -74,9 +102,16 @@ contract ChainlinkAggregator is ChainlinkClient {
         validateTimestamp(_requestId)
         recordChainlinkFulfillment(_requestId)
     {
-        spotPrices[requests[_requestId].collection] = _price;
-        // TODO; call back to pair factory in order to create a pair
-
+        Request memory request = requests[_requestId];
+        factory.initializePairETHFromOracle(
+            request.pair,
+            request.nft,
+            request.assetRecipient,
+            request.delta,
+            request.fee,
+            uint128(_price),
+            request.initialNFTIDs
+        );
         delete requests[_requestId];
     }
 
