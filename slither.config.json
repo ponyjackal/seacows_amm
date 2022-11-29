@@ -1,0 +1,9 @@
+{
+  "filter_paths": "lib",
+  "solc_remaps": [
+    "@prb/test/=lib/prb-test/src/",
+    "forge-std/=lib/forge-std/src/",
+    "solmate/=lib/solmate/src/",
+    "@openzeppelin/=lib/openzeppelin-contracts/"
+  ]
+}
