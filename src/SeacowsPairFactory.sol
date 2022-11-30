@@ -477,10 +477,14 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     /**
      * @dev remove ERC20 liquidity from trading pair
      * @param _amount lp token amount to remove
+     * @param _nftIDs NFT ids to withdraw
      */
-    function removeLiquidityERC20(SeacowsPairERC20 _pair, uint256 _amount) external {
+    function removeLiquidityERC20(SeacowsPairERC20 _pair, uint256 _amount, uint256[] calldata _nftIDs) external {
+        uint256 numNFTs = _nftIDs.length;
+
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_amount > 0, "Invalid amount");
+        require(_amount == numNFTs, "Invalid NFT amount");
 
         // burn LP token; we check if the user has engouh LP token in the function below
         _pair.burnLPToken(msg.sender, _amount);
@@ -489,16 +493,27 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint256 tokenAmount = _amount * _pair.spotPrice();
         _pair.token().safeTransferFrom(address(_pair), msg.sender, tokenAmount);
 
-        // TODO; transfer random _amount nfts from the pair to the user
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
      * @dev remove ETH liquidity from trading pair
      * @param _amount lp token amount to remove
+     * @param _nftIDs NFT ids to withdraw
      */
-    function removeLiquidityETH(SeacowsPairETH _pair, uint256 _amount) external {
+    function removeLiquidityETH(SeacowsPairETH _pair, uint256 _amount, uint256[] calldata _nftIDs) external {
+        uint256 numNFTs = _nftIDs.length;
+
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_amount > 0, "Invalid amount");
+        require(_amount == numNFTs, "Invalid NFT amount");
 
         // burn LP token; we check if the user has engouh LP token in the function below
         _pair.burnLPToken(msg.sender, _amount);
@@ -506,6 +521,13 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint256 ethAmount = _amount * _pair.spotPrice();
         _pair.removeLPETH(msg.sender, ethAmount);
 
-        // TODO; transfer random _amount nfts from the pair to the user
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 }
