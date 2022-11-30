@@ -467,6 +467,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             }
         }
 
+        // transfer eth to the pair
+        payable(_pair).safeTransferETH(msg.value);
+
         // mint LP tokens
         _pair.mintLPToken(msg.sender, numNFTs);
     }
@@ -479,7 +482,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_amount > 0, "Invalid amount");
 
-        // burn LP token
+        // burn LP token; we check if the user has engouh LP token in the function below
         _pair.burnLPToken(msg.sender, _amount);
 
         // transfer tokens to the user
@@ -497,10 +500,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_amount > 0, "Invalid amount");
 
-        // burn LP token
+        // burn LP token; we check if the user has engouh LP token in the function below
         _pair.burnLPToken(msg.sender, _amount);
 
-        // TODO; transfer eth from the pair to the user
         uint256 ethAmount = _amount * _pair.spotPrice();
         _pair.removeLPETH(msg.sender, ethAmount);
 
