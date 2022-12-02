@@ -152,7 +152,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
-        @notice Creates a pair contract using EIP-1167.
+        @notice Creates a pair contract using price oracle
         @param _nft The NFT contract of the collection the pair trades
         @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
         @param _assetRecipient The address that will receive the assets traders give during trades.
@@ -165,7 +165,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
         @return pair The new pair
      */
-    function createPairETH(
+    function createPairETHWithPriceOracle(
         IERC721 _nft,
         ICurve _bondingCurve,
         address payable _assetRecipient,
@@ -270,6 +270,86 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             params.initialTokenBalance
         );
         emit NewPair(address(pair));
+    }
+
+    /**
+        @notice Creates a pair contract using EIP-1167.
+        @param _nft The NFT contract of the collection the pair trades
+        @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
+        @param _assetRecipient The address that will receive the assets traders give during trades.
+                                If set to address(0), assets will be sent to the pool address.
+                                Not available to TRADE pools.
+        @param _poolType TOKEN, NFT, or TRADE
+        @param _delta The delta value used by the bonding curve. The meaning of delta depends
+        on the specific curve.
+        @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
+        @param _spotPrice The initial selling spot price, in ETH
+        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
+        @param _initialTokenBalance The initial token balance sent from the sender to the new pair
+        @return pair The new pair
+     */
+    struct CreateERC20PairParamsWithPriceOracle {
+        ERC20 token;
+        IERC721 nft;
+        ICurve bondingCurve;
+        address payable assetRecipient;
+        SeacowsPair.PoolType poolType;
+        uint128 delta;
+        uint96 fee;
+        uint256[] initialNFTIDs;
+        uint256 initialTokenBalance;
+    }
+
+    function createPairERC20WithPriceOracle(CreateERC20PairParamsWithPriceOracle calldata params)
+        external
+        returns (SeacowsPairERC20 pair)
+    {
+        require(bondingCurveAllowed[params.bondingCurve], "Bonding curve not whitelisted");
+
+        // Check to see if the NFT supports Enumerable to determine which template to use
+        address template;
+        try IERC165(address(params.nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
+            template = isEnumerable ? address(enumerableERC20Template) : address(missingEnumerableERC20Template);
+        } catch {
+            template = address(missingEnumerableERC20Template);
+        }
+
+        pair = SeacowsPairERC20(
+            payable(
+                template.cloneERC20Pair(this, params.bondingCurve, params.nft, uint8(params.poolType), params.token)
+            )
+        );
+
+        emit NewPair(address(pair));
+    }
+
+    /**
+     * @dev callback from ChainlinkAggregator
+     */
+    function initializePairERC20FromOracle(
+        SeacowsPairERC20 pair,
+        IERC721 _nft,
+        ERC20 _token,
+        address payable _assetRecipient,
+        uint128 _delta,
+        uint96 _fee,
+        uint128 _spotPrice,
+        uint256[] calldata _initialNFTIDs,
+        uint256 _initialTokenBalance
+    ) external onlyChainlinkAggregator {
+        // get erc20 price from uniswap price oracle
+
+        _initializePairERC20(
+            pair,
+            _token,
+            _nft,
+            _assetRecipient,
+            _delta,
+            _fee,
+            _spotPrice,
+            _initialNFTIDs,
+            _initialTokenBalance
+        );
     }
 
     /**
