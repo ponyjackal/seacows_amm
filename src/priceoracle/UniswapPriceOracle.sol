@@ -12,11 +12,6 @@ contract UniswapPriceOracle {
     // erc20 => uniswapV2Pair, we use weth => erc20 pairs
     mapping(address => address) public uniswapV2Pairs;
 
-    /**
-     * @dev constructor
-     */
-    constructor() {}
-
     function getPrice(address token) external returns (uint256) {
         require(token != address(0), "Invalid token address");
 
