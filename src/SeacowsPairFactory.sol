@@ -328,8 +328,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      */
     function initializePairERC20FromOracle(
         SeacowsPairERC20 pair,
-        IERC721 _nft,
         ERC20 _token,
+        IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,
         uint96 _fee,
