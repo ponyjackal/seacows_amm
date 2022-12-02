@@ -95,5 +95,5 @@ interface IUniswapV2Pair {
 interface IUniswapPriceOracle {
     function ORACLE_PRECISION() external view returns (uint256);
 
-    function getPrice(address token) external returns (uint256);
+    function getPrice(address token) external returns (uint128);
 }

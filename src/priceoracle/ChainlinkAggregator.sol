@@ -13,7 +13,7 @@ import { SeacowsPairERC20 } from "../SeacowsPairERC20.sol";
 contract ChainlinkAggregator is ChainlinkClient {
     using Chainlink for Chainlink.Request;
 
-    uint256 private constant ORACLE_PRECISION = 1000000000000000000;
+    uint256 private constant ORACLE_PRECISION = 10**18;
     uint256 private constant ORACLE_PAYMENT = 1 * 10**17; // solium-disable-line zeppelin/no-arithmetic-operations
     // Do not allow the oracle to submit times any further forward into the future than this constant.
     uint256 public constant ORACLE_FUTURE_LIMIT = 10 minutes;
