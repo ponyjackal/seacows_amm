@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
-import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
+import { ChainlinkClient, Chainlink } from "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
