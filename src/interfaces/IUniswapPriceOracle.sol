@@ -92,4 +92,8 @@ interface IUniswapV2Pair {
     function initialize(address, address) external;
 }
 
-interface IUniswapPriceOracle {}
+interface IUniswapPriceOracle {
+    function ORACLE_PRECISION() external view returns (uint256);
+
+    function getPrice(address token) external returns (uint256);
+}

@@ -24,6 +24,7 @@ import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableETH } from "./SeacowsPairMissingEnumerableETH.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
 import { IChainlinkAggregator } from "./interfaces/IChainlinkAggregator.sol";
+import { IUniswapPriceOracle } from "./interfaces/IUniswapPriceOracle.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
@@ -41,7 +42,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     SeacowsPairMissingEnumerableERC20 public immutable missingEnumerableERC20Template;
     address payable public override protocolFeeRecipient;
 
+    // Price oracles
     IChainlinkAggregator public immutable chainlinkAggregator;
+    IUniswapPriceOracle public immutable uniswapPriceOracle;
 
     // Units are in base 1e18
     uint256 public override protocolFeeMultiplier;
@@ -74,7 +77,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         address payable _protocolFeeRecipient,
         uint256 _protocolFeeMultiplier,
         address _priceOracleRegistry,
-        IChainlinkAggregator _chainlinkAggregator
+        IChainlinkAggregator _chainlinkAggregator,
+        IUniswapPriceOracle _uniswapPriceOracle
     ) {
         enumerableETHTemplate = _enumerableETHTemplate;
         missingEnumerableETHTemplate = _missingEnumerableETHTemplate;
@@ -86,6 +90,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         protocolFeeMultiplier = _protocolFeeMultiplier;
         priceOracleRegistry = _priceOracleRegistry;
         chainlinkAggregator = _chainlinkAggregator;
+        uniswapPriceOracle = _uniswapPriceOracle;
     }
 
     /**
@@ -180,6 +185,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
+
+        // request floor price from chainlink
+        chainlinkAggregator.requestCryptoPrice(pair, _nft, _assetRecipient, _delta, _fee, _initialNFTIDs);
 
         emit NewPair(address(pair));
     }
