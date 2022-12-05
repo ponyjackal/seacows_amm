@@ -7,7 +7,7 @@ import { ERC20 } from "../solmate/ERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { ISeacowsPairFactoryLike } from "../ISeacowsPairFactoryLike.sol";
-import { SeacowsPairETH } from "../SeacowsPairETH.sol";
+import { ISeacowsPairETH } from "../interfaces/ISeacowsPairETH.sol";
 import { SeacowsPairERC20 } from "../SeacowsPairERC20.sol";
 
 contract ChainlinkAggregator is ChainlinkClient {
@@ -22,7 +22,7 @@ contract ChainlinkAggregator is ChainlinkClient {
     bytes32 public oracleJobId;
 
     struct ETHRequest {
-        SeacowsPairETH pair;
+        ISeacowsPairETH pair;
         IERC721 nft;
         address payable assetRecipient;
         uint128 delta;
@@ -93,7 +93,7 @@ contract ChainlinkAggregator is ChainlinkClient {
        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
      */
     function requestCryptoPriceETH(
-        SeacowsPairETH _pair,
+        ISeacowsPairETH _pair,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,
@@ -133,15 +133,15 @@ contract ChainlinkAggregator is ChainlinkClient {
         recordChainlinkFulfillment(_requestId)
     {
         ETHRequest memory request = ethRequests[_requestId];
-        factory.initializePairETHFromOracle(
-            request.pair,
-            request.nft,
-            request.assetRecipient,
-            request.delta,
-            request.fee,
-            uint128(_price),
-            request.initialNFTIDs
-        );
+        // factory.initializePairETHFromOracle(
+        //     request.pair,
+        //     request.nft,
+        //     request.assetRecipient,
+        //     request.delta,
+        //     request.fee,
+        //     uint128(_price),
+        //     request.initialNFTIDs
+        // );
         delete ethRequests[_requestId];
     }
 

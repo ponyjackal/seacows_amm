@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { SeacowsRouter } from "./SeacowsRouter.sol";
-import { SeacowsPairETH } from "./SeacowsPairETH.sol";
+import { ISeacowsPairETH } from "./interfaces/ISeacowsPairETH.sol";
 import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
 import { ERC20 } from "./solmate/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
@@ -28,7 +28,7 @@ interface ISeacowsPairFactoryLike {
     function isPair(address potentialPair, PairVariant variant) external view returns (bool);
 
     function initializePairETHFromOracle(
-        SeacowsPairETH pair,
+        ISeacowsPairETH pair,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,

@@ -15,6 +15,7 @@ import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { SeacowsPairETH } from "./SeacowsPairETH.sol";
+import { ISeacowsPairETH } from "./interfaces/ISeacowsPairETH.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
 import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
@@ -147,7 +148,15 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             pair.mintLPToken(msg.sender, _initialNFTIDs.length);
         }
 
-        _initializePairETH(pair, _nft, _assetRecipient, _delta, _fee, _spotPrice, _initialNFTIDs);
+        _initializePairETH(
+            ISeacowsPairETH(address(pair)),
+            _nft,
+            _assetRecipient,
+            _delta,
+            _fee,
+            _spotPrice,
+            _initialNFTIDs
+        );
         emit NewPair(address(pair));
     }
 
@@ -187,7 +196,14 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
 
         // request floor price from chainlink
-        chainlinkAggregator.requestCryptoPrice(pair, _nft, _assetRecipient, _delta, _fee, _initialNFTIDs);
+        chainlinkAggregator.requestCryptoPriceETH(
+            ISeacowsPairETH(address(pair)),
+            _nft,
+            _assetRecipient,
+            _delta,
+            _fee,
+            _initialNFTIDs
+        );
 
         emit NewPair(address(pair));
     }
@@ -196,7 +212,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev callback from ChainlinkAggregator
      */
     function initializePairETHFromOracle(
-        SeacowsPairETH pair,
+        ISeacowsPairETH pair,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,
@@ -482,7 +498,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      */
 
     function _initializePairETH(
-        SeacowsPairETH _pair,
+        ISeacowsPairETH _pair,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,
