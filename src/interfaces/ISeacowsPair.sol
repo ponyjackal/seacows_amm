@@ -5,8 +5,16 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { SeacowsRouter } from "../SeacowsRouter.sol";
+import { ISeacowsPairFactoryLike } from "../ISeacowsPairFactoryLike.sol";
+import { ICurve } from "../bondingcurve/ICurve.sol";
 
 interface ISeacowsPair {
+    enum PoolType {
+        TOKEN,
+        NFT,
+        TRADE
+    }
+
     function initialize(
         address _owner,
         address payable _assetRecipient,
@@ -49,15 +57,15 @@ interface ISeacowsPair {
 
     function pairVariant() external;
 
-    function factory() external;
+    function factory() external pure returns (ISeacowsPairFactoryLike _factory);
 
-    function bondingCurve() external;
+    function bondingCurve() external pure returns (ICurve _bondingCurve);
 
-    function nft() external;
+    function nft() external pure returns (IERC721 _nft);
 
-    function poolType() external;
+    function poolType() external pure returns (PoolType _poolType);
 
-    function getAssetRecipient() external;
+    function getAssetRecipient() external view returns (address payable _assetRecipient);
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;
 

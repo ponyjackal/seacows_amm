@@ -18,6 +18,7 @@ import { SeacowsPairETH } from "./SeacowsPairETH.sol";
 import { ISeacowsPairETH } from "./interfaces/ISeacowsPairETH.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
+import { ISeacowsPairERC20 } from "./interfaces/ISeacowsPairERC20.sol";
 import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 import { SeacowsPairEnumerableETH } from "./SeacowsPairEnumerableETH.sol";
@@ -275,7 +276,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         _initializePairERC20(
-            pair,
+            ISeacowsPairERC20(address(pair)),
             params.token,
             params.nft,
             params.assetRecipient,
@@ -336,6 +337,18 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             )
         );
 
+        // request floor price from chainlink
+        chainlinkAggregator.requestCryptoPriceERC20(
+            ISeacowsPairERC20(address(pair)),
+            params.token,
+            params.nft,
+            params.assetRecipient,
+            params.delta,
+            params.fee,
+            params.initialNFTIDs,
+            params.initialTokenBalance
+        );
+
         emit NewPair(address(pair));
     }
 
@@ -343,7 +356,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev callback from ChainlinkAggregator
      */
     function initializePairERC20FromOracle(
-        SeacowsPairERC20 pair,
+        ISeacowsPairERC20 pair,
         ERC20 _token,
         IERC721 _nft,
         address payable _assetRecipient,
@@ -524,7 +537,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     function _initializePairERC20(
-        SeacowsPairERC20 _pair,
+        ISeacowsPairERC20 _pair,
         ERC20 _token,
         IERC721 _nft,
         address payable _assetRecipient,

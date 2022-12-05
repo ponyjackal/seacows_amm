@@ -8,7 +8,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { ISeacowsPairFactoryLike } from "../ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairETH } from "../interfaces/ISeacowsPairETH.sol";
-import { SeacowsPairERC20 } from "../SeacowsPairERC20.sol";
+import { ISeacowsPairERC20 } from "../interfaces/ISeacowsPairERC20.sol";
 
 contract ChainlinkAggregator is ChainlinkClient {
     using Chainlink for Chainlink.Request;
@@ -32,7 +32,7 @@ contract ChainlinkAggregator is ChainlinkClient {
     }
 
     struct ERC20Request {
-        SeacowsPairERC20 pair;
+        ISeacowsPairERC20 pair;
         ERC20 token;
         IERC721 nft;
         address payable assetRecipient;
@@ -158,7 +158,7 @@ contract ChainlinkAggregator is ChainlinkClient {
        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
      */
     function requestCryptoPriceERC20(
-        SeacowsPairERC20 _pair,
+        ISeacowsPairERC20 _pair,
         ERC20 _token,
         IERC721 _nft,
         address payable _assetRecipient,
