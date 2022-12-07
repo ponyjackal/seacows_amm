@@ -129,4 +129,14 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
             emit TokenWithdrawal(amount);
         }
     }
+
+    /**
+     * @notice get reserves in the pool, only available for trade pair
+     */
+    function getReserve() public view virtual override onlyTrade returns (uint256 nftReserve, uint256 tokenReserve) {
+        // nft balance
+        nftReserve = nft().balanceOf(address(this));
+        // token balance
+        tokenReserve = token().balanceOf(address(this));
+    }
 }
