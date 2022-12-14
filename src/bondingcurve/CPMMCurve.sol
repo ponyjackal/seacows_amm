@@ -9,7 +9,7 @@ import { FixedPointMathLib } from "./FixedPointMathLib.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
     Bonding curve logic for a CPMM curve, where each buy/sell changes spot price by adding/substracting delta
 */
-contract CPMMCurve is ICurve, CurveErrorCodes {
+abstract contract CPMMCurve is ICurve, CurveErrorCodes {
     using FixedPointMathLib for uint256;
 
     /**
@@ -31,21 +31,22 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getBuyInfo}
      */
-    function getBuyInfo(
+    function getCPMMBuyInfo(
         uint128 spotPrice,
-        uint128 delta, // we dont need this delta in CPMM
         uint256 numItems,
         uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier
+        uint256 protocolFeeMultiplier,
+        uint256 nftReserve,
+        uint256 tokenReserve
     )
         external
         pure
         override
-        returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee)
+        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 inputValue, uint256 protocolFee)
     {
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
-            return (Error.INVALID_NUMITEMS, 0, 0, 0, 0);
+            return (Error.INVALID_NUMITEMS, 0, 0, 0);
         }
 
         // If we buy n items, then the total cost is equal to:
@@ -61,11 +62,8 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
         // Add the protocol fee to the required input amount
         inputValue += protocolFee;
 
-        // Keep delta the same, we don't use delta in CPMM
-        newDelta = delta;
-
         // For a CPMM curve, the spot price is updated based on x * y = k
-        newSpotPrice = spotPrice;
+        newSpotPrice = uint128((tokenReserve + inputValue) / (nftReserve - numItems));
 
         // If we got all the way here, no math error happened
         error = Error.OK;
@@ -74,21 +72,17 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getSellInfo}
      */
-    function getSellInfo(
+    function getCPMMSellInfo(
         uint128 spotPrice,
-        uint128 delta, // we don't use delta in CPMM
         uint256 numItems,
         uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier
-    )
-        external
-        pure
-        override
-        returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee)
-    {
+        uint256 protocolFeeMultiplier,
+        uint256 nftReserve,
+        uint256 tokenReserve
+    ) external pure override returns (Error error, uint128 newSpotPrice, uint256 outputValue, uint256 protocolFee) {
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {
-            return (Error.INVALID_NUMITEMS, 0, 0, 0, 0);
+            return (Error.INVALID_NUMITEMS, 0, 0, 0);
         }
 
         // If we sell n items, then the total sale amount is:
@@ -104,11 +98,8 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
         // Subtract the protocol fee from the output amount to the seller
         outputValue -= protocolFee;
 
-        // Keep delta the same, we don't use delta in CPMM
-        newDelta = delta;
-
         // For a CPMM curve, the spot price is updated based on x * y = k
-        newSpotPrice = spotPrice;
+        newSpotPrice = uint128((tokenReserve - outputValue) / (nftReserve + numItems));
 
         // If we reached here, no math errors
         error = Error.OK;

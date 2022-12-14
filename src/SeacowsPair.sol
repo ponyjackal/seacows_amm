@@ -454,11 +454,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     }
 
     /**
-     * @notice get reserves in the pool, only available for trade pair
-     */
-    function getReserve() public view virtual returns (uint256 nftReserve, uint256 tokenReserve);
-
-    /**
      * Internal functions
      */
 
@@ -478,7 +473,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint256 maxExpectedTokenInput,
         ICurve _bondingCurve,
         ISeacowsPairFactoryLike _factory
-    ) internal returns (uint256 protocolFee, uint256 inputAmount) {
+    ) internal virtual returns (uint256 protocolFee, uint256 inputAmount) {
         CurveErrorCodes.Error error;
         // Save on 2 SLOADs by caching
         uint128 currentSpotPrice = spotPrice;
@@ -537,7 +532,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint256 minExpectedTokenOutput,
         ICurve _bondingCurve,
         ISeacowsPairFactoryLike _factory
-    ) internal returns (uint256 protocolFee, uint256 outputAmount) {
+    ) internal virtual returns (uint256 protocolFee, uint256 outputAmount) {
         CurveErrorCodes.Error error;
         // Save on 2 SLOADs by caching
         uint128 currentSpotPrice = spotPrice;
