@@ -10,6 +10,8 @@ import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
 contract SeacowsPairEnumerableERC20 is SeacowsPairEnumerable, SeacowsPairERC20 {
+    constructor(string memory _uri) SeacowsPairEnumerable(_uri) {}
+
     /**
         @notice Returns the SeacowsPair type
      */

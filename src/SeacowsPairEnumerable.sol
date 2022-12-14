@@ -12,6 +12,8 @@ import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
 abstract contract SeacowsPairEnumerable is SeacowsPair {
+    constructor(string memory _uri) SeacowsPair(_uri) {}
+
     /// @inheritdoc SeacowsPair
     function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal override {
         // Send NFTs to recipient

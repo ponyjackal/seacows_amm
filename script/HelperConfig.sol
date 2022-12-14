@@ -5,6 +5,7 @@ contract HelperConfig {
     NetworkConfig public activeNetworkConfig;
 
     struct NetworkConfig {
+        string lpUri;
         address seacowsPairEnumerableETH;
         address seacowsPairMissingEnumerableETH;
         address seacowsPairEnumerableERC20;
@@ -26,6 +27,7 @@ contract HelperConfig {
 
     function getGoerliEthConfig() internal pure returns (NetworkConfig memory goerliNetworkConfig) {
         goerliNetworkConfig = NetworkConfig({
+            lpUri: "",
             seacowsPairEnumerableETH: address(0),
             seacowsPairMissingEnumerableETH: address(0),
             seacowsPairEnumerableERC20: address(0),
@@ -39,6 +41,7 @@ contract HelperConfig {
 
     function getAnvilEthConfig() internal pure returns (NetworkConfig memory anvilNetworkConfig) {
         anvilNetworkConfig = NetworkConfig({
+            lpUri: "",
             seacowsPairEnumerableETH: address(0),
             seacowsPairMissingEnumerableETH: address(0),
             seacowsPairEnumerableERC20: address(0),

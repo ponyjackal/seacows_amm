@@ -124,6 +124,11 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
 
+        // mint LP tokens if trade pair
+        if (_poolType == SeacowsPair.PoolType.TRADE) {
+            pair.mintLPToken(msg.sender, _initialNFTIDs.length);
+        }
+
         _initializePairETH(pair, _nft, _assetRecipient, _delta, _fee, _spotPrice, _initialNFTIDs);
         emit NewPair(address(pair));
     }
@@ -173,6 +178,11 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                 template.cloneERC20Pair(this, params.bondingCurve, params.nft, uint8(params.poolType), params.token)
             )
         );
+
+        // mint LP tokens if trade pair
+        if (params.poolType == SeacowsPair.PoolType.TRADE) {
+            pair.mintLPToken(msg.sender, params.initialNFTIDs.length);
+        }
 
         _initializePairERC20(
             pair,
@@ -403,6 +413,120 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         ) {
             if (token == SeacowsPairERC20(recipient).token()) {
                 emit TokenDeposit(recipient);
+            }
+        }
+    }
+
+    /** Liquidity functions */
+
+    /**
+     * @dev add ERC20 liquidity into trading pair
+     * @param _nftIDs NFT ids
+     * @param _amount ERC20 token amount
+     */
+    function addLiquidityERC20(SeacowsPairERC20 _pair, uint256[] calldata _nftIDs, uint256 _amount) external {
+        uint256 numNFTs = _nftIDs.length;
+
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(numNFTs > 0, "Invalid NFT amount");
+        require(numNFTs * _pair.spotPrice() <= _amount, "Insufficient token amount");
+
+        // transfer tokens to pair
+        _pair.token().safeTransferFrom(msg.sender, address(_pair), _amount);
+
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        // mint LP tokens
+        _pair.mintLPToken(msg.sender, numNFTs);
+    }
+
+    /**
+     * @dev add ETH liquidity into trading pair
+     * @param _nftIDs NFT ids
+     */
+    function addLiquidityETH(SeacowsPairETH _pair, uint256[] calldata _nftIDs) external payable {
+        uint256 numNFTs = _nftIDs.length;
+
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(numNFTs > 0, "Invalid NFT amount");
+        require(numNFTs * _pair.spotPrice() <= msg.value, "Insufficient token amount");
+
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        // transfer eth to the pair
+        payable(_pair).safeTransferETH(msg.value);
+
+        // mint LP tokens
+        _pair.mintLPToken(msg.sender, numNFTs);
+    }
+
+    /**
+     * @dev remove ERC20 liquidity from trading pair
+     * @param _amount lp token amount to remove
+     * @param _nftIDs NFT ids to withdraw
+     */
+    function removeLiquidityERC20(SeacowsPairERC20 _pair, uint256 _amount, uint256[] calldata _nftIDs) external {
+        uint256 numNFTs = _nftIDs.length;
+
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(_amount > 0, "Invalid amount");
+        require(_amount == numNFTs, "Invalid NFT amount");
+
+        // burn LP token; we check if the user has engouh LP token in the function below
+        _pair.burnLPToken(msg.sender, _amount);
+
+        // transfer tokens to the user
+        uint256 tokenAmount = _amount * _pair.spotPrice();
+        _pair.token().safeTransferFrom(address(_pair), msg.sender, tokenAmount);
+
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @dev remove ETH liquidity from trading pair
+     * @param _amount lp token amount to remove
+     * @param _nftIDs NFT ids to withdraw
+     */
+    function removeLiquidityETH(SeacowsPairETH _pair, uint256 _amount, uint256[] calldata _nftIDs) external {
+        uint256 numNFTs = _nftIDs.length;
+
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(_amount > 0, "Invalid amount");
+        require(_amount == numNFTs, "Invalid NFT amount");
+
+        // burn LP token; we check if the user has engouh LP token in the function below
+        _pair.burnLPToken(msg.sender, _amount);
+
+        uint256 ethAmount = _amount * _pair.spotPrice();
+        _pair.removeLPETH(msg.sender, ethAmount);
+
+        // transfer NFTs from sender to pair
+        for (uint256 i; i < numNFTs; ) {
+            _pair.nft().safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
+
+            unchecked {
+                ++i;
             }
         }
     }
