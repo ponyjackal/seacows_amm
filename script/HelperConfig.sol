@@ -6,14 +6,9 @@ contract HelperConfig {
 
     struct NetworkConfig {
         string lpUri;
-        address seacowsPairEnumerableETH;
-        address seacowsPairMissingEnumerableETH;
-        address seacowsPairEnumerableERC20;
-        address seacowsPairMissingEnumerableERC20;
         address payable protocolFeeRecipient;
-        uint256 protocol_feemultiplier;
-        address seacowscollectionRegistry;
-        address seacowsPairFactory;
+        uint256 protocolFeeMultiplier;
+        address seacowsCollectionRegistry;
     }
 
     mapping(uint256 => NetworkConfig) public chainIdToNetworkConfig;
@@ -28,28 +23,18 @@ contract HelperConfig {
     function getGoerliEthConfig() internal pure returns (NetworkConfig memory goerliNetworkConfig) {
         goerliNetworkConfig = NetworkConfig({
             lpUri: "",
-            seacowsPairEnumerableETH: address(0),
-            seacowsPairMissingEnumerableETH: address(0),
-            seacowsPairEnumerableERC20: address(0),
-            seacowsPairMissingEnumerableERC20: address(0),
             protocolFeeRecipient: payable(address(0)),
-            protocol_feemultiplier: 5000000000000000,
-            seacowscollectionRegistry: address(0),
-            seacowsPairFactory: address(0)
+            protocolFeeMultiplier: 5000000000000000,
+            seacowsCollectionRegistry: address(0)
         });
     }
 
     function getAnvilEthConfig() internal pure returns (NetworkConfig memory anvilNetworkConfig) {
         anvilNetworkConfig = NetworkConfig({
             lpUri: "",
-            seacowsPairEnumerableETH: address(0),
-            seacowsPairMissingEnumerableETH: address(0),
-            seacowsPairEnumerableERC20: address(0),
-            seacowsPairMissingEnumerableERC20: address(0),
             protocolFeeRecipient: payable(address(0)),
-            protocol_feemultiplier: 5000000000000000,
-            seacowscollectionRegistry: address(0),
-            seacowsPairFactory: address(0)
+            protocolFeeMultiplier: 5000000000000000,
+            seacowsCollectionRegistry: address(0)
         });
     }
 }
