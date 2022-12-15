@@ -6,7 +6,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { ISeacowsPairFactoryLike } from "../ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairETH } from "../interfaces/ISeacowsPairETH.sol";
 import { ISeacowsPairERC20 } from "../interfaces/ISeacowsPairERC20.sol";
 

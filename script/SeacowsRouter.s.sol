@@ -4,7 +4,7 @@ pragma solidity >=0.8.4;
 import { Script } from "forge-std/Script.sol";
 import { HelperConfig } from "./HelperConfig.sol";
 import { SeacowsRouter } from "../src/SeacowsRouter.sol";
-import { ISeacowsPairFactoryLike } from "../src/ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "../src/interfaces/ISeacowsPairFactoryLike.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract DeploySeacowsRouter is Script {

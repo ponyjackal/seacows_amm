@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { SeacowsPairETH } from "./SeacowsPairETH.sol";
 import { SeacowsPairEnumerable } from "./SeacowsPairEnumerable.sol";
-import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";

@@ -8,7 +8,7 @@ import { OwnableWithTransferCallback } from "./lib/OwnableWithTransferCallback.s
 import { ReentrancyGuard } from "./lib/ReentrancyGuard.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
-import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
