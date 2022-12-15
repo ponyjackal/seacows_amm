@@ -15,14 +15,18 @@ import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { SeacowsPairETH } from "./SeacowsPairETH.sol";
+import { ISeacowsPairETH } from "./interfaces/ISeacowsPairETH.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
+import { ISeacowsPairERC20 } from "./interfaces/ISeacowsPairERC20.sol";
 import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 import { SeacowsPairEnumerableETH } from "./SeacowsPairEnumerableETH.sol";
 import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableETH } from "./SeacowsPairMissingEnumerableETH.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
+import { IChainlinkAggregator } from "./interfaces/IChainlinkAggregator.sol";
+import { IUniswapPriceOracle } from "./interfaces/IUniswapPriceOracle.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
@@ -39,6 +43,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     SeacowsPairEnumerableERC20 public immutable enumerableERC20Template;
     SeacowsPairMissingEnumerableERC20 public immutable missingEnumerableERC20Template;
     address payable public override protocolFeeRecipient;
+
+    // Price oracles
+    IChainlinkAggregator public immutable chainlinkAggregator;
+    IUniswapPriceOracle public immutable uniswapPriceOracle;
 
     // Units are in base 1e18
     uint256 public override protocolFeeMultiplier;
@@ -70,7 +78,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         SeacowsPairMissingEnumerableERC20 _missingEnumerableERC20Template,
         address payable _protocolFeeRecipient,
         uint256 _protocolFeeMultiplier,
-        address _priceOracleRegistry
+        address _priceOracleRegistry,
+        IChainlinkAggregator _chainlinkAggregator,
+        IUniswapPriceOracle _uniswapPriceOracle
     ) {
         enumerableETHTemplate = _enumerableETHTemplate;
         missingEnumerableETHTemplate = _missingEnumerableETHTemplate;
@@ -81,6 +91,16 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(_protocolFeeMultiplier <= MAX_PROTOCOL_FEE, "Fee too large");
         protocolFeeMultiplier = _protocolFeeMultiplier;
         priceOracleRegistry = _priceOracleRegistry;
+        chainlinkAggregator = _chainlinkAggregator;
+        uniswapPriceOracle = _uniswapPriceOracle;
+    }
+
+    /**
+     * Modifiers
+     */
+    modifier onlyChainlinkAggregator() {
+        require(msg.sender == address(chainlinkAggregator), "Not a chainlink aggregator");
+        _;
     }
 
     /**
@@ -129,8 +149,79 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             pair.mintLPToken(msg.sender, _initialNFTIDs.length);
         }
 
-        _initializePairETH(pair, _nft, _assetRecipient, _delta, _fee, _spotPrice, _initialNFTIDs);
+        _initializePairETH(
+            ISeacowsPairETH(address(pair)),
+            _nft,
+            _assetRecipient,
+            _delta,
+            _fee,
+            _spotPrice,
+            _initialNFTIDs
+        );
         emit NewPair(address(pair));
+    }
+
+    /**
+        @notice Creates a pair contract using price oracle
+        @param _nft The NFT contract of the collection the pair trades
+        @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
+        @param _assetRecipient The address that will receive the assets traders give during trades.
+                              If set to address(0), assets will be sent to the pool address.
+                              Not available to TRADE pools. 
+        @param _poolType TOKEN, NFT, or TRADE
+        @param _delta The delta value used by the bonding curve. The meaning of delta depends
+        on the specific curve.
+        @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
+        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
+        @return pair The new pair
+     */
+    function createPairETHWithPriceOracle(
+        IERC721 _nft,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        SeacowsPair.PoolType _poolType,
+        uint128 _delta,
+        uint96 _fee,
+        uint256[] calldata _initialNFTIDs
+    ) external payable returns (SeacowsPairETH pair) {
+        require(bondingCurveAllowed[_bondingCurve], "Bonding curve not whitelisted");
+
+        // Check to see if the NFT supports Enumerable to determine which template to use
+        address template;
+        try IERC165(address(_nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
+            template = isEnumerable ? address(enumerableETHTemplate) : address(missingEnumerableETHTemplate);
+        } catch {
+            template = address(missingEnumerableETHTemplate);
+        }
+
+        pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
+
+        // request floor price from chainlink
+        chainlinkAggregator.requestCryptoPriceETH(
+            ISeacowsPairETH(address(pair)),
+            _nft,
+            _assetRecipient,
+            _delta,
+            _fee,
+            _initialNFTIDs
+        );
+
+        emit NewPair(address(pair));
+    }
+
+    /**
+     * @dev callback from ChainlinkAggregator
+     */
+    function initializePairETHFromOracle(
+        ISeacowsPairETH pair,
+        IERC721 _nft,
+        address payable _assetRecipient,
+        uint128 _delta,
+        uint96 _fee,
+        uint128 _spotPrice,
+        uint256[] calldata _initialNFTIDs
+    ) external onlyChainlinkAggregator {
+        _initializePairETH(pair, _nft, _assetRecipient, _delta, _fee, _spotPrice, _initialNFTIDs);
     }
 
     /**
@@ -185,7 +276,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         _initializePairERC20(
-            pair,
+            ISeacowsPairERC20(address(pair)),
             params.token,
             params.nft,
             params.assetRecipient,
@@ -196,6 +287,99 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             params.initialTokenBalance
         );
         emit NewPair(address(pair));
+    }
+
+    /**
+        @notice Creates a pair contract using EIP-1167.
+        @param _nft The NFT contract of the collection the pair trades
+        @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
+        @param _assetRecipient The address that will receive the assets traders give during trades.
+                                If set to address(0), assets will be sent to the pool address.
+                                Not available to TRADE pools.
+        @param _poolType TOKEN, NFT, or TRADE
+        @param _delta The delta value used by the bonding curve. The meaning of delta depends
+        on the specific curve.
+        @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
+        @param _spotPrice The initial selling spot price, in ETH
+        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
+        @param _initialTokenBalance The initial token balance sent from the sender to the new pair
+        @return pair The new pair
+     */
+    struct CreateERC20PairParamsWithPriceOracle {
+        ERC20 token;
+        IERC721 nft;
+        ICurve bondingCurve;
+        address payable assetRecipient;
+        SeacowsPair.PoolType poolType;
+        uint128 delta;
+        uint96 fee;
+        uint256[] initialNFTIDs;
+        uint256 initialTokenBalance;
+    }
+
+    function createPairERC20WithPriceOracle(CreateERC20PairParamsWithPriceOracle calldata params)
+        external
+        returns (SeacowsPairERC20 pair)
+    {
+        require(bondingCurveAllowed[params.bondingCurve], "Bonding curve not whitelisted");
+
+        // Check to see if the NFT supports Enumerable to determine which template to use
+        address template;
+        try IERC165(address(params.nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
+            template = isEnumerable ? address(enumerableERC20Template) : address(missingEnumerableERC20Template);
+        } catch {
+            template = address(missingEnumerableERC20Template);
+        }
+
+        pair = SeacowsPairERC20(
+            payable(
+                template.cloneERC20Pair(this, params.bondingCurve, params.nft, uint8(params.poolType), params.token)
+            )
+        );
+
+        // request floor price from chainlink
+        chainlinkAggregator.requestCryptoPriceERC20(
+            ISeacowsPairERC20(address(pair)),
+            params.token,
+            params.nft,
+            params.assetRecipient,
+            params.delta,
+            params.fee,
+            params.initialNFTIDs,
+            params.initialTokenBalance
+        );
+
+        emit NewPair(address(pair));
+    }
+
+    /**
+     * @dev callback from ChainlinkAggregator
+     */
+    function initializePairERC20FromOracle(
+        ISeacowsPairERC20 pair,
+        ERC20 _token,
+        IERC721 _nft,
+        address payable _assetRecipient,
+        uint128 _delta,
+        uint96 _fee,
+        uint128 _spotPrice,
+        uint256[] calldata _initialNFTIDs,
+        uint256 _initialTokenBalance
+    ) external onlyChainlinkAggregator {
+        // get erc20 price in eth from uniswap price oracle
+        uint128 tokenPrice = (uniswapPriceOracle.getPrice(address(_token)) * _spotPrice) / 10**18;
+
+        _initializePairERC20(
+            pair,
+            _token,
+            _nft,
+            _assetRecipient,
+            _delta,
+            _fee,
+            tokenPrice,
+            _initialNFTIDs,
+            _initialTokenBalance
+        );
     }
 
     /**
@@ -327,7 +511,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      */
 
     function _initializePairETH(
-        SeacowsPairETH _pair,
+        ISeacowsPairETH _pair,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,
@@ -353,7 +537,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     function _initializePairERC20(
-        SeacowsPairERC20 _pair,
+        ISeacowsPairERC20 _pair,
         ERC20 _token,
         IERC721 _nft,
         address payable _assetRecipient,
