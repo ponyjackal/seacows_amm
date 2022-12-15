@@ -15,18 +15,19 @@ import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { SeacowsPairETH } from "./SeacowsPairETH.sol";
-import { ISeacowsPairETH } from "./interfaces/ISeacowsPairETH.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
-import { ISeacowsPairERC20 } from "./interfaces/ISeacowsPairERC20.sol";
 import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
-import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsPairEnumerableETH } from "./SeacowsPairEnumerableETH.sol";
 import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableETH } from "./SeacowsPairMissingEnumerableETH.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
-import { IChainlinkAggregator } from "./interfaces/IChainlinkAggregator.sol";
-import { IUniswapPriceOracle } from "./interfaces/IUniswapPriceOracle.sol";
+import { ChainlinkAggregator } from "./priceoracle/ChainlinkAggregator.sol";
+import { UniswapPriceOracle } from "./priceoracle/UniswapPriceOracle.sol";
+
+import { ISeacowsPairETH } from "./interfaces/ISeacowsPairETH.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairERC20 } from "./interfaces/ISeacowsPairERC20.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
@@ -45,8 +46,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     address payable public override protocolFeeRecipient;
 
     // Price oracles
-    IChainlinkAggregator public immutable chainlinkAggregator;
-    IUniswapPriceOracle public immutable uniswapPriceOracle;
+    ChainlinkAggregator public immutable chainlinkAggregator;
+    UniswapPriceOracle public immutable uniswapPriceOracle;
 
     // Units are in base 1e18
     uint256 public override protocolFeeMultiplier;
@@ -79,8 +80,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         address payable _protocolFeeRecipient,
         uint256 _protocolFeeMultiplier,
         address _priceOracleRegistry,
-        IChainlinkAggregator _chainlinkAggregator,
-        IUniswapPriceOracle _uniswapPriceOracle
+        ChainlinkAggregator _chainlinkAggregator,
+        UniswapPriceOracle _uniswapPriceOracle
     ) {
         enumerableETHTemplate = _enumerableETHTemplate;
         missingEnumerableETHTemplate = _missingEnumerableETHTemplate;

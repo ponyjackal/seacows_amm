@@ -9,6 +9,9 @@ contract HelperConfig {
         address payable protocolFeeRecipient;
         uint256 protocolFeeMultiplier;
         address seacowsCollectionRegistry;
+        address chainlinkToken;
+        address chainlinkOracle;
+        string chainlinkJobId;
     }
 
     mapping(uint256 => NetworkConfig) public chainIdToNetworkConfig;
@@ -25,7 +28,10 @@ contract HelperConfig {
             lpUri: "",
             protocolFeeRecipient: payable(address(0)),
             protocolFeeMultiplier: 5000000000000000,
-            seacowsCollectionRegistry: address(0)
+            seacowsCollectionRegistry: address(0),
+            chainlinkToken: address(0),
+            chainlinkOracle: address(0),
+            chainlinkJobId: ""
         });
     }
 
@@ -34,7 +40,10 @@ contract HelperConfig {
             lpUri: "",
             protocolFeeRecipient: payable(address(0)),
             protocolFeeMultiplier: 5000000000000000,
-            seacowsCollectionRegistry: address(0)
+            seacowsCollectionRegistry: address(0),
+            chainlinkToken: address(0),
+            chainlinkOracle: address(0),
+            chainlinkJobId: ""
         });
     }
 }
