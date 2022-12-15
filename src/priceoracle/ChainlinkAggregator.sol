@@ -82,7 +82,7 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
     }
 
     /** SETTER FUNCTIONS */
-    function updateSeacowsPairFactory(ISeacowsPairFactoryLike _factory) onlyOwner {
+    function updateSeacowsPairFactory(ISeacowsPairFactoryLike _factory) external onlyOwner {
         require(address(_factory) != address(0), "Invalid SeacowsPairFactory address");
         factory = _factory;
     }
