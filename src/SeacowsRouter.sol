@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { ERC20 } from "./solmate/ERC20.sol";
-import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";

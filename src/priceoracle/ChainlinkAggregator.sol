@@ -3,7 +3,7 @@ pragma solidity >=0.8.0;
 
 import { ChainlinkClient, Chainlink } from "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { ERC20 } from "../solmate/ERC20.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { ISeacowsPairFactoryLike } from "../ISeacowsPairFactoryLike.sol";

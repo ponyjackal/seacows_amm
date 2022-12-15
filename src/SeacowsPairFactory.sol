@@ -9,8 +9,8 @@ import { IERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensio
 
 // @dev Solmate's ERC20 is used instead of OZ's ERC20 so we can use safeTransferLib for cheaper safeTransfers for
 // ETH and ERC20 tokens
-import { ERC20 } from "./solmate/ERC20.sol";
-import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
