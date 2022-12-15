@@ -29,9 +29,9 @@ contract HelperConfig {
             protocolFeeRecipient: payable(address(0)),
             protocolFeeMultiplier: 5000000000000000,
             seacowsCollectionRegistry: address(0),
-            chainlinkToken: address(0),
-            chainlinkOracle: address(0),
-            chainlinkJobId: ""
+            chainlinkToken: 0x326C977E6efc84E512bB9C30f76E30c160eD06FB,
+            chainlinkOracle: 0xCC79157eb46F5624204f47AB42b3906cAA40eaB7,
+            chainlinkJobId: "ca98366cc7314957b8c012c72f05aeeb"
         });
     }
 
