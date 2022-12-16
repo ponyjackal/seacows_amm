@@ -14,7 +14,7 @@ contract SeacowsCollectionRegistry {
     event FeedCreated(address indexed collection, uint256 groupId, address feed, uint);
     event NewAdmin(address oldAdmin, address newAdmin);
 
-    constructor() public {
+    constructor() {
         admin = msg.sender;
     }
 
