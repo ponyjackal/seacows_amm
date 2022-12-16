@@ -481,38 +481,67 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
         uint128 newDelta;
-        (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
-            currentSpotPrice,
-            currentDelta,
-            nftIds.length,
-            fee,
-            _factory.protocolFeeMultiplier()
-        );
 
-        newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        uint256 numOfNFTs = nftIds.length;
 
-        // Revert if bonding curve had an error
-        if (error != CurveErrorCodes.Error.OK) {
-            revert BondingCurveError(error);
-        }
+        if (poolType() == PoolType.TRADE) {
+            // For trade pair, we only accept CPMM
+            // get reserve
+            (uint256 nftReserve, uint256 tokenReserve) = getReserve();
+            (error, newSpotPrice, inputAmount, protocolFee) = _bondingCurve.getCPMMBuyInfo(
+                currentSpotPrice,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier(),
+                nftReserve,
+                tokenReserve
+            );
 
-        // Revert if input is more than expected
-        require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
+            // Revert if bonding curve had an error
+            if (error != CurveErrorCodes.Error.OK) {
+                revert BondingCurveError(error);
+            }
 
-        // Consolidate writes to save gas
-        if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
+            // Revert if input is more than expected
+            require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
+
             spotPrice = newSpotPrice;
-            delta = newDelta;
-        }
 
-        // Emit spot price update if it has been updated
-        if (currentSpotPrice != newSpotPrice) {
             emit SpotPriceUpdate(newSpotPrice);
-        }
+        } else {
+            (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
+                currentSpotPrice,
+                currentDelta,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier()
+            );
 
-        // Emit delta update if it has been updated
-        if (currentDelta != newDelta) {
-            emit DeltaUpdate(newDelta);
+            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+
+            // Revert if bonding curve had an error
+            if (error != CurveErrorCodes.Error.OK) {
+                revert BondingCurveError(error);
+            }
+
+            // Revert if input is more than expected
+            require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
+
+            // Consolidate writes to save gas
+            if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
+                spotPrice = newSpotPrice;
+                delta = newDelta;
+            }
+
+            // Emit spot price update if it has been updated
+            if (currentSpotPrice != newSpotPrice) {
+                emit SpotPriceUpdate(newSpotPrice);
+            }
+
+            // Emit delta update if it has been updated
+            if (currentDelta != newDelta) {
+                emit DeltaUpdate(newDelta);
+            }
         }
     }
 
@@ -540,40 +569,73 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
         uint128 newDelta;
-        (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
-            currentSpotPrice,
-            currentDelta,
-            nftIds.length,
-            fee,
-            _factory.protocolFeeMultiplier()
-        );
+        uint256 numOfNFTs = nftIds.length;
 
-        newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        if (poolType() == PoolType.TRADE) {
+            // For trade pair, we only accept CPMM
+            // get reserve
+            (uint256 nftReserve, uint256 tokenReserve) = getReserve();
+            (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
+                currentSpotPrice,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier(),
+                nftReserve,
+                tokenReserve
+            );
 
-        // Revert if bonding curve had an error
-        if (error != CurveErrorCodes.Error.OK) {
-            revert BondingCurveError(error);
-        }
+            // Revert if bonding curve had an error
+            if (error != CurveErrorCodes.Error.OK) {
+                revert BondingCurveError(error);
+            }
 
-        // Revert if output is too little
-        require(outputAmount >= minExpectedTokenOutput, "Out too little tokens");
+            // Revert if output is too little
+            require(outputAmount >= minExpectedTokenOutput, "Out too little tokens");
 
-        // Consolidate writes to save gas
-        if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
             spotPrice = newSpotPrice;
-            delta = newDelta;
-        }
 
-        // Emit spot price update if it has been updated
-        if (currentSpotPrice != newSpotPrice) {
             emit SpotPriceUpdate(newSpotPrice);
-        }
+        } else {
+            (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
+                currentSpotPrice,
+                currentDelta,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier()
+            );
 
-        // Emit delta update if it has been updated
-        if (currentDelta != newDelta) {
-            emit DeltaUpdate(newDelta);
+            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+
+            // Revert if bonding curve had an error
+            if (error != CurveErrorCodes.Error.OK) {
+                revert BondingCurveError(error);
+            }
+
+            // Revert if output is too little
+            require(outputAmount >= minExpectedTokenOutput, "Out too little tokens");
+
+            // Consolidate writes to save gas
+            if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
+                spotPrice = newSpotPrice;
+                delta = newDelta;
+            }
+
+            // Emit spot price update if it has been updated
+            if (currentSpotPrice != newSpotPrice) {
+                emit SpotPriceUpdate(newSpotPrice);
+            }
+
+            // Emit delta update if it has been updated
+            if (currentDelta != newDelta) {
+                emit DeltaUpdate(newDelta);
+            }
         }
     }
+
+    /**
+     * @notice get reserves in the pool, only available for trade pair
+     */
+    function getReserve() public view virtual returns (uint256 nftReserve, uint256 tokenReserve);
 
     /**
         @notice Pulls the token input of a trade from the trader and pays the protocol fee.
