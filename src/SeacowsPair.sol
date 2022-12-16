@@ -487,7 +487,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         if (poolType() == PoolType.TRADE) {
             // For trade pair, we only accept CPMM
             // get reserve
-            (uint256 nftReserve, uint256 tokenReserve) = getReserve();
+            (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
             (error, newSpotPrice, inputAmount, protocolFee) = _bondingCurve.getCPMMBuyInfo(
                 currentSpotPrice,
                 numOfNFTs,
@@ -574,7 +574,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         if (poolType() == PoolType.TRADE) {
             // For trade pair, we only accept CPMM
             // get reserve
-            (uint256 nftReserve, uint256 tokenReserve) = getReserve();
+            (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
             (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
                 currentSpotPrice,
                 numOfNFTs,
@@ -635,7 +635,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
      * @notice get reserves in the pool, only available for trade pair
      */
-    function getReserve() public view virtual returns (uint256 nftReserve, uint256 tokenReserve);
+    function _getReserve() internal view virtual returns (uint256 nftReserve, uint256 tokenReserve);
 
     /**
         @notice Pulls the token input of a trade from the trader and pays the protocol fee.
