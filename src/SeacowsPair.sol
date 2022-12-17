@@ -480,7 +480,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint128 newSpotPrice;
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
-        uint128 newDelta;
+        uint128 newDelta = delta;
 
         uint256 numOfNFTs = nftIds.length;
 
@@ -496,18 +496,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 nftReserve,
                 tokenReserve
             );
-
-            // Revert if bonding curve had an error
-            if (error != CurveErrorCodes.Error.OK) {
-                revert BondingCurveError(error);
-            }
-
-            // Revert if input is more than expected
-            require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
-
-            spotPrice = newSpotPrice;
-
-            emit SpotPriceUpdate(newSpotPrice);
         } else {
             (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
                 currentSpotPrice,
@@ -518,30 +506,30 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             );
 
             newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        }
 
-            // Revert if bonding curve had an error
-            if (error != CurveErrorCodes.Error.OK) {
-                revert BondingCurveError(error);
-            }
+        // Revert if bonding curve had an error
+        if (error != CurveErrorCodes.Error.OK) {
+            revert BondingCurveError(error);
+        }
 
-            // Revert if input is more than expected
-            require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
+        // Revert if input is more than expected
+        require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
 
-            // Consolidate writes to save gas
-            if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
-                spotPrice = newSpotPrice;
-                delta = newDelta;
-            }
+        // Consolidate writes to save gas
+        if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
+            spotPrice = newSpotPrice;
+            delta = newDelta;
+        }
 
-            // Emit spot price update if it has been updated
-            if (currentSpotPrice != newSpotPrice) {
-                emit SpotPriceUpdate(newSpotPrice);
-            }
+        // Emit spot price update if it has been updated
+        if (currentSpotPrice != newSpotPrice) {
+            emit SpotPriceUpdate(newSpotPrice);
+        }
 
-            // Emit delta update if it has been updated
-            if (currentDelta != newDelta) {
-                emit DeltaUpdate(newDelta);
-            }
+        // Emit delta update if it has been updated
+        if (currentDelta != newDelta) {
+            emit DeltaUpdate(newDelta);
         }
     }
 
@@ -568,7 +556,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint128 newSpotPrice;
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
-        uint128 newDelta;
+        uint128 newDelta = delta;
         uint256 numOfNFTs = nftIds.length;
 
         if (poolType() == PoolType.TRADE) {
@@ -583,18 +571,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 nftReserve,
                 tokenReserve
             );
-
-            // Revert if bonding curve had an error
-            if (error != CurveErrorCodes.Error.OK) {
-                revert BondingCurveError(error);
-            }
-
-            // Revert if output is too little
-            require(outputAmount >= minExpectedTokenOutput, "Out too little tokens");
-
-            spotPrice = newSpotPrice;
-
-            emit SpotPriceUpdate(newSpotPrice);
         } else {
             (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
                 currentSpotPrice,
@@ -605,30 +581,29 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             );
 
             newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        }
+        // Revert if bonding curve had an error
+        if (error != CurveErrorCodes.Error.OK) {
+            revert BondingCurveError(error);
+        }
 
-            // Revert if bonding curve had an error
-            if (error != CurveErrorCodes.Error.OK) {
-                revert BondingCurveError(error);
-            }
+        // Revert if output is too little
+        require(outputAmount >= minExpectedTokenOutput, "Out too little tokens");
 
-            // Revert if output is too little
-            require(outputAmount >= minExpectedTokenOutput, "Out too little tokens");
+        // Consolidate writes to save gas
+        if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
+            spotPrice = newSpotPrice;
+            delta = newDelta;
+        }
 
-            // Consolidate writes to save gas
-            if (currentSpotPrice != newSpotPrice || currentDelta != newDelta) {
-                spotPrice = newSpotPrice;
-                delta = newDelta;
-            }
+        // Emit spot price update if it has been updated
+        if (currentSpotPrice != newSpotPrice) {
+            emit SpotPriceUpdate(newSpotPrice);
+        }
 
-            // Emit spot price update if it has been updated
-            if (currentSpotPrice != newSpotPrice) {
-                emit SpotPriceUpdate(newSpotPrice);
-            }
-
-            // Emit delta update if it has been updated
-            if (currentDelta != newDelta) {
-                emit DeltaUpdate(newDelta);
-            }
+        // Emit delta update if it has been updated
+        if (currentDelta != newDelta) {
+            emit DeltaUpdate(newDelta);
         }
     }
 

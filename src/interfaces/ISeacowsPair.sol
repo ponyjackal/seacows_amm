@@ -53,9 +53,9 @@ interface ISeacowsPair {
 
     function getSellNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details) external;
 
-    function getAllHeldIds() external view virtual returns (uint256[] memory);
+    function getAllHeldIds() external view returns (uint256[] memory);
 
-    function pairVariant() external pure virtual returns (ISeacowsPairFactoryLike.PairVariant);
+    function pairVariant() external pure returns (ISeacowsPairFactoryLike.PairVariant);
 
     function factory() external pure returns (ISeacowsPairFactoryLike _factory);
 

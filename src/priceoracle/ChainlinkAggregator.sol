@@ -140,15 +140,15 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
         recordChainlinkFulfillment(_requestId)
     {
         ETHRequest memory request = ethRequests[_requestId];
-        // factory.initializePairETHFromOracle(
-        //     request.pair,
-        //     request.nft,
-        //     request.assetRecipient,
-        //     request.delta,
-        //     request.fee,
-        //     uint128(_price),
-        //     request.initialNFTIDs
-        // );
+        factory.initializePairETHFromOracle(
+            request.pair,
+            request.nft,
+            request.assetRecipient,
+            request.delta,
+            request.fee,
+            uint128(_price),
+            request.initialNFTIDs
+        );
         delete ethRequests[_requestId];
     }
 
