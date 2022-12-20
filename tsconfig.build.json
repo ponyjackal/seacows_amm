@@ -11,8 +11,5 @@
     "useUnknownInCatchVariables": false,
     "declaration": true
   },
-  "include": ["./types", "./deployed", "./helpers", "./abis/**/*.json","./index.ts"],
-  "files": [
-    "./hardhat.config.ts"
-  ]
+  "include": ["./types", "./deployed", "./helpers", "./abis/**/*.json","./index.ts"]
 }
