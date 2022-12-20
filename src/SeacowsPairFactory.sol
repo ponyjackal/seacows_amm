@@ -220,7 +220,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint96 _fee,
         uint128 _spotPrice,
         uint256[] calldata _initialNFTIDs
-    ) external onlyChainlinkAggregator {
+    ) external override onlyChainlinkAggregator {
         _initializePairETH(pair, _nft, _assetRecipient, _delta, _fee, _spotPrice, _initialNFTIDs);
     }
 
@@ -365,7 +365,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint128 _spotPrice,
         uint256[] calldata _initialNFTIDs,
         uint256 _initialTokenBalance
-    ) external onlyChainlinkAggregator {
+    ) external override onlyChainlinkAggregator {
         // get erc20 price in eth from uniswap price oracle
         uint128 tokenPrice = (uniswapPriceOracle.getPrice(address(_token)) * _spotPrice) / 10**18;
 

@@ -7,7 +7,5 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 interface ISeacowsPairETH is ISeacowsPair {
     function withdrawAllETH() external;
 
-    function withdrawERC20(ERC20 a, uint256 amount) external;
-
     function withdrawETH(uint256 amount) external;
 }

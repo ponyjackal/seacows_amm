@@ -4,19 +4,19 @@ pragma solidity ^0.8.0;
 import "./AggregatorV2V3Interface.sol";
 
 contract SeacowsGroupFeed is AggregatorV2V3Interface {
-    uint256 public constant version = 0;
+    uint256 public constant override version = 0;
 
-    uint8 public decimals;
-    int256 public latestAnswer;
-    uint256 public latestTimestamp;
-    uint256 public latestRound;
+    uint8 public override decimals;
+    int256 public override latestAnswer;
+    uint256 public override latestTimestamp;
+    uint256 public override latestRound;
 
     address public registry;
     address public collection;
     uint256 public groupId;
 
-    mapping(uint256 => int256) public getAnswer;
-    mapping(uint256 => uint256) public getTimestamp;
+    mapping(uint256 => int256) public override getAnswer;
+    mapping(uint256 => uint256) public override getTimestamp;
     mapping(uint256 => uint256) private getStartedAt;
 
     constructor() public {
@@ -53,6 +53,7 @@ contract SeacowsGroupFeed is AggregatorV2V3Interface {
     function getRoundData(uint80 _roundId)
         external
         view
+        override
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         return (_roundId, getAnswer[_roundId], getStartedAt[_roundId], getTimestamp[_roundId], _roundId);
@@ -61,6 +62,7 @@ contract SeacowsGroupFeed is AggregatorV2V3Interface {
     function latestRoundData()
         external
         view
+        override
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         return (
@@ -72,7 +74,7 @@ contract SeacowsGroupFeed is AggregatorV2V3Interface {
         );
     }
 
-    function description() external view returns (string memory) {
+    function description() external view override returns (string memory) {
         return "v0.0.1/GroupFeed.sol";
     }
 
