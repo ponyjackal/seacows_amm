@@ -1,7 +1,7 @@
 {
   "name": "@yolominds/seacows-amm-foundry",
   "description": "",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": {
     "name": "PonyJackal",
     "url": "https://github.com/PonyJackal"
@@ -65,5 +65,7 @@
     "prettier": "prettier --config \"./.prettierrc.yml\" --write \"**/*.{json,md,sol,yml}\"",
     "prettier:check": "prettier --config \"./.prettierrc.yml\" --check \"**/*.{json,md,sol,yml}\""
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }
