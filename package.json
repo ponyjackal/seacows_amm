@@ -52,7 +52,6 @@
     "template"
   ],
   "packageManager": "yarn@3.2.4",
-  "private": true,
   "resolutions": {
     "solhint/@solidity-parser/parser": "^0.14.5"
   },
@@ -60,6 +59,7 @@
     "build": "tsc -p ./tsconfig.build.json && copyfiles -u 1 types/**/*.d.ts dist/types",
     "clean": "rimraf cache out",
     "compile": "hardhat compile",
+    "release": "npx standard-version --message 'chore(release): %s\n\n[skip ci]' --no-verify",
     "lint": "yarn lint:sol && yarn prettier:check",
     "lint:sol": "solhint \"{src,test}/**/*.sol\"",
     "postinstall": "husky install",
