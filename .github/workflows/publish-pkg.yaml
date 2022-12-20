@@ -54,9 +54,9 @@ jobs:
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Push updated version to master
+    - name: Push updated version to main
       uses: ad-m/github-push-action@master
       with:
-        branch: master
+        branch: main
         tags: true
         github_token: ${{ steps.seacows-bot.outputs.token }}
