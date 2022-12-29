@@ -3,14 +3,15 @@ pragma solidity >=0.8.0;
 
 import { ChainlinkClient, Chainlink } from "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { ERC20 } from "../solmate/ERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
 
-import { ISeacowsPairFactoryLike } from "../ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairETH } from "../interfaces/ISeacowsPairETH.sol";
 import { ISeacowsPairERC20 } from "../interfaces/ISeacowsPairERC20.sol";
 
-contract ChainlinkAggregator is ChainlinkClient {
+contract ChainlinkAggregator is ChainlinkClient, Ownable {
     using Chainlink for Chainlink.Request;
 
     uint256 private constant ORACLE_PRECISION = 10**18;
@@ -80,6 +81,12 @@ contract ChainlinkAggregator is ChainlinkClient {
         _;
     }
 
+    /** SETTER FUNCTIONS */
+    function updateSeacowsPairFactory(ISeacowsPairFactoryLike _factory) external onlyOwner {
+        require(address(_factory) != address(0), "Invalid SeacowsPairFactory address");
+        factory = _factory;
+    }
+
     /**
      * @notice Initiatiate a price request via chainlink for eth pair. 
        @param _pair The NFT contract of the collection the pair trades
@@ -133,15 +140,15 @@ contract ChainlinkAggregator is ChainlinkClient {
         recordChainlinkFulfillment(_requestId)
     {
         ETHRequest memory request = ethRequests[_requestId];
-        // factory.initializePairETHFromOracle(
-        //     request.pair,
-        //     request.nft,
-        //     request.assetRecipient,
-        //     request.delta,
-        //     request.fee,
-        //     uint128(_price),
-        //     request.initialNFTIDs
-        // );
+        factory.initializePairETHFromOracle(
+            request.pair,
+            request.nft,
+            request.assetRecipient,
+            request.delta,
+            request.fee,
+            uint128(_price),
+            request.initialNFTIDs
+        );
         delete ethRequests[_requestId];
     }
 

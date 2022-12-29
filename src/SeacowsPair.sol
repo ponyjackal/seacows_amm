@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import { ERC20 } from "./solmate/ERC20.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -12,7 +12,7 @@ import { OwnableWithTransferCallback } from "./lib/OwnableWithTransferCallback.s
 import { ReentrancyGuard } from "./lib/ReentrancyGuard.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
-import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegistry.sol";
@@ -480,16 +480,33 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint128 newSpotPrice;
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
-        uint128 newDelta;
-        (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
-            currentSpotPrice,
-            currentDelta,
-            nftIds.length,
-            fee,
-            _factory.protocolFeeMultiplier()
-        );
+        uint128 newDelta = delta;
 
-        newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        uint256 numOfNFTs = nftIds.length;
+
+        if (poolType() == PoolType.TRADE) {
+            // For trade pair, we only accept CPMM
+            // get reserve
+            (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
+            (error, newSpotPrice, inputAmount, protocolFee) = _bondingCurve.getCPMMBuyInfo(
+                currentSpotPrice,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier(),
+                nftReserve,
+                tokenReserve
+            );
+        } else {
+            (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
+                currentSpotPrice,
+                currentDelta,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier()
+            );
+
+            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        }
 
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
@@ -539,17 +556,32 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint128 newSpotPrice;
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
-        uint128 newDelta;
-        (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
-            currentSpotPrice,
-            currentDelta,
-            nftIds.length,
-            fee,
-            _factory.protocolFeeMultiplier()
-        );
+        uint128 newDelta = delta;
+        uint256 numOfNFTs = nftIds.length;
 
-        newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        if (poolType() == PoolType.TRADE) {
+            // For trade pair, we only accept CPMM
+            // get reserve
+            (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
+            (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
+                currentSpotPrice,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier(),
+                nftReserve,
+                tokenReserve
+            );
+        } else {
+            (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
+                currentSpotPrice,
+                currentDelta,
+                numOfNFTs,
+                fee,
+                _factory.protocolFeeMultiplier()
+            );
 
+            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+        }
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
             revert BondingCurveError(error);
@@ -574,6 +606,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             emit DeltaUpdate(newDelta);
         }
     }
+
+    /**
+     * @notice get reserves in the pool, only available for trade pair
+     */
+    function _getReserve() internal view virtual returns (uint256 nftReserve, uint256 tokenReserve);
 
     /**
         @notice Pulls the token input of a trade from the trader and pays the protocol fee.

@@ -6,14 +6,12 @@ contract HelperConfig {
 
     struct NetworkConfig {
         string lpUri;
-        address seacowsPairEnumerableETH;
-        address seacowsPairMissingEnumerableETH;
-        address seacowsPairEnumerableERC20;
-        address seacowsPairMissingEnumerableERC20;
         address payable protocolFeeRecipient;
-        uint256 protocol_feemultiplier;
-        address seacowscollectionRegistry;
-        address seacowsPairFactory;
+        uint256 protocolFeeMultiplier;
+        address seacowsCollectionRegistry;
+        address chainlinkToken;
+        address chainlinkOracle;
+        string chainlinkJobId;
     }
 
     mapping(uint256 => NetworkConfig) public chainIdToNetworkConfig;
@@ -28,28 +26,24 @@ contract HelperConfig {
     function getGoerliEthConfig() internal pure returns (NetworkConfig memory goerliNetworkConfig) {
         goerliNetworkConfig = NetworkConfig({
             lpUri: "",
-            seacowsPairEnumerableETH: address(0),
-            seacowsPairMissingEnumerableETH: address(0),
-            seacowsPairEnumerableERC20: address(0),
-            seacowsPairMissingEnumerableERC20: address(0),
             protocolFeeRecipient: payable(address(0)),
-            protocol_feemultiplier: 5000000000000000,
-            seacowscollectionRegistry: address(0),
-            seacowsPairFactory: address(0)
+            protocolFeeMultiplier: 5000000000000000,
+            seacowsCollectionRegistry: address(0),
+            chainlinkToken: 0x326C977E6efc84E512bB9C30f76E30c160eD06FB,
+            chainlinkOracle: 0xCC79157eb46F5624204f47AB42b3906cAA40eaB7,
+            chainlinkJobId: "ca98366cc7314957b8c012c72f05aeeb"
         });
     }
 
     function getAnvilEthConfig() internal pure returns (NetworkConfig memory anvilNetworkConfig) {
         anvilNetworkConfig = NetworkConfig({
             lpUri: "",
-            seacowsPairEnumerableETH: address(0),
-            seacowsPairMissingEnumerableETH: address(0),
-            seacowsPairEnumerableERC20: address(0),
-            seacowsPairMissingEnumerableERC20: address(0),
             protocolFeeRecipient: payable(address(0)),
-            protocol_feemultiplier: 5000000000000000,
-            seacowscollectionRegistry: address(0),
-            seacowsPairFactory: address(0)
+            protocolFeeMultiplier: 5000000000000000,
+            seacowsCollectionRegistry: address(0),
+            chainlinkToken: address(0),
+            chainlinkOracle: address(0),
+            chainlinkJobId: ""
         });
     }
 }

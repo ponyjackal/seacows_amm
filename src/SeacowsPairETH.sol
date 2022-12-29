@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import { ERC20 } from "./solmate/ERC20.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { SafeTransferLib } from "./solmate/SafeTransferLib.sol";
+import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
-import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 
 /**
@@ -136,5 +136,15 @@ abstract contract SeacowsPairETH is SeacowsPair {
         // Only allow calls without function selector
         require(msg.data.length == _immutableParamsLength());
         emit TokenDeposit(msg.value);
+    }
+
+    /**
+     * @notice get reserves in the pool, only available for trade pair
+     */
+    function _getReserve() internal view override onlyTrade returns (uint256 nftReserve, uint256 tokenReserve) {
+        // nft balance
+        nftReserve = nft().balanceOf(address(this));
+        // eth balance
+        tokenReserve = address(this).balance;
     }
 }

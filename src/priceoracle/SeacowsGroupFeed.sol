@@ -19,7 +19,7 @@ contract SeacowsGroupFeed is AggregatorV2V3Interface {
     mapping(uint256 => uint256) public override getTimestamp;
     mapping(uint256 => uint256) private getStartedAt;
 
-    constructor() public {
+    constructor() {
         registry = msg.sender;
     }
 

@@ -3,7 +3,10 @@ pragma solidity ^0.8.0;
 
 import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
 import { SeacowsPairMissingEnumerable } from "./SeacowsPairMissingEnumerable.sol";
-import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
+import { SeacowsRouter } from "./SeacowsRouter.sol";
+import { ICurve } from "./bondingcurve/ICurve.sol";
+import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
 contract SeacowsPairMissingEnumerableERC20 is SeacowsPairMissingEnumerable, SeacowsPairERC20 {
     constructor(string memory _uri) SeacowsPairMissingEnumerable(_uri) {}
