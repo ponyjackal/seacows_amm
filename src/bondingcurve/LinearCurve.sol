@@ -9,7 +9,7 @@ import { FixedPointMathLib } from "./FixedPointMathLib.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
     Bonding curve logic for a linear curve, where each buy/sell changes spot price by adding/substracting delta
 */
-contract LinearCurve is ICurve, CurveErrorCodes {
+abstract contract LinearCurve is ICurve, CurveErrorCodes {
     using FixedPointMathLib for uint256;
 
     /**

@@ -9,7 +9,7 @@ import { FixedPointMathLib } from "./FixedPointMathLib.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
     Bonding curve logic for an exponential curve, where each buy/sell changes spot price by multiplying/dividing delta
 */
-contract ExponentialCurve is ICurve, CurveErrorCodes {
+abstract contract ExponentialCurve is ICurve, CurveErrorCodes {
     using FixedPointMathLib for uint256;
 
     // minimum price to prevent numerical issues

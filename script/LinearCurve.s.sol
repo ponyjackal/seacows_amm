@@ -10,7 +10,7 @@ contract DeployLinearCurve is Script {
 
     function run() public {
         vm.startBroadcast();
-        linearCurve = new LinearCurve();
+        // linearCurve = new LinearCurve();
         vm.stopBroadcast();
     }
 }

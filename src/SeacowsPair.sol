@@ -473,7 +473,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint256 maxExpectedTokenInput,
         ICurve _bondingCurve,
         ISeacowsPairFactoryLike _factory
-    ) internal returns (uint256 protocolFee, uint256 inputAmount) {
+    ) internal virtual returns (uint256 protocolFee, uint256 inputAmount) {
         CurveErrorCodes.Error error;
         // Save on 2 SLOADs by caching
         uint128 currentSpotPrice = spotPrice;
@@ -532,7 +532,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint256 minExpectedTokenOutput,
         ICurve _bondingCurve,
         ISeacowsPairFactoryLike _factory
-    ) internal returns (uint256 protocolFee, uint256 outputAmount) {
+    ) internal virtual returns (uint256 protocolFee, uint256 outputAmount) {
         CurveErrorCodes.Error error;
         // Save on 2 SLOADs by caching
         uint128 currentSpotPrice = spotPrice;

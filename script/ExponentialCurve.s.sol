@@ -10,7 +10,7 @@ contract DeployExponentialCurve is Script {
 
     function run() public {
         vm.startBroadcast();
-        exponentialCurve = new ExponentialCurve();
+        // exponentialCurve = new ExponentialCurve();
         vm.stopBroadcast();
     }
 }

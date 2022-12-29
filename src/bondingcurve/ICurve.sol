@@ -53,6 +53,60 @@ interface ICurve {
 
     /**
         @notice Given the current state of the pair and the trade, computes how much the user
+        should pay to purchase an NFT from the pair, the new spot price, and other values.
+        @param spotPrice The current selling spot price of the pair, in tokens
+        @param numItems The number of NFTs the user is selling to the pair
+        @param feeMultiplier Determines how much fee the LP takes from this trade, 18 decimals
+        @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
+        @param nftReserve The NFT reserve in the pair
+        @param tokenReserve The token reserve in the pair
+
+        @return error Any math calculation errors, only Error.OK means the returned values are valid
+        @return newSpotPrice The updated selling spot price, in tokens
+        @return inputValue The amount that the user should pay, in tokens
+        @return protocolFee The amount of fee to send to the protocol, in tokens
+     */
+    function getCPMMBuyInfo(
+        uint128 spotPrice,
+        uint256 numItems,
+        uint256 feeMultiplier,
+        uint256 protocolFeeMultiplier,
+        uint256 nftReserve,
+        uint256 tokenReserve
+    )
+        external
+        view
+        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 inputValue, uint256 protocolFee);
+
+    /**
+        @notice Given the current state of the pair and the trade, computes how much the user
+        should receive when selling NFTs to the pair, the new spot price, and other values.
+        @param spotPrice The current selling spot price of the pair, in tokens
+        @param numItems The number of NFTs the user is selling to the pair
+        @param feeMultiplier Determines how much fee the LP takes from this trade, 18 decimals
+        @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
+        @param nftReserve NFT reserve in the pair
+        @param tokenReserve Token reserve in the pair
+
+        @return error Any math calculation errors, only Error.OK means the returned values are valid
+        @return newSpotPrice The updated selling spot price, in tokens
+        @return outputValue The amount that the user should receive, in tokens
+        @return protocolFee The amount of fee to send to the protocol, in tokens
+     */
+    function getCPMMSellInfo(
+        uint128 spotPrice,
+        uint256 numItems,
+        uint256 feeMultiplier,
+        uint256 protocolFeeMultiplier,
+        uint256 nftReserve,
+        uint256 tokenReserve
+    )
+        external
+        view
+        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 outputValue, uint256 protocolFee);
+
+    /**
+        @notice Given the current state of the pair and the trade, computes how much the user
         should receive when selling NFTs to the pair, the new spot price, and other values.
         @param spotPrice The current selling spot price of the pair, in tokens
         @param delta The delta parameter of the pair, what it means depends on the curve
