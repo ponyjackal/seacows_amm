@@ -143,7 +143,7 @@ abstract contract SeacowsPairETH is SeacowsPair {
      */
     function _getReserve() internal view override onlyTrade returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
-        nftReserve = nft().balanceOf(address(this));
+        nftReserve = IERC721(nft()).balanceOf(address(this));
         // eth balance
         tokenReserve = address(this).balance;
     }

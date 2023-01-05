@@ -165,13 +165,16 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
-        IERC721 _nft = nft();
+        address _nft = nft();
 
         // Input validation
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require((numNFTs > 0) && (numNFTs <= _nft.balanceOf(address(this))), "Ask for > 0 and <= balanceOf NFTs");
+            require(
+                (numNFTs > 0) && (numNFTs <= IERC721(_nft).balanceOf(address(this))),
+                "Ask for > 0 and <= balanceOf NFTs"
+            );
         }
 
         // Call bonding curve for pricing information
@@ -186,7 +189,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
 
-        _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
+        _sendAnyNFTsToRecipient(IERC721(_nft), nftRecipient, numNFTs);
 
         _refundTokenToSender(inputAmount);
 
@@ -239,7 +242,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
 
-        _sendSpecificNFTsToRecipient(nft(), nftRecipient, nftIds);
+        _sendSpecificNFTsToRecipient(IERC721(nft()), nftRecipient, nftIds);
 
         _refundTokenToSender(inputAmount);
 
@@ -292,7 +295,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _payProtocolFeeFromPair(_factory, protocolFee);
 
-        _takeNFTsFromSender(nft(), nftIds, _factory, isRouter, routerCaller);
+        _takeNFTsFromSender(IERC721(nft()), nftIds, _factory, isRouter, routerCaller);
 
         emit SwapNFTInPair();
     }
@@ -416,7 +419,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
         @notice Returns the NFT collection that parameterizes the pair
      */
-    function nft() public pure returns (IERC721 _nft) {
+    function nft() public pure returns (address _nft) {
         uint256 paramsLength = _immutableParamsLength();
         assembly {
             _nft := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 40)))
@@ -656,6 +659,20 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param numNFTs The number of NFTs to send  
      */
     function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal virtual;
+
+    /**
+        @notice Sends some number of SFTs to a recipient address
+        @dev Even though we specify the SFT address here, this internal function is only 
+        used to send NFTs associated with this specific pool.
+        @param _sft The address of the SFT to send
+        @param sftRecipient The receiving address for the NFTs
+        @param tokenId SFT token Id
+        @param numSFTs The number of SFTs to send  
+     */
+    function _sendSFTsToRecipient(IERC1155 _sft, address sftRecipient, uint256 tokenId, uint256 numSFTs) internal {
+        // Send SFTs to recipient
+        _sft.safeTransferFrom(address(this), sftRecipient, tokenId, numSFTs, "");
+    }
 
     /**
         @notice Sends specific NFTs to a recipient address

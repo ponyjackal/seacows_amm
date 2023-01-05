@@ -621,7 +621,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // transfer NFTs from sender to pair
         for (uint256 i; i < numNFTs; ) {
-            _pair.nft().safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
+            IERC721(_pair.nft()).safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
 
             unchecked {
                 ++i;
@@ -645,7 +645,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // transfer NFTs from sender to pair
         for (uint256 i; i < numNFTs; ) {
-            _pair.nft().safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
+            IERC721(_pair.nft()).safeTransferFrom(msg.sender, address(_pair), _nftIDs[i]);
 
             unchecked {
                 ++i;
@@ -680,7 +680,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // transfer NFTs from sender to pair
         for (uint256 i; i < numNFTs; ) {
-            _pair.nft().safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
+            IERC721(_pair.nft()).safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
 
             unchecked {
                 ++i;
@@ -708,7 +708,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // transfer NFTs from sender to pair
         for (uint256 i; i < numNFTs; ) {
-            _pair.nft().safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
+            IERC721(_pair.nft()).safeTransferFrom(address(_pair), msg.sender, _nftIDs[i]);
 
             unchecked {
                 ++i;

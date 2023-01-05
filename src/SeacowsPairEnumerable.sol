@@ -48,7 +48,7 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
 
     /// @inheritdoc SeacowsPair
     function getAllHeldIds() external view override returns (uint256[] memory) {
-        IERC721 _nft = nft();
+        IERC721 _nft = IERC721(nft());
         uint256 numNFTs = _nft.balanceOf(address(this));
         uint256[] memory ids = new uint256[](numNFTs);
         for (uint256 i; i < numNFTs; ) {
