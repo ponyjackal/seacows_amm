@@ -7,7 +7,17 @@ import "@typechain/hardhat";
 import "hardhat-abi-exporter";
 import "hardhat-deploy";
 import "hardhat-gas-reporter";
+import "hardhat-preprocessor";
+import fs from "fs";
 import { HardhatUserConfig, task } from "hardhat/config";
+
+function getRemappings() {
+  return fs
+    .readFileSync("remappings.txt", "utf8")
+    .split("\n")
+    .filter(Boolean) // remove empty lines
+    .map((line) => line.trim().split("="));
+}
 
 // dotenv.config();
 // chai.use(solidity);
@@ -26,8 +36,24 @@ import { HardhatUserConfig, task } from "hardhat/config";
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
+  preprocess: {
+    eachLine: (hre) => ({
+      transform: (line: string) => {
+        if (line.match(/^\s*import /i)) {
+          for (const [from, to] of getRemappings()) {
+            if (line.includes(from)) {
+              line = line.replace(from, to);
+              break;
+            }
+          }
+        }
+        return line;
+      },
+    }),
+  },
   paths: {
     sources: "./src",
+    cache: "./cache_hardhat",
   },
   solidity: {
     version: "0.8.4",
