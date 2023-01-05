@@ -12,11 +12,13 @@ import fs from "fs";
 import { HardhatUserConfig, task } from "hardhat/config";
 
 function getRemappings() {
-  return fs
+  const mappings = fs
     .readFileSync("remappings.txt", "utf8")
     .split("\n")
     .filter(Boolean) // remove empty lines
     .map((line) => line.trim().split("="));
+  console.log(mappings);
+  return mappings;
 }
 
 // dotenv.config();
@@ -36,21 +38,22 @@ function getRemappings() {
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
-  preprocess: {
-    eachLine: (hre) => ({
-      transform: (line: string) => {
-        if (line.match(/^\s*import /i)) {
-          for (const [from, to] of getRemappings()) {
-            if (line.includes(from)) {
-              line = line.replace(from, to);
-              break;
-            }
-          }
-        }
-        return line;
-      },
-    }),
-  },
+  // @ts-ignore
+  // preprocess: {
+  //   eachLine: (hre) => ({
+  //     transform: (line: string) => {
+  //       if (line.match(/^\s*import /i)) {
+  //         for (const [from, to] of getRemappings()) {
+  //           if (line.includes(from)) {
+  //             line = line.replace(from, to);
+  //             break;
+  //           }
+  //         }
+  //       }
+  //       return line;
+  //     },
+  //   }),
+  // },
   paths: {
     sources: "./src",
     cache: "./cache_hardhat",
@@ -73,7 +76,6 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
   },
-  // @ts-ignore
   typechain: {
     outDir: "types",
     target: "ethers-v5",

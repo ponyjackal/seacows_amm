@@ -34,13 +34,15 @@ jobs:
         scope: '@yolominds'
 
     - name: install modules
-      run: yarn install --frozen-lockfile
+      run: yarn install
 
     - name: Run Test cases
-      run: yarn compile
-      env:
-        SKIP_LOAD: true
-        NODE_OPTIONS: '--openssl-legacy-provider'
+      run: |
+        cat lib/solmate/src/tokens/ERC20.sol
+        yarn compile
+      # env:
+      #   SKIP_LOAD: true
+      #   NODE_OPTIONS: '--openssl-legacy-provider'
 
     - name: build typescript
       run: yarn build
