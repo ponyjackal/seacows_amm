@@ -12,13 +12,11 @@ import fs from "fs";
 import { HardhatUserConfig, task } from "hardhat/config";
 
 function getRemappings() {
-  const mappings = fs
+  return fs
     .readFileSync("remappings.txt", "utf8")
     .split("\n")
     .filter(Boolean) // remove empty lines
-    .map((line) => line.trim().split("="));
-  console.log(mappings);
-  return mappings;
+    .map((line) => line.trim().split("=")); 
 }
 
 // dotenv.config();
