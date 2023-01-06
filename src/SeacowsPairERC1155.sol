@@ -11,7 +11,18 @@ import { SeacowsPair } from "./SeacowsPair.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
 abstract contract SeacowsPairERC1155 is SeacowsPair {
-    ERC1155 public sft;
+    uint256 public tokenId;
 
     constructor(string memory _uri) SeacowsPair(_uri) {}
+
+    /// @inheritdoc SeacowsPair
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal override {
+        // Send NFTs to recipient
+        IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, tokenId, numNFTs, "");
+    }
+
+    /// @inheritdoc SeacowsPair
+    function withdrawERC1155(address _nft, uint256 numNFTs) external override onlyOwner {
+        IERC1155(_nft).safeTransferFrom(address(this), msg.sender, tokenId, numNFTs, "");
+    }
 }

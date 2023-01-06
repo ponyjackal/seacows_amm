@@ -189,7 +189,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
 
-        _sendAnyNFTsToRecipient(IERC721(_nft), nftRecipient, numNFTs);
+        _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
 
         _refundTokenToSender(inputAmount);
 
@@ -658,21 +658,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param nftRecipient The receiving address for the NFTs
         @param numNFTs The number of NFTs to send  
      */
-    function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal virtual;
-
-    /**
-        @notice Sends some number of SFTs to a recipient address
-        @dev Even though we specify the SFT address here, this internal function is only 
-        used to send NFTs associated with this specific pool.
-        @param _sft The address of the SFT to send
-        @param sftRecipient The receiving address for the NFTs
-        @param tokenId SFT token Id
-        @param numSFTs The number of SFTs to send  
-     */
-    function _sendSFTsToRecipient(IERC1155 _sft, address sftRecipient, uint256 tokenId, uint256 numSFTs) internal {
-        // Send SFTs to recipient
-        _sft.safeTransferFrom(address(this), sftRecipient, tokenId, numSFTs, "");
-    }
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal virtual;
 
     /**
         @notice Sends specific NFTs to a recipient address
@@ -768,13 +754,10 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
     /**
         @notice Rescues ERC1155 tokens from the pair to the owner. Only callable by the owner.
-        @param a The NFT to transfer
-        @param ids The NFT ids to transfer
-        @param amounts The amounts of each id to transfer
+        @param _nft The NFT to transfer
+        @param numNFTs The amounts of each id to transfer
      */
-    function withdrawERC1155(IERC1155 a, uint256[] calldata ids, uint256[] calldata amounts) external onlyOwner {
-        a.safeBatchTransferFrom(address(this), msg.sender, ids, amounts, "");
-    }
+    function withdrawERC1155(address _nft, uint256 numNFTs) external virtual;
 
     /**
         @notice Updates the selling spot price. Only callable by the owner.

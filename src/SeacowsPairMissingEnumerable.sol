@@ -20,14 +20,14 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
     constructor(string memory _uri) SeacowsPair(_uri) {}
 
     /// @inheritdoc SeacowsPair
-    function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal override {
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal override {
         // Send NFTs to recipient
         // We're missing enumerable, so we also update the pair's own ID set
         // NOTE: We start from last index to first index to save on gas
         uint256 lastIndex = idSet.length() - 1;
         for (uint256 i; i < numNFTs; ) {
             uint256 nftId = idSet.at(lastIndex);
-            _nft.safeTransferFrom(address(this), nftRecipient, nftId);
+            IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftId);
             idSet.remove(nftId);
 
             unchecked {
