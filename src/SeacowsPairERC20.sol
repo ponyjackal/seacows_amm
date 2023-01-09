@@ -120,8 +120,7 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
         return IMMUTABLE_PARAMS_LENGTH;
     }
 
-    /// @inheritdoc SeacowsPair
-    function withdrawERC20(ERC20 a, uint256 amount) external override onlyOwner {
+    function withdrawERC20(ERC20 a, uint256 amount) external onlyAdmin {
         a.safeTransfer(msg.sender, amount);
 
         if (a == token()) {

@@ -115,11 +115,6 @@ abstract contract SeacowsPairETH is SeacowsPair {
         payable(recipient).safeTransferETH(amount);
     }
 
-    /// @inheritdoc SeacowsPair
-    function withdrawERC20(ERC20 a, uint256 amount) external override onlyOwner {
-        a.safeTransfer(msg.sender, amount);
-    }
-
     /**
         @dev All ETH transfers into the pair are accepted. This is the main method
         for the owner to top up the pair's token reserves.

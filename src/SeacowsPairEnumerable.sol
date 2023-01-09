@@ -65,8 +65,7 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
         return this.onERC721Received.selector;
     }
 
-    /// @inheritdoc SeacowsPair
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external override onlyOwner {
+    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyAdmin {
         uint256 numNFTs = nftIds.length;
         for (uint256 i; i < numNFTs; ) {
             a.safeTransferFrom(address(this), msg.sender, nftIds[i]);

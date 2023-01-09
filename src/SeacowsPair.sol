@@ -734,30 +734,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     function _immutableParamsLength() internal pure virtual returns (uint256);
 
     /**
-     * Owner functions
+     * Admin functions
      */
-
-    /**
-        @notice Rescues a specified set of NFTs owned by the pair to the owner address. (onlyOwnable modifier is in the implemented function)
-        @dev If the NFT is the pair's collection, we also remove it from the id tracking (if the NFT is missing enumerable).
-        @param a The NFT to transfer
-        @param nftIds The list of IDs of the NFTs to send to the owner
-     */
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external virtual;
-
-    /**
-        @notice Rescues ERC20 tokens from the pair to the owner. Only callable by the owner (onlyOwnable modifier is in the implemented function).
-        @param a The token to transfer
-        @param amount The amount of tokens to send to the owner
-     */
-    function withdrawERC20(ERC20 a, uint256 amount) external virtual;
-
-    /**
-        @notice Rescues ERC1155 tokens from the pair to the owner. Only callable by the owner.
-        @param _nft The NFT to transfer
-        @param numNFTs The amounts of each id to transfer
-     */
-    function withdrawERC1155(address _nft, uint256 numNFTs) external virtual;
 
     /**
         @notice Updates the selling spot price. Only callable by the owner.
