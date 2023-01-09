@@ -22,7 +22,7 @@ library SeacowsPairCloner {
         address implementation,
         ISeacowsPairFactoryLike factory,
         ICurve bondingCurve,
-        IERC721 nft,
+        address nft,
         uint8 poolType
     ) internal returns (address instance) {
         assembly {
@@ -112,7 +112,7 @@ library SeacowsPairCloner {
         address implementation,
         ISeacowsPairFactoryLike factory,
         ICurve bondingCurve,
-        IERC721 nft,
+        address nft,
         uint8 poolType,
         ERC20 token
     ) internal returns (address instance) {

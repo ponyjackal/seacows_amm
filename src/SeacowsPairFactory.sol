@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { IERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
@@ -22,6 +23,8 @@ import { SeacowsPairEnumerableETH } from "./SeacowsPairEnumerableETH.sol";
 import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableETH } from "./SeacowsPairMissingEnumerableETH.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
+import { SeacowsPairERC1155ETH } from "./SeacowsPairERC1155ETH.sol";
+import { SeacowsPairERC1155ERC20 } from "./SeacowsPairERC1155ERC20.sol";
 import { ChainlinkAggregator } from "./priceoracle/ChainlinkAggregator.sol";
 import { UniswapPriceOracle } from "./priceoracle/UniswapPriceOracle.sol";
 
@@ -43,6 +46,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     SeacowsPairMissingEnumerableETH public immutable missingEnumerableETHTemplate;
     SeacowsPairEnumerableERC20 public immutable enumerableERC20Template;
     SeacowsPairMissingEnumerableERC20 public immutable missingEnumerableERC20Template;
+    SeacowsPairERC1155ETH public immutable erc1155ETHTemplate;
+    SeacowsPairERC1155ERC20 public immutable erc1155ERC20Template;
     address payable public override protocolFeeRecipient;
 
     // Price oracles
@@ -77,6 +82,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         SeacowsPairMissingEnumerableETH _missingEnumerableETHTemplate,
         SeacowsPairEnumerableERC20 _enumerableERC20Template,
         SeacowsPairMissingEnumerableERC20 _missingEnumerableERC20Template,
+        SeacowsPairERC1155ETH _erc1155ETHTemplate,
+        SeacowsPairERC1155ERC20 _erc1155ERC20Template,
         address payable _protocolFeeRecipient,
         uint256 _protocolFeeMultiplier,
         address _priceOracleRegistry,
@@ -87,6 +94,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         missingEnumerableETHTemplate = _missingEnumerableETHTemplate;
         enumerableERC20Template = _enumerableERC20Template;
         missingEnumerableERC20Template = _missingEnumerableERC20Template;
+        erc1155ETHTemplate = _erc1155ETHTemplate;
+        erc1155ERC20Template = _erc1155ERC20Template;
         protocolFeeRecipient = _protocolFeeRecipient;
 
         require(_protocolFeeMultiplier <= MAX_PROTOCOL_FEE, "Fee too large");
@@ -143,7 +152,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             template = address(missingEnumerableETHTemplate);
         }
 
-        pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
+        pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, address(_nft), uint8(_poolType))));
 
         // mint LP tokens if trade pair
         if (_poolType == SeacowsPair.PoolType.TRADE) {
@@ -160,6 +169,39 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             _initialNFTIDs
         );
         emit NewPair(address(pair));
+    }
+
+    /**
+        @notice Creates an erc1155 pair contract using EIP-1167.
+        @param _nft The NFT contract of the collection the pair trades
+        @param _tokenId The ERC1155 token id
+        @param _amounts the initial amounts of erc1155 tokens
+        @return pair The new pair
+     */
+    function createPairERC1155ETH(IERC1155 _nft, uint256 _tokenId, uint256 _amounts)
+        external
+        payable
+        returns (SeacowsPairETH pair)
+    {
+        address template = address(erc1155ETHTemplate);
+        // create a pair
+        pair = SeacowsPairETH(
+            payable(template.cloneETHPair(this, ICurve(address(0)), address(_nft), uint8(SeacowsPair.PoolType.TRADE)))
+        );
+
+        // mint LP tokens
+        pair.mintLPToken(msg.sender, _amounts);
+
+        // _initializePairETH(
+        //     ISeacowsPairETH(address(pair)),
+        //     _nft,
+        //     _assetRecipient,
+        //     _delta,
+        //     _fee,
+        //     _spotPrice,
+        //     _initialNFTIDs
+        // );
+        // emit NewPair(address(pair));
     }
 
     /**
@@ -195,7 +237,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             template = address(missingEnumerableETHTemplate);
         }
 
-        pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, _nft, uint8(_poolType))));
+        pair = SeacowsPairETH(payable(template.cloneETHPair(this, _bondingCurve, address(_nft), uint8(_poolType))));
 
         // request floor price from chainlink
         chainlinkAggregator.requestCryptoPriceETH(
@@ -267,7 +309,13 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         pair = SeacowsPairERC20(
             payable(
-                template.cloneERC20Pair(this, params.bondingCurve, params.nft, uint8(params.poolType), params.token)
+                template.cloneERC20Pair(
+                    this,
+                    params.bondingCurve,
+                    address(params.nft),
+                    uint8(params.poolType),
+                    params.token
+                )
             )
         );
 
@@ -334,7 +382,13 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         pair = SeacowsPairERC20(
             payable(
-                template.cloneERC20Pair(this, params.bondingCurve, params.nft, uint8(params.poolType), params.token)
+                template.cloneERC20Pair(
+                    this,
+                    params.bondingCurve,
+                    address(params.nft),
+                    uint8(params.poolType),
+                    params.token
+                )
             )
         );
 
