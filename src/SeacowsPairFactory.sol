@@ -340,6 +340,54 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
+        @notice Creates an erc1155 pair contract using EIP-1167.
+        @param _nft The NFT contract of the collection the pair trades
+        @param _tokenId The ERC1155 token id
+        @param _amounts the initial amounts of erc1155 tokens
+        @param _token ERC20 token
+        @param _tokenAmount ERC20 token amount
+        @param _fee The initial % fee taken, if this is a trade pair 
+        @return pair The new pair
+     */
+    function createPairERC1155ERC20(
+        IERC1155 _nft,
+        uint256 _tokenId,
+        uint256 _amounts,
+        ERC20 _token,
+        uint256 _tokenAmount,
+        uint96 _fee
+    ) external payable returns (SeacowsPairETH pair) {
+        address template = address(erc1155ETHTemplate);
+        // create a pair
+        pair = SeacowsPairETH(
+            payable(
+                template.cloneERC1155ERC20Pair(
+                    this,
+                    ICurve(address(0)),
+                    address(_nft),
+                    uint8(SeacowsPair.PoolType.TRADE),
+                    _token,
+                    _tokenId
+                )
+            )
+        );
+
+        // mint LP tokens
+        pair.mintLPToken(msg.sender, _amounts);
+
+        _initializePairERC20ERC1155(
+            ISeacowsPairETH(address(pair)),
+            _nft,
+            _tokenId,
+            _amounts,
+            _token,
+            _tokenAmount,
+            _fee
+        );
+        emit NewPair(address(pair));
+    }
+
+    /**
         @notice Creates a pair contract using EIP-1167.
         @param _nft The NFT contract of the collection the pair trades
         @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
@@ -600,8 +648,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint96 _fee
     ) internal {
         uint128 initSpotPrice = (uint128)(msg.value / _amounts);
+
         // initialize pair,
-        //TODO need to set spot price based on ETH, nft amounts
         _pair.initialize(msg.sender, payable(msg.sender), 0, _fee, initSpotPrice);
 
         // transfer initial ETH to pair
@@ -637,6 +685,30 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+    }
+
+    function _initializePairERC20ERC1155(
+        ISeacowsPairETH _pair,
+        IERC1155 _nft,
+        uint256 _tokenId,
+        uint256 _amounts,
+        ERC20 _token,
+        uint256 _tokenAmount,
+        uint96 _fee
+    ) internal {
+        uint128 initSpotPrice = (uint128)(_tokenAmount / _amounts);
+
+        // initialize pair,
+        _pair.initialize(msg.sender, payable(msg.sender), 0, _fee, initSpotPrice);
+
+        // transfer initial tokens to pair
+        _token.safeTransferFrom(msg.sender, address(_pair), _tokenAmount);
+
+        // transfer initial ETH to pair
+        payable(address(_pair)).safeTransferETH(msg.value);
+
+        // transfer nfts to the pair
+        _nft.safeTransferFrom(msg.sender, address(_pair), _tokenId, _amounts, "");
     }
 
     /** 
