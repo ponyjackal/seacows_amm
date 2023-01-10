@@ -779,6 +779,30 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
+     * @dev add ERC20 liquidity into ERC1155 trading pair
+     * @param _amount ERC20 token amount
+     * @param _tokenAmount ERC20 token amount
+     */
+    function addLiquidityERC20ERC1155(SeacowsPairERC1155ERC20 _pair, uint256 _amount, uint256 _tokenAmount) external {
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(
+            _pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
+            "Not a ERC1155/ERC20 trade pair"
+        );
+        require(_amount > 0, "Invalid NFT amount");
+        require(_amount * _pair.spotPrice() <= _amount, "Insufficient token amount");
+
+        // transfer tokens to pair
+        _pair.token().safeTransferFrom(msg.sender, address(_pair), _tokenAmount);
+
+        // transfer NFTs from sender to pair
+        IERC1155(_pair.nft()).safeTransferFrom(msg.sender, address(_pair), _pair.tokenId(), _amount, "");
+
+        // mint LP tokens
+        _pair.mintLPToken(msg.sender, _amount);
+    }
+
+    /**
      * @dev add ETH liquidity into trading pair
      * @param _nftIDs NFT ids
      */
@@ -803,6 +827,26 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // mint LP tokens
         _pair.mintLPToken(msg.sender, numNFTs);
+    }
+
+    /**
+     * @dev add ETH liquidity into ERC1155 trading pair
+     * @param _amount NFT amount
+     */
+    function addLiquidityETHERC1155(SeacowsPairERC1155ETH _pair, uint256 _amount) external payable {
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ETH, "Not a ERC1155/ETH trade pair");
+        require(_amount > 0, "Invalid NFT amount");
+        require(_amount * _pair.spotPrice() <= msg.value, "Insufficient token amount");
+
+        // transfer NFTs from sender to pair
+        IERC1155(_pair.nft()).safeTransferFrom(msg.sender, address(_pair), _pair.tokenId(), _amount, "");
+
+        // transfer eth to the pair
+        payable(_pair).safeTransferETH(msg.value);
+
+        // mint LP tokens
+        _pair.mintLPToken(msg.sender, _amount);
     }
 
     /**
@@ -835,6 +879,29 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
+     * @dev remove ERC20 liquidity from ERC1155 trading pair
+     * @param _amount lp token amount to remove
+     */
+    function removeLiquidityERC20ERC1155(SeacowsPairERC1155ERC20 _pair, uint256 _amount) external {
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(
+            _pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
+            "Not a ERC1155/ERC20 trade pair"
+        );
+        require(_amount > 0, "Invalid amount");
+
+        // burn LP token; we check if the user has engouh LP token in the function below
+        _pair.burnLPToken(msg.sender, _amount);
+
+        // transfer tokens to the user
+        uint256 tokenAmount = _amount * _pair.spotPrice();
+        _pair.token().safeTransferFrom(address(_pair), msg.sender, tokenAmount);
+
+        // transfer NFTs from sender to pair
+        IERC1155(_pair.nft()).safeTransferFrom(address(_pair), msg.sender, _pair.tokenId(), _amount, "");
+    }
+
+    /**
      * @dev remove ETH liquidity from trading pair
      * @param _amount lp token amount to remove
      * @param _nftIDs NFT ids to withdraw
@@ -860,5 +927,24 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+    }
+
+    /**
+     * @dev remove ETH liquidity from ERC1155 trading pair
+     * @param _amount lp token amount to remove
+     */
+    function removeLiquidityETH(SeacowsPairERC1155ETH _pair, uint256 _amount) external {
+        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
+        require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ETH, "Not a ERC1155/ETH trade pair");
+        require(_amount > 0, "Invalid amount");
+
+        // burn LP token; we check if the user has engouh LP token in the function below
+        _pair.burnLPToken(msg.sender, _amount);
+
+        uint256 ethAmount = _amount * _pair.spotPrice();
+        _pair.removeLPETH(msg.sender, ethAmount);
+
+        // transfer NFTs from sender to pair
+        IERC1155(_pair.nft()).safeTransferFrom(address(_pair), msg.sender, _pair.tokenId(), _amount, "");
     }
 }
