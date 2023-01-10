@@ -16,8 +16,6 @@ abstract contract SeacowsPairETH is SeacowsPair {
     using SafeTransferLib for address payable;
     using SafeTransferLib for ERC20;
 
-    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 61;
-
     /// @inheritdoc SeacowsPair
     function _pullTokenInputAndPayProtocolFee(
         uint256 inputAmount,
@@ -76,12 +74,6 @@ abstract contract SeacowsPairETH is SeacowsPair {
         if (outputAmount > 0) {
             tokenRecipient.safeTransferETH(outputAmount);
         }
-    }
-
-    /// @inheritdoc SeacowsPair
-    // @dev see SeacowsPairCloner for params length calculation
-    function _immutableParamsLength() internal pure override returns (uint256) {
-        return IMMUTABLE_PARAMS_LENGTH;
     }
 
     /**

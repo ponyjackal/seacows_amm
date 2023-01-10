@@ -14,10 +14,28 @@ import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
 contract SeacowsPairERC1155ERC20 is SeacowsPairERC1155, SeacowsPairERC20 {
     constructor(string memory _uri) SeacowsPairERC1155(_uri) {}
 
+    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 101;
+
+    /**
+        @notice Returns the ERC1155 token id associated with the pair
+        @dev See SeacowsPairCloner for an explanation on how this works
+     */
+    function tokenId() public pure override returns (uint256 _tokenId) {
+        uint256 paramsLength = _immutableParamsLength();
+        assembly {
+            _tokenId := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 81)))
+        }
+    }
+
     /**
         @notice Returns the SeacowsPair type
      */
     function pairVariant() public pure override returns (ISeacowsPairFactoryLike.PairVariant) {
         return ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20;
+    }
+
+    // @dev see SeacowsPairCloner for params length calculation
+    function _immutableParamsLength() internal pure override returns (uint256) {
+        return IMMUTABLE_PARAMS_LENGTH;
     }
 }

@@ -61,24 +61,24 @@ contract DeploySeacowsPairFactory is Script {
         /** deploy UniswapPriceOracle */
         uniswapPriceOracle = new UniswapPriceOracle();
 
-        /** deploy SeacowsPairFactory */
-        seacowsPairFactory = new SeacowsPairFactory(
-            seacowsPairEnumerableETH,
-            seacowsPairMissingEnumerableETH,
-            seacowsPairEnumerableERC20,
-            seacowsPairMissingEnumerableERC20,
-            protocolFeeRecipient,
-            protocolFeeMultiplier,
-            seacowsCollectionRegistry,
-            chainlinkAggregator,
-            uniswapPriceOracle
-        );
+        // /** deploy SeacowsPairFactory */
+        // seacowsPairFactory = new SeacowsPairFactory(
+        //     seacowsPairEnumerableETH,
+        //     seacowsPairMissingEnumerableETH,
+        //     seacowsPairEnumerableERC20,
+        //     seacowsPairMissingEnumerableERC20,
+        //     protocolFeeRecipient,
+        //     protocolFeeMultiplier,
+        //     seacowsCollectionRegistry,
+        //     chainlinkAggregator,
+        //     uniswapPriceOracle
+        // );
 
-        /** update SeacowsPairFactory in ChainlinkAggregator*/
-        chainlinkAggregator.updateSeacowsPairFactory(ISeacowsPairFactoryLike(seacowsPairFactory));
+        // /** update SeacowsPairFactory in ChainlinkAggregator*/
+        // chainlinkAggregator.updateSeacowsPairFactory(ISeacowsPairFactoryLike(seacowsPairFactory));
 
-        /** deploy SeacowsRouter */
-        seacowsRouter = new SeacowsRouter(ISeacowsPairFactoryLike(seacowsPairFactory));
+        // /** deploy SeacowsRouter */
+        // seacowsRouter = new SeacowsRouter(ISeacowsPairFactoryLike(seacowsPairFactory));
 
         vm.stopBroadcast();
     }

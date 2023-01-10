@@ -17,8 +17,6 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 abstract contract SeacowsPairERC20 is SeacowsPair {
     using SafeTransferLib for ERC20;
 
-    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
-
     /**
         @notice Returns the ERC20 token associated with the pair
         @dev See SeacowsPairCloner for an explanation on how this works
@@ -112,12 +110,6 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
         if (outputAmount > 0) {
             token().safeTransfer(tokenRecipient, outputAmount);
         }
-    }
-
-    /// @inheritdoc SeacowsPair
-    // @dev see SeacowsPairCloner for params length calculation
-    function _immutableParamsLength() internal pure override returns (uint256) {
-        return IMMUTABLE_PARAMS_LENGTH;
     }
 
     function withdrawERC20(ERC20 a, uint256 amount) external onlyAdmin {
