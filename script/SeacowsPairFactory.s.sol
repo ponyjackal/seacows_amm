@@ -10,6 +10,8 @@ import { SeacowsPairEnumerableETH } from "../src/SeacowsPairEnumerableETH.sol";
 import { SeacowsPairMissingEnumerableETH } from "../src/SeacowsPairMissingEnumerableETH.sol";
 import { SeacowsPairEnumerableERC20 } from "../src/SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "../src/SeacowsPairMissingEnumerableERC20.sol";
+import { SeacowsPairERC1155ETH } from "../src/SeacowsPairERC1155ETH.sol";
+import { SeacowsPairERC1155ERC20 } from "../src/SeacowsPairERC1155ERC20.sol";
 import { UniswapPriceOracle } from "../src/priceoracle/UniswapPriceOracle.sol";
 import { ChainlinkAggregator } from "../src/priceoracle/ChainlinkAggregator.sol";
 
@@ -21,6 +23,8 @@ contract DeploySeacowsPairFactory is Script {
     SeacowsPairMissingEnumerableETH internal seacowsPairMissingEnumerableETH;
     SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
     SeacowsPairMissingEnumerableERC20 internal seacowsPairMissingEnumerableERC20;
+    SeacowsPairERC1155ETH internal seacowsPairERC1155ETH;
+    SeacowsPairERC1155ERC20 internal seacowsPairERC1155ERC20;
     UniswapPriceOracle internal uniswapPriceOracle;
     ChainlinkAggregator internal chainlinkAggregator;
 
@@ -50,6 +54,12 @@ contract DeploySeacowsPairFactory is Script {
         /** deploy SeacowsPairMissingEnumerableERC20 */
         seacowsPairMissingEnumerableERC20 = new SeacowsPairMissingEnumerableERC20(lpUri);
 
+        /** deploy SeacowsPairERC1155ETH */
+        seacowsPairERC1155ETH = new SeacowsPairERC1155ETH(lpUri);
+
+        /** deploy SeacowsPairERC1155ERC20 */
+        seacowsPairERC1155ERC20 = new SeacowsPairERC1155ERC20(lpUri);
+
         /** deploy ChainlinkAggregator */
         chainlinkAggregator = new ChainlinkAggregator(
             ISeacowsPairFactoryLike(address(0)),
@@ -61,24 +71,26 @@ contract DeploySeacowsPairFactory is Script {
         /** deploy UniswapPriceOracle */
         uniswapPriceOracle = new UniswapPriceOracle();
 
-        // /** deploy SeacowsPairFactory */
-        // seacowsPairFactory = new SeacowsPairFactory(
-        //     seacowsPairEnumerableETH,
-        //     seacowsPairMissingEnumerableETH,
-        //     seacowsPairEnumerableERC20,
-        //     seacowsPairMissingEnumerableERC20,
-        //     protocolFeeRecipient,
-        //     protocolFeeMultiplier,
-        //     seacowsCollectionRegistry,
-        //     chainlinkAggregator,
-        //     uniswapPriceOracle
-        // );
+        /** deploy SeacowsPairFactory */
+        seacowsPairFactory = new SeacowsPairFactory(
+            seacowsPairEnumerableETH,
+            seacowsPairMissingEnumerableETH,
+            seacowsPairEnumerableERC20,
+            seacowsPairMissingEnumerableERC20,
+            seacowsPairERC1155ETH,
+            seacowsPairERC1155ERC20,
+            protocolFeeRecipient,
+            protocolFeeMultiplier,
+            seacowsCollectionRegistry,
+            chainlinkAggregator,
+            uniswapPriceOracle
+        );
 
-        // /** update SeacowsPairFactory in ChainlinkAggregator*/
-        // chainlinkAggregator.updateSeacowsPairFactory(ISeacowsPairFactoryLike(seacowsPairFactory));
+        /** update SeacowsPairFactory in ChainlinkAggregator*/
+        chainlinkAggregator.updateSeacowsPairFactory(ISeacowsPairFactoryLike(seacowsPairFactory));
 
-        // /** deploy SeacowsRouter */
-        // seacowsRouter = new SeacowsRouter(ISeacowsPairFactoryLike(seacowsPairFactory));
+        /** deploy SeacowsRouter */
+        seacowsRouter = new SeacowsRouter(ISeacowsPairFactoryLike(seacowsPairFactory));
 
         vm.stopBroadcast();
     }
