@@ -176,9 +176,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @param _nft The NFT contract of the collection the pair trades
         @param _tokenId The ERC1155 token id
         @param _amounts the initial amounts of erc1155 tokens
+        @param _fee The initial % fee taken, if this is a trade pair 
         @return pair The new pair
      */
-    function createPairERC1155ETH(IERC1155 _nft, uint256 _tokenId, uint256 _amounts)
+    function createPairERC1155ETH(IERC1155 _nft, uint256 _tokenId, uint256 _amounts, uint96 _fee)
         external
         payable
         returns (SeacowsPairETH pair)
@@ -186,22 +187,22 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         address template = address(erc1155ETHTemplate);
         // create a pair
         pair = SeacowsPairETH(
-            payable(template.cloneETHPair(this, ICurve(address(0)), address(_nft), uint8(SeacowsPair.PoolType.TRADE)))
+            payable(
+                template.cloneERC1155ETHPair(
+                    this,
+                    ICurve(address(0)),
+                    address(_nft),
+                    uint8(SeacowsPair.PoolType.TRADE),
+                    _tokenId
+                )
+            )
         );
 
         // mint LP tokens
         pair.mintLPToken(msg.sender, _amounts);
 
-        // _initializePairETH(
-        //     ISeacowsPairETH(address(pair)),
-        //     _nft,
-        //     _assetRecipient,
-        //     _delta,
-        //     _fee,
-        //     _spotPrice,
-        //     _initialNFTIDs
-        // );
-        // emit NewPair(address(pair));
+        _initializePairETHERC1155(ISeacowsPairETH(address(pair)), _nft, _tokenId, _amounts, _fee);
+        emit NewPair(address(pair));
     }
 
     /**
@@ -589,6 +590,25 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+    }
+
+    function _initializePairETHERC1155(
+        ISeacowsPairETH _pair,
+        IERC1155 _nft,
+        uint256 _tokenId,
+        uint256 _amounts,
+        uint96 _fee
+    ) internal {
+        uint128 initSpotPrice = (uint128)(msg.value / _amounts);
+        // initialize pair,
+        //TODO need to set spot price based on ETH, nft amounts
+        _pair.initialize(msg.sender, payable(msg.sender), 0, _fee, initSpotPrice);
+
+        // transfer initial ETH to pair
+        payable(address(_pair)).safeTransferETH(msg.value);
+
+        // transfer nfts to the pair
+        _nft.safeTransferFrom(msg.sender, address(_pair), _tokenId, _amounts, "");
     }
 
     function _initializePairERC20(
