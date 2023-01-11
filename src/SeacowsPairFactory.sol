@@ -650,7 +650,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint128 initSpotPrice = (uint128)(msg.value / _amounts);
 
         // initialize pair,
-        _pair.initialize(msg.sender, payable(msg.sender), 0, _fee, initSpotPrice);
+        _pair.initialize(msg.sender, payable(address(0)), 0, _fee, initSpotPrice);
 
         // transfer initial ETH to pair
         payable(address(_pair)).safeTransferETH(msg.value);
@@ -699,7 +699,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint128 initSpotPrice = (uint128)(_tokenAmount / _amounts);
 
         // initialize pair,
-        _pair.initialize(msg.sender, payable(msg.sender), 0, _fee, initSpotPrice);
+        _pair.initialize(msg.sender, payable(address(0)), 0, _fee, initSpotPrice);
 
         // transfer initial tokens to pair
         _token.safeTransferFrom(msg.sender, address(_pair), _tokenAmount);
