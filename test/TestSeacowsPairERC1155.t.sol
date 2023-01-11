@@ -106,7 +106,10 @@ contract SeacowsPairERC1155Test is Test {
     }
 
     function test_create_eth_pair() public {
-        vm.prank(spender);
+        vm.startPrank(spender);
+
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+
         SeacowsPairETH ethPair = seacowsPairFactory.createPairERC1155ETH(testSeacowsSFT, 1, 1000, 10);
 
         uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
