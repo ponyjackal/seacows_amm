@@ -3,10 +3,9 @@ pragma solidity >=0.8.0;
 
 import { ChainlinkClient, Chainlink } from "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { ERC20 } from "solmate/tokens/ERC20.sol";
-
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairETH } from "../interfaces/ISeacowsPairETH.sol";
 import { ISeacowsPairERC20 } from "../interfaces/ISeacowsPairERC20.sol";
@@ -34,7 +33,7 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
 
     struct ERC20Request {
         ISeacowsPairERC20 pair;
-        ERC20 token;
+        IERC20 token;
         IERC721 nft;
         address payable assetRecipient;
         uint128 delta;
@@ -166,7 +165,7 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
      */
     function requestCryptoPriceERC20(
         ISeacowsPairERC20 _pair,
-        ERC20 _token,
+        IERC20 _token,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,

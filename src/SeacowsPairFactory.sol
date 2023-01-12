@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import { IERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
@@ -175,22 +176,24 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @notice Creates an erc1155 pair contract using EIP-1167.
         @param _nft The NFT contract of the collection the pair trades
         @param _tokenId The ERC1155 token id
+        @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
         @param _amounts the initial amounts of erc1155 tokens
         @param _fee The initial % fee taken, if this is a trade pair 
         @return pair The new pair
      */
-    function createPairERC1155ETH(IERC1155 _nft, uint256 _tokenId, uint256 _amounts, uint96 _fee)
+    function createPairERC1155ETH(IERC1155 _nft, uint256 _tokenId, ICurve _bondingCurve, uint256 _amounts, uint96 _fee)
         external
         payable
         returns (SeacowsPairETH pair)
     {
+        // TODO; only CPMM can be used here for _bondingCurve
         address template = address(erc1155ETHTemplate);
         // create a pair
         pair = SeacowsPairETH(
             payable(
                 template.cloneERC1155ETHPair(
                     this,
-                    ICurve(address(0)),
+                    _bondingCurve,
                     address(_nft),
                     uint8(SeacowsPair.PoolType.TRADE),
                     _tokenId
@@ -285,7 +288,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @return pair The new pair
      */
     struct CreateERC20PairParams {
-        ERC20 token;
+        IERC20 token;
         IERC721 nft;
         ICurve bondingCurve;
         address payable assetRecipient;
@@ -343,6 +346,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @notice Creates an erc1155 pair contract using EIP-1167.
         @param _nft The NFT contract of the collection the pair trades
         @param _tokenId The ERC1155 token id
+        @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
         @param _amounts the initial amounts of erc1155 tokens
         @param _token ERC20 token
         @param _tokenAmount ERC20 token amount
@@ -352,8 +356,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function createPairERC1155ERC20(
         IERC1155 _nft,
         uint256 _tokenId,
+        ICurve _bondingCurve,
         uint256 _amounts,
-        ERC20 _token,
+        IERC20 _token,
         uint256 _tokenAmount,
         uint96 _fee
     ) external payable returns (SeacowsPairETH pair) {
@@ -363,7 +368,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             payable(
                 template.cloneERC1155ERC20Pair(
                     this,
-                    ICurve(address(0)),
+                    _bondingCurve,
                     address(_nft),
                     uint8(SeacowsPair.PoolType.TRADE),
                     _token,
@@ -404,7 +409,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @return pair The new pair
      */
     struct CreateERC20PairParamsWithPriceOracle {
-        ERC20 token;
+        IERC20 token;
         IERC721 nft;
         ICurve bondingCurve;
         address payable assetRecipient;
@@ -461,7 +466,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      */
     function initializePairERC20FromOracle(
         ISeacowsPairERC20 pair,
-        ERC20 _token,
+        IERC20 _token,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,
@@ -661,7 +666,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     function _initializePairERC20(
         ISeacowsPairERC20 _pair,
-        ERC20 _token,
+        IERC20 _token,
         IERC721 _nft,
         address payable _assetRecipient,
         uint128 _delta,
@@ -674,7 +679,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         _pair.initialize(msg.sender, _assetRecipient, _delta, _fee, _spotPrice);
 
         // transfer initial tokens to pair
-        _token.safeTransferFrom(msg.sender, address(_pair), _initialTokenBalance);
+        _token.transferFrom(msg.sender, address(_pair), _initialTokenBalance);
 
         // transfer initial NFTs from sender to pair
         uint256 numNFTs = _initialNFTIDs.length;
@@ -692,7 +697,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         IERC1155 _nft,
         uint256 _tokenId,
         uint256 _amounts,
-        ERC20 _token,
+        IERC20 _token,
         uint256 _tokenAmount,
         uint96 _fee
     ) internal {
@@ -702,7 +707,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         _pair.initialize(msg.sender, payable(address(0)), 0, _fee, initSpotPrice);
 
         // transfer initial tokens to pair
-        _token.safeTransferFrom(msg.sender, address(_pair), _tokenAmount);
+        _token.transferFrom(msg.sender, address(_pair), _tokenAmount);
 
         // transfer initial ETH to pair
         payable(address(_pair)).safeTransferETH(msg.value);

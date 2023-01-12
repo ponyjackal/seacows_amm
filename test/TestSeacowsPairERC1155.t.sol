@@ -3,6 +3,7 @@ pragma solidity >=0.8.4;
 
 import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { HelperConfig } from "../script/HelperConfig.sol";
 import { SeacowsPairFactory } from "../src/SeacowsPairFactory.sol";
 import { ISeacowsPairFactoryLike } from "../src/interfaces/ISeacowsPairFactoryLike.sol";
@@ -17,6 +18,8 @@ import { UniswapPriceOracle } from "../src/priceoracle/UniswapPriceOracle.sol";
 import { ChainlinkAggregator } from "../src/priceoracle/ChainlinkAggregator.sol";
 import { TestSeacowsSFT } from "../src/TestCollectionToken/TestSeacowsSFT.sol";
 import { ISeacowsPairERC1155 } from "../src/interfaces/ISeacowsPairERC1155.sol";
+import { CPMMCurve } from "../src/bondingcurve/CPMMCurve.sol";
+import { MyToken } from "../src/TestCollectionToken/TestSeacowsToken.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
@@ -37,6 +40,8 @@ contract SeacowsPairERC1155Test is Test {
     UniswapPriceOracle internal uniswapPriceOracle;
     ChainlinkAggregator internal chainlinkAggregator;
     TestSeacowsSFT internal testSeacowsSFT;
+    CPMMCurve internal cpmmCurve;
+    MyToken internal token;
 
     function setUp() public {
         HelperConfig helperConfig = new HelperConfig();
@@ -103,14 +108,42 @@ contract SeacowsPairERC1155Test is Test {
         // deploy sft contract
         testSeacowsSFT = new TestSeacowsSFT();
         testSeacowsSFT.safeMint(spender);
+
+        token = new MyToken();
+        token.mint(spender, 1e18);
+
+        // deploy CPMM
+        cpmmCurve = new CPMMCurve();
     }
 
-    function test_create_eth_pair() public {
+    function create_eth_pair() public {
         vm.startPrank(spender);
 
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
-        SeacowsPairETH ethPair = seacowsPairFactory.createPairERC1155ETH(testSeacowsSFT, 1, 1000, 10);
+        SeacowsPairETH ethPair = seacowsPairFactory.createPairERC1155ETH(testSeacowsSFT, 1, cpmmCurve, 1000, 10);
+
+        uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
+
+        assertEq(tokenId, 5);
+    }
+
+    function test_create_erc20_pair() public {
+        vm.startPrank(spender);
+
+        token.approve(address(seacowsPairFactory), 1000000);
+
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+
+        SeacowsPairETH ethPair = seacowsPairFactory.createPairERC1155ERC20(
+            testSeacowsSFT,
+            1,
+            cpmmCurve,
+            1000,
+            ERC20(token),
+            100000,
+            10
+        );
 
         uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
 

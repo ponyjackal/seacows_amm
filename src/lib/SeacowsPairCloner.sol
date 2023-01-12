@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import {ERC20} from "solmate/tokens/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {ICurve} from "../bondingcurve/ICurve.sol";
 import {ISeacowsPairFactoryLike} from "../interfaces/ISeacowsPairFactoryLike.sol";
@@ -206,7 +206,7 @@ library SeacowsPairCloner {
         ICurve bondingCurve,
         address nft,
         uint8 poolType,
-        ERC20 token
+        IERC20 token
     ) internal returns (address instance) {
         assembly {
             let ptr := mload(0x40)
@@ -298,7 +298,7 @@ library SeacowsPairCloner {
         ICurve bondingCurve,
         address nft,
         uint8 poolType,
-        ERC20 token,
+        IERC20 token,
         uint256 tokenId
     ) internal returns (address instance) {
         assembly {
