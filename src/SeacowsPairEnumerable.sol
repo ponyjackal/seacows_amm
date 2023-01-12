@@ -65,7 +65,8 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
         return this.onERC721Received.selector;
     }
 
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyAdmin {
+    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyOwner {
+        require(poolType() == PoolType.NFT, "Invalid pool type");
         uint256 numNFTs = nftIds.length;
         for (uint256 i; i < numNFTs; ) {
             a.safeTransferFrom(address(this), msg.sender, nftIds[i]);
