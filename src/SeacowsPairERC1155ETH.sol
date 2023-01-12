@@ -23,7 +23,7 @@ contract SeacowsPairERC1155ETH is SeacowsPairERC1155, SeacowsPairETH {
     function tokenId() public pure override returns (uint256 _tokenId) {
         uint256 paramsLength = _immutableParamsLength();
         assembly {
-            _tokenId := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 81)))
+            _tokenId := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 61)))
         }
     }
 

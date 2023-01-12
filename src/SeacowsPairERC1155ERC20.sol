@@ -14,7 +14,7 @@ import { SeacowsPairERC20 } from "./SeacowsPairERC20.sol";
 contract SeacowsPairERC1155ERC20 is SeacowsPairERC1155, SeacowsPairERC20 {
     constructor(string memory _uri) SeacowsPairERC1155(_uri) {}
 
-    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 101;
+    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 113;
 
     /**
         @notice Returns the ERC1155 token id associated with the pair

@@ -3,11 +3,11 @@
 pragma solidity ^0.8.0;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {ICurve} from "../bondingcurve/ICurve.sol";
 import {ISeacowsPairFactoryLike} from "../interfaces/ISeacowsPairFactoryLike.sol";
+
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 library SeacowsPairCloner {
     /**
@@ -309,7 +309,7 @@ library SeacowsPairCloner {
             // -------------------------------------------------------------------------------------------------------------
 
             // creation size = 09
-            // runtime size = 9a
+            // runtime size = a6
             // 60 runtime  | PUSH1 runtime (r)     | r                       | –
             // 3d          | RETURNDATASIZE        | 0 r                     | –
             // 81          | DUP2                  | r 0 r                   | –
@@ -319,10 +319,10 @@ library SeacowsPairCloner {
             // f3          | RETURN                |                         | [0-runSize): runtime code
 
             // -------------------------------------------------------------------------------------------------------------
-            // RUNTIME (53 bytes of code + 101 bytes of extra data = 154 bytes)
+            // RUNTIME (53 bytes of code + 113 bytes of extra data = 166 bytes)
             // -------------------------------------------------------------------------------------------------------------
 
-            // extra data size = 65
+            // extra data size = 71
             // 3d          | RETURNDATASIZE        | 0                       | –
             // 3d          | RETURNDATASIZE        | 0 0                     | –
             // 3d          | RETURNDATASIZE        | 0 0 0                   | –
@@ -342,7 +342,7 @@ library SeacowsPairCloner {
             // 73 addr     | PUSH20 0x123…         | addr 0 cds 0 0 0 0      | [0, cds) = calldata, [cds, cds+0x35) = extraData
             mstore(
                 ptr,
-                hex"60_9a_3d_81_60_09_3d_39_f3_3d_3d_3d_3d_36_3d_3d_37_60_65_60_35_36_39_36_60_65_01_3d_73_00_00_00"
+                hex"60_a6_3d_81_60_09_3d_39_f3_3d_3d_3d_3d_36_3d_3d_37_60_71_60_35_36_39_36_60_71_01_3d_73_00_00_00"
             )
             mstore(add(ptr, 0x1d), shl(0x60, implementation))
 
@@ -364,7 +364,7 @@ library SeacowsPairCloner {
             )
 
             // -------------------------------------------------------------------------------------------------------------
-            // EXTRA DATA (81 bytes)
+            // EXTRA DATA (113 bytes)
             // -------------------------------------------------------------------------------------------------------------
 
             mstore(add(ptr, 0x3e), shl(0x60, factory))
@@ -374,7 +374,7 @@ library SeacowsPairCloner {
             mstore(add(ptr, 0x7b), shl(0x60, token))
             mstore(add(ptr, 0x8f), shl(0x60, tokenId))
 
-            instance := create(0, ptr, 0xa3)
+            instance := create(0, ptr, 0xaf)
         }
     }
 

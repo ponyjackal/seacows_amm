@@ -30,8 +30,8 @@ import { ChainlinkAggregator } from "./priceoracle/ChainlinkAggregator.sol";
 import { UniswapPriceOracle } from "./priceoracle/UniswapPriceOracle.sol";
 
 import { ISeacowsPairETH } from "./interfaces/ISeacowsPairETH.sol";
-import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairERC20 } from "./interfaces/ISeacowsPairERC20.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
@@ -204,7 +204,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         // mint LP tokens
         pair.mintLPToken(msg.sender, _amounts);
 
-        _initializePairETHERC1155(ISeacowsPairETH(address(pair)), _nft, _tokenId, _amounts, _fee);
+        _initializePairETHERC1155(pair, _nft, _tokenId, _amounts, _fee);
         emit NewPair(address(pair));
     }
 
@@ -361,10 +361,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         IERC20 _token,
         uint256 _tokenAmount,
         uint96 _fee
-    ) external payable returns (SeacowsPairETH pair) {
-        address template = address(erc1155ETHTemplate);
+    ) external payable returns (SeacowsPairERC20 pair) {
+        address template = address(erc1155ERC20Template);
         // create a pair
-        pair = SeacowsPairETH(
+        pair = SeacowsPairERC20(
             payable(
                 template.cloneERC1155ERC20Pair(
                     this,
@@ -380,15 +380,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         // mint LP tokens
         pair.mintLPToken(msg.sender, _amounts);
 
-        _initializePairERC20ERC1155(
-            ISeacowsPairETH(address(pair)),
-            _nft,
-            _tokenId,
-            _amounts,
-            _token,
-            _tokenAmount,
-            _fee
-        );
+        _initializePairERC20ERC1155(pair, _nft, _tokenId, _amounts, _token, _tokenAmount, _fee);
         emit NewPair(address(pair));
     }
 
@@ -646,7 +638,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     function _initializePairETHERC1155(
-        ISeacowsPairETH _pair,
+        SeacowsPairETH _pair,
         IERC1155 _nft,
         uint256 _tokenId,
         uint256 _amounts,
@@ -693,7 +685,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     function _initializePairERC20ERC1155(
-        ISeacowsPairETH _pair,
+        SeacowsPairERC20 _pair,
         IERC1155 _nft,
         uint256 _tokenId,
         uint256 _amounts,
@@ -708,9 +700,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // transfer initial tokens to pair
         _token.transferFrom(msg.sender, address(_pair), _tokenAmount);
-
-        // transfer initial ETH to pair
-        payable(address(_pair)).safeTransferETH(msg.value);
 
         // transfer nfts to the pair
         _nft.safeTransferFrom(msg.sender, address(_pair), _tokenId, _amounts, "");

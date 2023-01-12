@@ -12,6 +12,7 @@ import { SeacowsPairMissingEnumerableETH } from "../src/SeacowsPairMissingEnumer
 import { SeacowsPairEnumerableERC20 } from "../src/SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "../src/SeacowsPairMissingEnumerableERC20.sol";
 import { SeacowsPairETH } from "../src/SeacowsPairETH.sol";
+import { SeacowsPairERC20 } from "../src/SeacowsPairERC20.sol";
 import { SeacowsPairERC1155ETH } from "../src/SeacowsPairERC1155ETH.sol";
 import { SeacowsPairERC1155ERC20 } from "../src/SeacowsPairERC1155ERC20.sol";
 import { UniswapPriceOracle } from "../src/priceoracle/UniswapPriceOracle.sol";
@@ -116,7 +117,7 @@ contract SeacowsPairERC1155Test is Test {
         cpmmCurve = new CPMMCurve();
     }
 
-    function create_eth_pair() public {
+    function test_create_eth_pair() public {
         vm.startPrank(spender);
 
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
@@ -125,7 +126,7 @@ contract SeacowsPairERC1155Test is Test {
 
         uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
 
-        assertEq(tokenId, 5);
+        assertEq(tokenId, 1);
     }
 
     function test_create_erc20_pair() public {
@@ -135,7 +136,7 @@ contract SeacowsPairERC1155Test is Test {
 
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
-        SeacowsPairETH ethPair = seacowsPairFactory.createPairERC1155ERC20(
+        SeacowsPairERC20 ethPair = seacowsPairFactory.createPairERC1155ERC20(
             testSeacowsSFT,
             1,
             cpmmCurve,
@@ -147,6 +148,6 @@ contract SeacowsPairERC1155Test is Test {
 
         uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
 
-        assertEq(tokenId, 5);
+        assertEq(tokenId, 1);
     }
 }
