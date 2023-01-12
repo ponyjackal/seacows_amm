@@ -927,7 +927,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev remove ETH liquidity from ERC1155 trading pair
      * @param _amount lp token amount to remove
      */
-    function removeLiquidityETH(SeacowsPairERC1155ETH _pair, uint256 _amount) external {
+    function removeLiquidityETHERC1155(SeacowsPairERC1155ETH _pair, uint256 _amount) external {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ETH, "Not a ERC1155/ETH trade pair");
         require(_amount > 0, "Invalid amount");
