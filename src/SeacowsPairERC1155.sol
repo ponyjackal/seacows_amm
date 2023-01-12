@@ -26,10 +26,6 @@ abstract contract SeacowsPairERC1155 is SeacowsPair {
         IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, tokenId(), numNFTs, "");
     }
 
-    function withdrawERC1155(address _nft, uint256 numNFTs) external onlyAdmin {
-        IERC1155(_nft).safeTransferFrom(address(this), msg.sender, tokenId(), numNFTs, "");
-    }
-
     /** Deprecated functions, just overrided based on design pattern */
     /// @inheritdoc SeacowsPair
     function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds)
