@@ -13,6 +13,8 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
 contract SeacowsPairEnumerableERC20 is SeacowsPairEnumerable, SeacowsPairERC20 {
+    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
+
     constructor(string memory _uri) SeacowsPairEnumerable(_uri) {}
 
     /**
@@ -20,5 +22,10 @@ contract SeacowsPairEnumerableERC20 is SeacowsPairEnumerable, SeacowsPairERC20 {
      */
     function pairVariant() public pure override returns (ISeacowsPairFactoryLike.PairVariant) {
         return ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20;
+    }
+
+    // @dev see SeacowsPairCloner for params length calculation
+    function _immutableParamsLength() internal pure override returns (uint256) {
+        return IMMUTABLE_PARAMS_LENGTH;
     }
 }

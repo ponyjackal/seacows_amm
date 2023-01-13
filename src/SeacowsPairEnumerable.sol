@@ -15,13 +15,13 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
     constructor(string memory _uri) SeacowsPair(_uri) {}
 
     /// @inheritdoc SeacowsPair
-    function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal override {
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal override {
         // Send NFTs to recipient
         // (we know NFT implements IERC721Enumerable so we just iterate)
-        uint256 lastIndex = _nft.balanceOf(address(this)) - 1;
+        uint256 lastIndex = IERC721(_nft).balanceOf(address(this)) - 1;
         for (uint256 i = 0; i < numNFTs; ) {
             uint256 nftId = IERC721Enumerable(address(_nft)).tokenOfOwnerByIndex(address(this), lastIndex);
-            _nft.safeTransferFrom(address(this), nftRecipient, nftId);
+            IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftId);
 
             unchecked {
                 --lastIndex;
@@ -48,7 +48,7 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
 
     /// @inheritdoc SeacowsPair
     function getAllHeldIds() external view override returns (uint256[] memory) {
-        IERC721 _nft = nft();
+        IERC721 _nft = IERC721(nft());
         uint256 numNFTs = _nft.balanceOf(address(this));
         uint256[] memory ids = new uint256[](numNFTs);
         for (uint256 i; i < numNFTs; ) {
@@ -65,8 +65,8 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
         return this.onERC721Received.selector;
     }
 
-    /// @inheritdoc SeacowsPair
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external override onlyOwner {
+    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyOwner {
+        require(poolType() == PoolType.NFT, "Invalid pool type");
         uint256 numNFTs = nftIds.length;
         for (uint256 i; i < numNFTs; ) {
             a.safeTransferFrom(address(this), msg.sender, nftIds[i]);

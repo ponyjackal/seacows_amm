@@ -16,8 +16,6 @@ abstract contract SeacowsPairETH is SeacowsPair {
     using SafeTransferLib for address payable;
     using SafeTransferLib for ERC20;
 
-    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 61;
-
     /// @inheritdoc SeacowsPair
     function _pullTokenInputAndPayProtocolFee(
         uint256 inputAmount,
@@ -78,12 +76,6 @@ abstract contract SeacowsPairETH is SeacowsPair {
         }
     }
 
-    /// @inheritdoc SeacowsPair
-    // @dev see SeacowsPairCloner for params length calculation
-    function _immutableParamsLength() internal pure override returns (uint256) {
-        return IMMUTABLE_PARAMS_LENGTH;
-    }
-
     /**
         @notice Withdraws all token owned by the pair to the owner address.
         @dev Only callable by the owner.
@@ -115,11 +107,6 @@ abstract contract SeacowsPairETH is SeacowsPair {
         payable(recipient).safeTransferETH(amount);
     }
 
-    /// @inheritdoc SeacowsPair
-    function withdrawERC20(ERC20 a, uint256 amount) external override onlyOwner {
-        a.safeTransfer(msg.sender, amount);
-    }
-
     /**
         @dev All ETH transfers into the pair are accepted. This is the main method
         for the owner to top up the pair's token reserves.
@@ -143,7 +130,7 @@ abstract contract SeacowsPairETH is SeacowsPair {
      */
     function _getReserve() internal view override onlyTrade returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
-        nftReserve = nft().balanceOf(address(this));
+        nftReserve = IERC721(nft()).balanceOf(address(this));
         // eth balance
         tokenReserve = address(this).balance;
     }

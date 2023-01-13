@@ -165,13 +165,16 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
-        IERC721 _nft = nft();
+        address _nft = nft();
 
         // Input validation
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require((numNFTs > 0) && (numNFTs <= _nft.balanceOf(address(this))), "Ask for > 0 and <= balanceOf NFTs");
+            require(
+                (numNFTs > 0) && (numNFTs <= IERC721(_nft).balanceOf(address(this))),
+                "Ask for > 0 and <= balanceOf NFTs"
+            );
         }
 
         // Call bonding curve for pricing information
@@ -239,7 +242,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
 
-        _sendSpecificNFTsToRecipient(nft(), nftRecipient, nftIds);
+        _sendSpecificNFTsToRecipient(IERC721(nft()), nftRecipient, nftIds);
 
         _refundTokenToSender(inputAmount);
 
@@ -292,7 +295,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _payProtocolFeeFromPair(_factory, protocolFee);
 
-        _takeNFTsFromSender(nft(), nftIds, _factory, isRouter, routerCaller);
+        _takeNFTsFromSender(IERC721(nft()), nftIds, _factory, isRouter, routerCaller);
 
         emit SwapNFTInPair();
     }
@@ -416,7 +419,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
         @notice Returns the NFT collection that parameterizes the pair
      */
-    function nft() public pure returns (IERC721 _nft) {
+    function nft() public pure returns (address _nft) {
         uint256 paramsLength = _immutableParamsLength();
         assembly {
             _nft := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 40)))
@@ -655,7 +658,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param nftRecipient The receiving address for the NFTs
         @param numNFTs The number of NFTs to send  
      */
-    function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal virtual;
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal virtual;
 
     /**
         @notice Sends specific NFTs to a recipient address
@@ -731,33 +734,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     function _immutableParamsLength() internal pure virtual returns (uint256);
 
     /**
-     * Owner functions
+     * Admin functions
      */
-
-    /**
-        @notice Rescues a specified set of NFTs owned by the pair to the owner address. (onlyOwnable modifier is in the implemented function)
-        @dev If the NFT is the pair's collection, we also remove it from the id tracking (if the NFT is missing enumerable).
-        @param a The NFT to transfer
-        @param nftIds The list of IDs of the NFTs to send to the owner
-     */
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external virtual;
-
-    /**
-        @notice Rescues ERC20 tokens from the pair to the owner. Only callable by the owner (onlyOwnable modifier is in the implemented function).
-        @param a The token to transfer
-        @param amount The amount of tokens to send to the owner
-     */
-    function withdrawERC20(ERC20 a, uint256 amount) external virtual;
-
-    /**
-        @notice Rescues ERC1155 tokens from the pair to the owner. Only callable by the owner.
-        @param a The NFT to transfer
-        @param ids The NFT ids to transfer
-        @param amounts The amounts of each id to transfer
-     */
-    function withdrawERC1155(IERC1155 a, uint256[] calldata ids, uint256[] calldata amounts) external onlyOwner {
-        a.safeBatchTransferFrom(address(this), msg.sender, ids, amounts, "");
-    }
 
     /**
         @notice Updates the selling spot price. Only callable by the owner.

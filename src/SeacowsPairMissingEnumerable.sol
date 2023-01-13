@@ -20,14 +20,14 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
     constructor(string memory _uri) SeacowsPair(_uri) {}
 
     /// @inheritdoc SeacowsPair
-    function _sendAnyNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256 numNFTs) internal override {
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal override {
         // Send NFTs to recipient
         // We're missing enumerable, so we also update the pair's own ID set
         // NOTE: We start from last index to first index to save on gas
         uint256 lastIndex = idSet.length() - 1;
         for (uint256 i; i < numNFTs; ) {
             uint256 nftId = idSet.at(lastIndex);
-            _nft.safeTransferFrom(address(this), nftRecipient, nftId);
+            IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftId);
             idSet.remove(nftId);
 
             unchecked {
@@ -75,7 +75,7 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
         if it's the same collection used by pool. (As it doesn't auto-track because no ERC721Enumerable)
      */
     function onERC721Received(address, address, uint256 id, bytes memory) public virtual returns (bytes4) {
-        IERC721 _nft = nft();
+        IERC721 _nft = IERC721(nft());
         // If it's from the pair's NFT, add the ID to ID set
         if (msg.sender == address(_nft)) {
             idSet.add(id);
@@ -83,9 +83,8 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
         return this.onERC721Received.selector;
     }
 
-    /// @inheritdoc SeacowsPair
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external override onlyOwner {
-        IERC721 _nft = nft();
+    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyAdmin {
+        IERC721 _nft = IERC721(nft());
         uint256 numNFTs = nftIds.length;
 
         // If it's not the pair's NFT, just withdraw normally

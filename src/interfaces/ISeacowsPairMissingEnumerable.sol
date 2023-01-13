@@ -7,7 +7,7 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 interface ISeacowsPairMissingEnumerable is ISeacowsPair {
     function getAllHeldIds() external view override returns (uint256[] memory);
 
-    function onERC721Received(address, address, uint256 id, bytes memory) external virtual returns (bytes4);
+    function onERC721Received(address, address, uint256 id, bytes memory) external returns (bytes4);
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external override;
 }
