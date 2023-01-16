@@ -16,7 +16,7 @@ function getRemappings() {
     .readFileSync("remappings.txt", "utf8")
     .split("\n")
     .filter(Boolean) // remove empty lines
-    .map((line) => line.trim().split("=")); 
+    .map((line) => line.trim().split("="));
 }
 
 // dotenv.config();
@@ -89,8 +89,16 @@ const config: HardhatUserConfig = {
     path: "./dist/abis",
     runOnCompile: true,
     clear: true,
-    flat: true,
-    only: [":Seacows*"],
+    // flat: false,
+    except: [":ERC*"],
+    // solmate and openzeppelin have duplicated ERC20 contracts. Need special handling.
+    rename: (sourceName: string, contractName: string) => {
+      if (contractName.match(/^IERC/)) {
+        return contractName.replace(/^IERC/, "ERC");
+      } else {
+        return contractName;
+      }
+    },
     spacing: 2,
     pretty: false,
   },

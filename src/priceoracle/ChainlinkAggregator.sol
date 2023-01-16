@@ -44,7 +44,7 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
     }
 
     // request id => ETHRequest info
-    mapping(bytes32 => ETHRequest) private ethRequests;
+    // mapping(bytes32 => ETHRequest) private ethRequests;
     // request id => ERC20Request info
     mapping(bytes32 => ERC20Request) private erc20Requests;
     // spot prices
@@ -70,10 +70,10 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
         _;
     }
 
-    modifier validateETHTimestamp(bytes32 _requestId) {
-        require(ethRequests[_requestId].timestamp > block.timestamp - ORACLE_FUTURE_LIMIT, "Request has expired");
-        _;
-    }
+    // modifier validateETHTimestamp(bytes32 _requestId) {
+    //     require(ethRequests[_requestId].timestamp > block.timestamp - ORACLE_FUTURE_LIMIT, "Request has expired");
+    //     _;
+    // }
 
     modifier validateERC20Timestamp(bytes32 _requestId) {
         require(erc20Requests[_requestId].timestamp > block.timestamp - ORACLE_FUTURE_LIMIT, "Request has expired");
@@ -98,58 +98,58 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
        @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
      */
-    function requestCryptoPriceETH(
-        ISeacowsPairETH _pair,
-        IERC721 _nft,
-        address payable _assetRecipient,
-        uint128 _delta,
-        uint96 _fee,
-        uint256[] calldata _initialNFTIDs
-    ) external onlyFactory returns (bytes32) {
-        Chainlink.Request memory req = buildChainlinkRequest(oracleJobId, address(this), this.fulfillETH.selector);
-        string memory requestURL = string(
-            abi.encodePacked(
-                "https://api.reservoir.tools/oracle/collections/floor-ask/v4?collection=",
-                Strings.toHexString(address(_nft))
-            )
-        );
-        req.add("get", requestURL);
+    // function requestCryptoPriceETH(
+    //     ISeacowsPairETH _pair,
+    //     IERC721 _nft,
+    //     address payable _assetRecipient,
+    //     uint128 _delta,
+    //     uint96 _fee,
+    //     uint256[] calldata _initialNFTIDs
+    // ) external onlyFactory returns (bytes32) {
+    //     Chainlink.Request memory req = buildChainlinkRequest(oracleJobId, address(this), this.fulfillETH.selector);
+    //     string memory requestURL = string(
+    //         abi.encodePacked(
+    //             "https://api.reservoir.tools/oracle/collections/floor-ask/v4?collection=",
+    //             Strings.toHexString(address(_nft))
+    //         )
+    //     );
+    //     req.add("get", requestURL);
 
-        req.add("path", "price");
+    //     req.add("path", "price");
 
-        req.addInt("times", int256(ORACLE_PRECISION));
+    //     req.addInt("times", int256(ORACLE_PRECISION));
 
-        bytes32 requestId = sendChainlinkRequest(req, ORACLE_PAYMENT);
-        ethRequests[requestId] = ETHRequest(
-            _pair,
-            _nft,
-            _assetRecipient,
-            _delta,
-            _fee,
-            _initialNFTIDs,
-            block.timestamp
-        );
+    //     bytes32 requestId = sendChainlinkRequest(req, ORACLE_PAYMENT);
+    //     ethRequests[requestId] = ETHRequest(
+    //         _pair,
+    //         _nft,
+    //         _assetRecipient,
+    //         _delta,
+    //         _fee,
+    //         _initialNFTIDs,
+    //         block.timestamp
+    //     );
 
-        return requestId;
-    }
+    //     return requestId;
+    // }
 
-    function fulfillETH(bytes32 _requestId, uint256 _price)
-        public
-        validateETHTimestamp(_requestId)
-        recordChainlinkFulfillment(_requestId)
-    {
-        ETHRequest memory request = ethRequests[_requestId];
-        factory.initializePairETHFromOracle(
-            request.pair,
-            request.nft,
-            request.assetRecipient,
-            request.delta,
-            request.fee,
-            uint128(_price),
-            request.initialNFTIDs
-        );
-        delete ethRequests[_requestId];
-    }
+    // function fulfillETH(bytes32 _requestId, uint256 _price)
+    //     public
+    //     validateETHTimestamp(_requestId)
+    //     recordChainlinkFulfillment(_requestId)
+    // {
+    //     ETHRequest memory request = ethRequests[_requestId];
+    //     factory.initializePairETHFromOracle(
+    //         request.pair,
+    //         request.nft,
+    //         request.assetRecipient,
+    //         request.delta,
+    //         request.fee,
+    //         uint128(_price),
+    //         request.initialNFTIDs
+    //     );
+    //     delete ethRequests[_requestId];
+    // }
 
     /**
      * @notice Initiatiate a price request via chainlink for erc20 pair. 

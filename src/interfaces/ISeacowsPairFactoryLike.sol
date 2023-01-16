@@ -29,15 +29,15 @@ interface ISeacowsPairFactoryLike {
 
     function isPair(address potentialPair, PairVariant variant) external view returns (bool);
 
-    function initializePairETHFromOracle(
-        ISeacowsPairETH pair,
-        IERC721 _nft,
-        address payable _assetRecipient,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] calldata _initialNFTIDs
-    ) external;
+    // function initializePairETHFromOracle(
+    //     ISeacowsPairETH pair,
+    //     IERC721 _nft,
+    //     address payable _assetRecipient,
+    //     uint128 _delta,
+    //     uint96 _fee,
+    //     uint128 _spotPrice,
+    //     uint256[] calldata _initialNFTIDs
+    // ) external;
 
     function initializePairERC20FromOracle(
         ISeacowsPairERC20 pair,

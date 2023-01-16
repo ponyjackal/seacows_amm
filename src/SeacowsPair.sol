@@ -300,11 +300,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         emit SwapNFTInPair();
     }
 
-    function _applyWithOraclePrice(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details, uint256 spotPrice)
-        internal
-        view
-        returns (uint256 newPrice)
-    {
+    function _applyWithOraclePrice(
+        uint256[] memory _nftIds,
+        SeacowsRouter.NFTDetail[] memory _details,
+        uint256 _spotPrice
+    ) internal view returns (uint256 newPrice) {
         address oracleRegisrtyAddr = factory().priceOracleRegistry();
         SeacowsCollectionRegistry registry = SeacowsCollectionRegistry(oracleRegisrtyAddr);
         address _nft = address(nft());
@@ -314,13 +314,13 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint256 numerator = 100;
         uint256 denominator = 1000;
 
-        for (uint256 i = 0; i < nftIds.length; ) {
+        for (uint256 i = 0; i < _nftIds.length; ) {
             uint256 oraclePrice = uint256(
-                registry.getAssetPrice(_nft, nftIds[i], details[i].groupId, details[i].merkleProof)
+                registry.getAssetPrice(_nft, _nftIds[i], _details[i].groupId, _details[i].merkleProof)
             );
-            uint256 priceDiff = oraclePrice - spotPrice;
+            uint256 priceDiff = oraclePrice - _spotPrice;
             uint256 priceDelta = priceDiff > 0 ? (priceDiff * numerator) / denominator : 0;
-            uint256 appliedPrice = spotPrice + priceDelta;
+            uint256 appliedPrice = _spotPrice + priceDelta;
             totalPrice += appliedPrice;
             unchecked {
                 ++i;
@@ -328,7 +328,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         }
 
         // average price
-        newPrice = totalPrice / nftIds.length;
+        newPrice = totalPrice / _nftIds.length;
     }
 
     /**
@@ -658,7 +658,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param nftRecipient The receiving address for the NFTs
         @param numNFTs The number of NFTs to send  
      */
-    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal virtual;
+    function _sendAnyNFTsToRecipient(
+        IERC721 _nft,
+        address nftRecipient,
+        uint256 numNFTs
+    ) internal virtual;
 
     /**
         @notice Sends specific NFTs to a recipient address
@@ -668,9 +672,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param nftRecipient The receiving address for the NFTs
         @param nftIds The specific IDs of NFTs to send  
      */
-    function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds)
-        internal
-        virtual;
+    function _sendSpecificNFTsToRecipient(
+        IERC721 _nft,
+        address nftRecipient,
+        uint256[] calldata nftIds
+    ) internal virtual;
 
     /**
         @notice Takes NFTs from the caller and sends them into the pair's asset recipient
@@ -882,7 +888,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     function burnLPToken(address recipient, uint256 amount) external onlyFactory {
         require(recipient != address(0), "Invalid recipient");
         require(balanceOf(recipient, LP_TOKEN) >= amount, "Insufficient LP token");
-        require(amount > 0, "Invliad amount");
+        require(amount > 0, "Invalid amount");
         // burn LP from the user
         _burn(recipient, LP_TOKEN, amount);
     }
@@ -894,7 +900,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
      * note only used trade pair
      * @dev we override _mint function to track totalSupply
      */
-    function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal virtual override onlyTrade {
+    function _mint(
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) internal virtual override onlyTrade {
         totalSupply[id] += amount;
         super._mint(to, id, amount, data);
 
@@ -906,7 +917,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
      * note only used trade pair
      * @dev we override _mint function to track totalSupply
      */
-    function _burn(address from, uint256 id, uint256 amount) internal virtual override onlyTrade {
+    function _burn(
+        address from,
+        uint256 id,
+        uint256 amount
+    ) internal virtual override onlyTrade {
         totalSupply[id] -= amount;
         super._burn(from, id, amount);
 

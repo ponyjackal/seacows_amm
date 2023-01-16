@@ -6,6 +6,7 @@ contract HelperConfig {
 
     struct NetworkConfig {
         string lpUri;
+        address weth;
         address payable protocolFeeRecipient;
         uint256 protocolFeeMultiplier;
         address seacowsCollectionRegistry;
@@ -26,6 +27,7 @@ contract HelperConfig {
     function getGoerliEthConfig() internal pure returns (NetworkConfig memory goerliNetworkConfig) {
         goerliNetworkConfig = NetworkConfig({
             lpUri: "",
+            weth: 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6,
             protocolFeeRecipient: payable(address(0)),
             protocolFeeMultiplier: 5000000000000000,
             seacowsCollectionRegistry: address(0),
@@ -38,6 +40,7 @@ contract HelperConfig {
     function getAnvilEthConfig() internal pure returns (NetworkConfig memory anvilNetworkConfig) {
         anvilNetworkConfig = NetworkConfig({
             lpUri: "",
+            weth: 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6, // TODO: change to the correct weth
             protocolFeeRecipient: payable(address(0)),
             protocolFeeMultiplier: 5000000000000000,
             seacowsCollectionRegistry: address(0),

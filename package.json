@@ -70,6 +70,7 @@
     "dist"
   ],
   "dependencies": {
-    "hardhat-preprocessor": "^0.1.5"
+    "hardhat-preprocessor": "^0.1.5",
+    "node": "^19.3.0"
   }
 }

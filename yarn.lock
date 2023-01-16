@@ -1845,6 +1845,7 @@ __metadata:
     hardhat-preprocessor: ^0.1.5
     husky: ^8.0.1
     lint-staged: ^13.0.3
+    node: ^19.3.0
     prettier: ^2.7.1
     prettier-plugin-solidity: ^1.0.0-dev.24
     rimraf: ^3.0.2
@@ -10083,6 +10084,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-bin-setup@npm:^1.0.0":
+  version: 1.1.3
+  resolution: "node-bin-setup@npm:1.1.3"
+  checksum: ae09c036dde8133f5226dc984445a8bdecc9b56078fd091f9e243e3965e544275f4786054041db60cc4ebc2957a5e44e8f316dfc15d100f3988ee2d04661d4bf
+  languageName: node
+  linkType: hard
+
 "node-environment-flags@npm:1.0.6":
   version: 1.0.6
   resolution: "node-environment-flags@npm:1.0.6"
@@ -10145,6 +10153,17 @@ __metadata:
   bin:
     node-gyp: bin/node-gyp.js
   checksum: 589ddd3ed967724ef425f9624bfa47cf73022640ab3eba6d556e92cdc4ddef33b63fce3a467c93b995a3f61df92eafd3c3d1e8dbe4a2c00c383334487dea99c3
+  languageName: node
+  linkType: hard
+
+"node@npm:^19.3.0":
+  version: 19.3.0
+  resolution: "node@npm:19.3.0"
+  dependencies:
+    node-bin-setup: ^1.0.0
+  bin:
+    node: bin/node
+  checksum: 8072d483ad015121e5fc55aed1889f6053c8bfaced97a76c73104e3031ae5f3f6ceee4e2b2cec08120e2bfaeba8fb5303b22ba2b860820fcd3719d0ba1cee521
   languageName: node
   linkType: hard
 
