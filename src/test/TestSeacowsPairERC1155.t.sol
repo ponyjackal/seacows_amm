@@ -137,5 +137,9 @@ contract SeacowsPairERC1155Test is Test {
         seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
 
         vm.stopPrank();
+
+        uint256 lpBalance = pair.balanceOf(spender, 1);
+
+        assertEq(lpBalance, 100);
     }
 }
