@@ -11,8 +11,9 @@ import { IERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensio
 
 // @dev Solmate's ERC20 is used instead of OZ's ERC20 so we can use safeTransferLib for cheaper safeTransfers for
 // ETH and ERC20 tokens
-import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
@@ -28,13 +29,13 @@ import { UniswapPriceOracle } from "./priceoracle/UniswapPriceOracle.sol";
 import { IWETH } from "./interfaces/IWETH.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairERC20 } from "./interfaces/ISeacowsPairERC20.sol";
-import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairERC1155ERC20 } from "./interfaces/ISeacowsPairERC1155ERC20.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     using SeacowsPairCloner for address;
     using SafeTransferLib for address payable;
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for ERC20;
 
     bytes4 private constant INTERFACE_ID_ERC721_ENUMERABLE = type(IERC721Enumerable).interfaceId;
 
@@ -411,8 +412,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             return SeacowsPairCloner.isERC20PairClone(address(this), address(enumerableERC20Template), potentialPair);
         } else if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
             return SeacowsPairCloner.isERC20PairClone(address(this), address(missingEnumerableERC20Template), potentialPair);
-        }
-        else {
+        } else {
             // invalid input
             return false;
         }
@@ -638,7 +638,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @param _amount ERC20 token amount
      * @param _tokenAmount ERC20 token amount
      */
-    function addLiquidityERC20ERC1155(SeacowsPairERC1155ERC20 _pair, uint256 _amount, uint256 _tokenAmount) external {
+    function addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20 _pair, uint256 _amount, uint256 _tokenAmount) external {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
         require(_amount > 0, "Invalid NFT amount");
@@ -668,7 +668,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev add ETH liquidity into ERC1155 trading pair
      * @param _amount NFT amount
      */
-    function addLiquidityETHERC1155(SeacowsPairERC1155ERC20 _pair, uint256 _amount) external payable {
+    function addLiquidityETHERC1155(ISeacowsPairERC1155ERC20 _pair, uint256 _amount) external payable {
         IWETH(weth).deposit{ value: msg.value }();
         IWETH(weth).transfer(msg.sender, msg.value);
         this.addLiquidityERC20ERC1155(_pair, _amount, msg.value);

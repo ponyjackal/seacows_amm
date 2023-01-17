@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
-import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
@@ -15,7 +15,7 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm 
  */
 abstract contract SeacowsPairERC20 is SeacowsPair {
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for ERC20;
 
     /**
         @notice Returns the ERC20 token associated with the pair

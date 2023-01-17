@@ -35,6 +35,7 @@ contract SeacowsPairERC1155Test is Test {
     UniswapPriceOracle internal uniswapPriceOracle;
     ChainlinkAggregator internal chainlinkAggregator;
     TestSeacowsSFT internal testSeacowsSFT;
+    SeacowsPairERC20 internal pair;
     CPMMCurve internal cpmmCurve;
     TestERC20 internal token;
 
@@ -93,27 +94,41 @@ contract SeacowsPairERC1155Test is Test {
 
         // deploy sft contract
         testSeacowsSFT = new TestSeacowsSFT();
-        testSeacowsSFT.safeMint(spender);
+        testSeacowsSFT.safeMint(owner);
 
         token = new TestERC20();
-        token.mint(spender, 1e18);
+        token.mint(owner, 1e18);
 
         // deploy CPMM
         cpmmCurve = new CPMMCurve();
-    }
 
-    function test_create_erc20_pair() public {
-        vm.startPrank(spender);
+        // create a pair
+        vm.startPrank(owner);
 
         token.approve(address(seacowsPairFactory), 1000000);
 
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
-        SeacowsPairERC20 ethPair = seacowsPairFactory.createPairERC1155ERC20(testSeacowsSFT, 1, cpmmCurve, 1000, ERC20(token), 100000, 10);
+        pair = seacowsPairFactory.createPairERC1155ERC20(testSeacowsSFT, 1, cpmmCurve, 1000, ERC20(token), 100000, 10);
 
-        uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
+        vm.stopPrank();
+    }
+
+    function test_create_erc20_pair() public {
+        uint256 tokenId = ISeacowsPairERC1155(address(pair)).tokenId();
 
         assertEq(tokenId, 1);
+        vm.stopPrank();
+    }
+
+    function test_add_liquidity() public {
+        token.mint(spender, 1e18);
+        testSeacowsSFT.safeMint(spender);
+
+        vm.startPrank(spender);
+
+        seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 100);
+
         vm.stopPrank();
     }
 }
