@@ -118,7 +118,10 @@ contract SeacowsPairERC1155Test is Test {
         uint256 tokenId = ISeacowsPairERC1155(address(pair)).tokenId();
 
         assertEq(tokenId, 1);
-        vm.stopPrank();
+
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+
+        assertEq(spotPrice, 100);
     }
 
     function test_add_liquidity() public {
@@ -127,7 +130,11 @@ contract SeacowsPairERC1155Test is Test {
 
         vm.startPrank(spender);
 
-        seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 100);
+        token.approve(address(seacowsPairFactory), 1000000);
+
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+
+        seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
 
         vm.stopPrank();
     }

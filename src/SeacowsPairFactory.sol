@@ -642,7 +642,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
         require(_amount > 0, "Invalid NFT amount");
-        require(_amount * _pair.spotPrice() <= _amount, "Insufficient token amount");
+        require(_amount * _pair.spotPrice() == _tokenAmount, "Insufficient token amount");
 
         // transfer tokens to pair
         _pair.token().safeTransferFrom(msg.sender, address(_pair), _tokenAmount);
