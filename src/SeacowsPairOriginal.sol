@@ -65,18 +65,13 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
       The Ownable library we use disallows setting the owner to be address(0), so this condition
       should only be valid before the first initialize call. 
       @param _owner The owner of the pair
-      @param _assetRecipient The address that will receive the TOKEN or NFT sent to this pair during swaps. NOTE: If set to address(0), they will go to the pair itself.
+      @param _assetRecipient The address that will receive the TOKEN or NFT sent to this pair during swaps. 
+      NOTE: If set to address(0), they will go to the pair itself.
       @param _delta The initial delta of the bonding curve
       @param _fee The initial % fee taken, if this is a trade pair 
       @param _spotPrice The initial price to sell an asset into the pair
      */
-    function initialize(
-        address _owner,
-        address payable _assetRecipient,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice
-    ) external payable {
+    function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external payable {
         require(owner() == address(0), "Initialized");
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
@@ -116,13 +111,13 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
         ETH pairs.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForAnyNFTs(
-        uint256 numNFTs,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external payable virtual nonReentrant returns (uint256 inputAmount) {
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
+        external
+        payable
+        virtual
+        nonReentrant
+        returns (uint256 inputAmount)
+    {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
@@ -137,12 +132,7 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(
-            numNFTs,
-            maxExpectedTokenInput,
-            _bondingCurve,
-            _factory
-        );
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(numNFTs, maxExpectedTokenInput, _bondingCurve, _factory);
 
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
 
@@ -188,12 +178,7 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(
-            nftIds.length,
-            maxExpectedTokenInput,
-            _bondingCurve,
-            _factory
-        );
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds.length, maxExpectedTokenInput, _bondingCurve, _factory);
 
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
 
@@ -237,12 +222,7 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(
-            nftIds.length,
-            minExpectedTokenOutput,
-            _bondingCurve,
-            _factory
-        );
+        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(nftIds.length, minExpectedTokenOutput, _bondingCurve, _factory);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
@@ -264,13 +244,7 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
     function getBuyNFTQuote(uint256 numNFTs)
         external
         view
-        returns (
-            CurveErrorCodes.Error error,
-            uint256 newSpotPrice,
-            uint256 newDelta,
-            uint256 inputAmount,
-            uint256 protocolFee
-        )
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
     {
         (error, newSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve().getBuyInfo(
             spotPrice,
@@ -288,13 +262,7 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
     function getSellNFTQuote(uint256 numNFTs)
         external
         view
-        returns (
-            CurveErrorCodes.Error error,
-            uint256 newSpotPrice,
-            uint256 newDelta,
-            uint256 outputAmount,
-            uint256 protocolFee
-        )
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
     {
         (error, newSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve().getSellInfo(
             spotPrice,
@@ -502,7 +470,8 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
 
     /**
         @notice Sends excess tokens back to the caller (if applicable)
-        @dev We send ETH back to the caller even when called from SeacowsRouter because we do an aggregate slippage check for certain bulk swaps. (Instead of sending directly back to the router caller) 
+        @dev We send ETH back to the caller even when called from SeacowsRouter because we do an aggregate slippage check for certain bulk swaps. 
+        (Instead of sending directly back to the router caller) 
         Excess ETH sent for one swap can then be used to help pay for the next swap.
      */
     function _refundTokenToSender(uint256 inputAmount) internal virtual;
@@ -537,9 +506,7 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
         @param nftRecipient The receiving address for the NFTs
         @param nftIds The specific IDs of NFTs to send  
      */
-    function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds)
-        internal
-        virtual;
+    function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds) internal virtual;
 
     /**
         @notice Takes NFTs from the caller and sends them into the pair's asset recipient
@@ -551,13 +518,10 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
         @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
         ETH pairs.
      */
-    function _takeNFTsFromSender(
-        IERC721 _nft,
-        uint256[] calldata nftIds,
-        ISeacowsPairFactoryLike _factory,
-        bool isRouter,
-        address routerCaller
-    ) internal virtual {
+    function _takeNFTsFromSender(IERC721 _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
+        internal
+        virtual
+    {
         {
             address _assetRecipient = getAssetRecipient();
             uint256 numNFTs = nftIds.length;
@@ -569,7 +533,8 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
                 require(routerAllowed, "Not router");
 
                 // Call router to pull NFTs
-                // If more than 1 NFT is being transfered, we can do a balance check instead of an ownership check, as pools are indifferent between NFTs from the same collection
+                // If more than 1 NFT is being transfered, we can do a balance check instead of an ownership check,
+                // as pools are indifferent between NFTs from the same collection
                 if (numNFTs > 1) {
                     uint256 beforeBalance = _nft.balanceOf(_assetRecipient);
                     for (uint256 i = 0; i < numNFTs; ) {
@@ -701,7 +666,8 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
     }
 
     /**
-        @notice Allows owner to batch multiple calls, forked from: https://github.com/boringcrypto/BoringSolidity/blob/master/contracts/BoringBatchable.sol 
+        @notice Allows owner to batch multiple calls, forked from: 
+        https://github.com/boringcrypto/BoringSolidity/blob/master/contracts/BoringBatchable.sol 
         @dev Intended for withdrawing/altering pool pricing in one tx, only callable by owner, cannot change owner
         @param calls The calldata for each call to make
         @param revertOnFail Whether or not to revert the entire tx if any of the calls fail

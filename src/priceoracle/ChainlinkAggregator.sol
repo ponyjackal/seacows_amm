@@ -6,8 +6,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
-import { ISeacowsPairETH } from "../interfaces/ISeacowsPairETH.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol"; 
 import { ISeacowsPairERC20 } from "../interfaces/ISeacowsPairERC20.sol";
 
 contract ChainlinkAggregator is ChainlinkClient, Ownable {
@@ -20,17 +19,7 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
 
     ISeacowsPairFactoryLike public factory;
     bytes32 public oracleJobId;
-
-    struct ETHRequest {
-        ISeacowsPairETH pair;
-        IERC721 nft;
-        address payable assetRecipient;
-        uint128 delta;
-        uint96 fee;
-        uint256[] initialNFTIDs;
-        uint256 timestamp;
-    }
-
+ 
     struct ERC20Request {
         ISeacowsPairERC20 pair;
         IERC20 token;
@@ -43,8 +32,6 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
         uint256 timestamp;
     }
 
-    // request id => ETHRequest info
-    // mapping(bytes32 => ETHRequest) private ethRequests;
     // request id => ERC20Request info
     mapping(bytes32 => ERC20Request) private erc20Requests;
     // spot prices
@@ -70,11 +57,6 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
         _;
     }
 
-    // modifier validateETHTimestamp(bytes32 _requestId) {
-    //     require(ethRequests[_requestId].timestamp > block.timestamp - ORACLE_FUTURE_LIMIT, "Request has expired");
-    //     _;
-    // }
-
     modifier validateERC20Timestamp(bytes32 _requestId) {
         require(erc20Requests[_requestId].timestamp > block.timestamp - ORACLE_FUTURE_LIMIT, "Request has expired");
         _;
@@ -85,71 +67,6 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
         require(address(_factory) != address(0), "Invalid SeacowsPairFactory address");
         factory = _factory;
     }
-
-    /**
-     * @notice Initiatiate a price request via chainlink for eth pair. 
-       @param _pair The NFT contract of the collection the pair trades
-       @param _nft The NFT contract of the collection the pair trades
-       @param _assetRecipient The address that will receive the assets traders give during trades.
-                            If set to address(0), assets will be sent to the pool address.
-                              Not available to TRADE pools. 
-       @param _delta The delta value used by the bonding curve. The meaning of delta depends
-        on the specific curve.
-       @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
-       @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
-     */
-    // function requestCryptoPriceETH(
-    //     ISeacowsPairETH _pair,
-    //     IERC721 _nft,
-    //     address payable _assetRecipient,
-    //     uint128 _delta,
-    //     uint96 _fee,
-    //     uint256[] calldata _initialNFTIDs
-    // ) external onlyFactory returns (bytes32) {
-    //     Chainlink.Request memory req = buildChainlinkRequest(oracleJobId, address(this), this.fulfillETH.selector);
-    //     string memory requestURL = string(
-    //         abi.encodePacked(
-    //             "https://api.reservoir.tools/oracle/collections/floor-ask/v4?collection=",
-    //             Strings.toHexString(address(_nft))
-    //         )
-    //     );
-    //     req.add("get", requestURL);
-
-    //     req.add("path", "price");
-
-    //     req.addInt("times", int256(ORACLE_PRECISION));
-
-    //     bytes32 requestId = sendChainlinkRequest(req, ORACLE_PAYMENT);
-    //     ethRequests[requestId] = ETHRequest(
-    //         _pair,
-    //         _nft,
-    //         _assetRecipient,
-    //         _delta,
-    //         _fee,
-    //         _initialNFTIDs,
-    //         block.timestamp
-    //     );
-
-    //     return requestId;
-    // }
-
-    // function fulfillETH(bytes32 _requestId, uint256 _price)
-    //     public
-    //     validateETHTimestamp(_requestId)
-    //     recordChainlinkFulfillment(_requestId)
-    // {
-    //     ETHRequest memory request = ethRequests[_requestId];
-    //     factory.initializePairETHFromOracle(
-    //         request.pair,
-    //         request.nft,
-    //         request.assetRecipient,
-    //         request.delta,
-    //         request.fee,
-    //         uint128(_price),
-    //         request.initialNFTIDs
-    //     );
-    //     delete ethRequests[_requestId];
-    // }
 
     /**
      * @notice Initiatiate a price request via chainlink for erc20 pair. 
@@ -175,10 +92,7 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
     ) external onlyFactory returns (bytes32) {
         Chainlink.Request memory req = buildChainlinkRequest(oracleJobId, address(this), this.fulfillERC20.selector);
         string memory requestURL = string(
-            abi.encodePacked(
-                "https://api.reservoir.tools/oracle/collections/floor-ask/v4?collection=",
-                Strings.toHexString(address(_nft))
-            )
+            abi.encodePacked("https://api.reservoir.tools/oracle/collections/floor-ask/v4?collection=", Strings.toHexString(address(_nft)))
         );
         req.add("get", requestURL);
 
@@ -202,11 +116,7 @@ contract ChainlinkAggregator is ChainlinkClient, Ownable {
         return requestId;
     }
 
-    function fulfillERC20(bytes32 _requestId, uint256 _price)
-        public
-        validateERC20Timestamp(_requestId)
-        recordChainlinkFulfillment(_requestId)
-    {
+    function fulfillERC20(bytes32 _requestId, uint256 _price) public validateERC20Timestamp(_requestId) recordChainlinkFulfillment(_requestId) {
         ERC20Request memory request = erc20Requests[_requestId];
         factory.initializePairERC20FromOracle(
             request.pair,

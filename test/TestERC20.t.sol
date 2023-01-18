@@ -2,12 +2,12 @@
 pragma solidity >=0.8.4;
 
 import "forge-std/Test.sol";
-import { MyToken } from "../src/TestCollectionToken/TestSeacowsToken.sol";
+import { TestERC20 } from "../src/TestCollectionToken/TestERC20.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract MockERC20Test is Test {
-    MyToken internal token;
+    TestERC20 internal token;
 
     uint256 internal ownerPrivateKey;
     uint256 internal spenderPrivateKey;
@@ -16,7 +16,7 @@ contract MockERC20Test is Test {
     address internal spender;
 
     function setUp() public {
-        token = new MyToken();
+        token = new TestERC20();
 
         ownerPrivateKey = 0xA11CE;
         spenderPrivateKey = 0xB0B;

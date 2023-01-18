@@ -2,15 +2,15 @@
 pragma solidity >=0.8.4;
 
 import { Script } from "forge-std/Script.sol";
-import { MyNFT } from "../src/TestCollectionToken/TestSeacowsNFT.sol";
+import { TestERC20 } from "../src/TestCollectionToken/TestERC20.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
-contract DeployTestSeacowsNFT is Script {
-    MyNFT internal testSeacowsNFT;
+contract DeployTestERC20 is Script {
+    TestERC20 internal token;
 
     function run() public {
         vm.startBroadcast();
-        testSeacowsNFT = new MyNFT();
+        token = new TestERC20();
         vm.stopBroadcast();
     }
 }

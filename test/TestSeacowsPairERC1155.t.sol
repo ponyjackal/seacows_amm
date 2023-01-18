@@ -7,20 +7,16 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { HelperConfig } from "../script/HelperConfig.sol";
 import { SeacowsPairFactory } from "../src/SeacowsPairFactory.sol";
 import { ISeacowsPairFactoryLike } from "../src/interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPairEnumerableETH } from "../src/SeacowsPairEnumerableETH.sol";
-import { SeacowsPairMissingEnumerableETH } from "../src/SeacowsPairMissingEnumerableETH.sol";
 import { SeacowsPairEnumerableERC20 } from "../src/SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "../src/SeacowsPairMissingEnumerableERC20.sol";
-import { SeacowsPairETH } from "../src/SeacowsPairETH.sol";
 import { SeacowsPairERC20 } from "../src/SeacowsPairERC20.sol";
-import { SeacowsPairERC1155ETH } from "../src/SeacowsPairERC1155ETH.sol";
 import { SeacowsPairERC1155ERC20 } from "../src/SeacowsPairERC1155ERC20.sol";
 import { UniswapPriceOracle } from "../src/priceoracle/UniswapPriceOracle.sol";
 import { ChainlinkAggregator } from "../src/priceoracle/ChainlinkAggregator.sol";
 import { TestSeacowsSFT } from "../src/TestCollectionToken/TestSeacowsSFT.sol";
 import { ISeacowsPairERC1155 } from "../src/interfaces/ISeacowsPairERC1155.sol";
 import { CPMMCurve } from "../src/bondingcurve/CPMMCurve.sol";
-import { MyToken } from "../src/TestCollectionToken/TestSeacowsToken.sol";
+import { TestERC20 } from "../src/TestCollectionToken/TestERC20.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
@@ -28,26 +24,25 @@ contract SeacowsPairERC1155Test is Test {
     uint256 internal ownerPrivateKey;
     uint256 internal spenderPrivateKey;
 
+    address internal weth;
     address internal owner;
     address internal spender;
 
     SeacowsPairFactory internal seacowsPairFactory;
-    SeacowsPairEnumerableETH internal seacowsPairEnumerableETH;
-    SeacowsPairMissingEnumerableETH internal seacowsPairMissingEnumerableETH;
     SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
     SeacowsPairMissingEnumerableERC20 internal seacowsPairMissingEnumerableERC20;
-    SeacowsPairERC1155ETH internal seacowsPairERC1155ETH;
     SeacowsPairERC1155ERC20 internal seacowsPairERC1155ERC20;
     UniswapPriceOracle internal uniswapPriceOracle;
     ChainlinkAggregator internal chainlinkAggregator;
     TestSeacowsSFT internal testSeacowsSFT;
     CPMMCurve internal cpmmCurve;
-    MyToken internal token;
+    TestERC20 internal token;
 
     function setUp() public {
         HelperConfig helperConfig = new HelperConfig();
         (
             string memory lpUri,
+            address _weth,
             address payable protocolFeeRecipient,
             uint256 protocolFeeMultiplier,
             address seacowsCollectionRegistry,
@@ -62,11 +57,8 @@ contract SeacowsPairERC1155Test is Test {
         owner = vm.addr(ownerPrivateKey);
         spender = vm.addr(spenderPrivateKey);
 
-        /** deploy SeacowsPairEnumerableETH */
-        seacowsPairEnumerableETH = new SeacowsPairEnumerableETH(lpUri);
-
-        /** deploy SeacowsPairMissingEnumerableETH */
-        seacowsPairMissingEnumerableETH = new SeacowsPairMissingEnumerableETH(lpUri);
+        /** deploy TestWETH */
+        weth = _weth;
 
         /** deploy SeacowsPairEnumerableERC20 */
         seacowsPairEnumerableERC20 = new SeacowsPairEnumerableERC20(lpUri);
@@ -74,30 +66,23 @@ contract SeacowsPairERC1155Test is Test {
         /** deploy SeacowsPairMissingEnumerableERC20 */
         seacowsPairMissingEnumerableERC20 = new SeacowsPairMissingEnumerableERC20(lpUri);
 
-        /** deploy SeacowsPairERC1155ETH */
-        seacowsPairERC1155ETH = new SeacowsPairERC1155ETH(lpUri);
-
         /** deploy SeacowsPairERC1155ERC20 */
         seacowsPairERC1155ERC20 = new SeacowsPairERC1155ERC20(lpUri);
 
         /** deploy ChainlinkAggregator */
-        chainlinkAggregator = new ChainlinkAggregator(
-            ISeacowsPairFactoryLike(address(0)),
-            chainlinkToken,
-            chainlinkOracle,
-            chainlinkJobId
-        );
+        chainlinkAggregator = new ChainlinkAggregator(ISeacowsPairFactoryLike(address(0)), chainlinkToken, chainlinkOracle, chainlinkJobId);
 
         /** deploy UniswapPriceOracle */
         uniswapPriceOracle = new UniswapPriceOracle();
 
         /** deploy SeacowsPairFactory */
         seacowsPairFactory = new SeacowsPairFactory(
-            seacowsPairEnumerableETH,
-            seacowsPairMissingEnumerableETH,
+            weth,
+            // seacowsPairEnumerableETH,
+            // seacowsPairMissingEnumerableETH,
             seacowsPairEnumerableERC20,
             seacowsPairMissingEnumerableERC20,
-            seacowsPairERC1155ETH,
+            // seacowsPairERC1155ETH,
             seacowsPairERC1155ERC20,
             protocolFeeRecipient,
             protocolFeeMultiplier,
@@ -110,23 +95,11 @@ contract SeacowsPairERC1155Test is Test {
         testSeacowsSFT = new TestSeacowsSFT();
         testSeacowsSFT.safeMint(spender);
 
-        token = new MyToken();
+        token = new TestERC20();
         token.mint(spender, 1e18);
 
         // deploy CPMM
         cpmmCurve = new CPMMCurve();
-    }
-
-    function test_create_eth_pair() public {
-        vm.startPrank(spender);
-
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-
-        SeacowsPairETH ethPair = seacowsPairFactory.createPairERC1155ETH(testSeacowsSFT, 1, cpmmCurve, 1000, 10);
-
-        uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
-
-        assertEq(tokenId, 1);
     }
 
     function test_create_erc20_pair() public {
@@ -136,15 +109,7 @@ contract SeacowsPairERC1155Test is Test {
 
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
-        SeacowsPairERC20 ethPair = seacowsPairFactory.createPairERC1155ERC20(
-            testSeacowsSFT,
-            1,
-            cpmmCurve,
-            1000,
-            ERC20(token),
-            100000,
-            10
-        );
+        SeacowsPairERC20 ethPair = seacowsPairFactory.createPairERC1155ERC20(testSeacowsSFT, 1, cpmmCurve, 1000, ERC20(token), 100000, 10);
 
         uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
 

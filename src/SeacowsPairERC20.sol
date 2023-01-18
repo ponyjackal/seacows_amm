@@ -53,19 +53,10 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
 
             // Cache state and then call router to transfer tokens from user
             uint256 beforeBalance = _token.balanceOf(_assetRecipient);
-            router.pairTransferERC20From(
-                _token,
-                routerCaller,
-                _assetRecipient,
-                inputAmount - protocolFee,
-                pairVariant()
-            );
+            router.pairTransferERC20From(_token, routerCaller, _assetRecipient, inputAmount - protocolFee, pairVariant());
 
             // Verify token transfer (protect pair against malicious router)
-            require(
-                _token.balanceOf(_assetRecipient) - beforeBalance == inputAmount - protocolFee,
-                "ERC20 not transferred in"
-            );
+            require(_token.balanceOf(_assetRecipient) - beforeBalance == inputAmount - protocolFee, "ERC20 not transferred in");
 
             router.pairTransferERC20From(_token, routerCaller, address(_factory), protocolFee, pairVariant());
 

@@ -51,10 +51,7 @@ contract SeacowsCollectionRegistry {
         SeacowsGroupFeed(feed).updateAnswer(_answer);
     }
 
-    function batchUpdateAnswer(address[] memory collection, uint256[] memory groupId, int256[] memory _answer)
-        public
-        onlyAdmin
-    {
+    function batchUpdateAnswer(address[] memory collection, uint256[] memory groupId, int256[] memory _answer) public onlyAdmin {
         for (uint j = 0; j < collection.length; j++) {
             _updateAnswer(collection[j], groupId[j], _answer[j]);
         }
@@ -79,11 +76,7 @@ contract SeacowsCollectionRegistry {
         return computedHash == root;
     }
 
-    function getAssetPrice(address collection, uint256 tokenId, uint256 groupId, bytes32[] calldata merkleProof)
-        external
-        view
-        returns (int256)
-    {
+    function getAssetPrice(address collection, uint256 tokenId, uint256 groupId, bytes32[] calldata merkleProof) external view returns (int256) {
         address feed = getFeeds[collection][groupId];
         bytes32 merkleRoot = getMerkleRoot[collection];
         require(feed != address(0), "CollectionRegistry: FEED_NOT_EXISTS");

@@ -14,7 +14,8 @@ interface ICurve {
     function validateDelta(uint128 delta) external pure returns (bool valid);
 
     /**
-        @notice Validates if a new spot price is valid for the curve. Spot price is generally assumed to be the immediate sell price of 1 NFT to the pool, in units of the pool's paired token.
+        @notice Validates if a new spot price is valid for the curve. 
+        Spot price is generally assumed to be the immediate sell price of 1 NFT to the pool, in units of the pool's paired token.
         @param newSpotPrice The new spot price to be set
         @return valid True if the new spot price is valid, false otherwise
      */
@@ -34,22 +35,10 @@ interface ICurve {
         @return inputValue The amount that the user should pay, in tokens
         @return protocolFee The amount of fee to send to the protocol, in tokens
      */
-    function getBuyInfo(
-        uint128 spotPrice,
-        uint128 delta,
-        uint256 numItems,
-        uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier
-    )
+    function getBuyInfo(uint128 spotPrice, uint128 delta, uint256 numItems, uint256 feeMultiplier, uint256 protocolFeeMultiplier)
         external
         view
-        returns (
-            CurveErrorCodes.Error error,
-            uint128 newSpotPrice,
-            uint128 newDelta,
-            uint256 inputValue,
-            uint256 protocolFee
-        );
+        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee);
 
     /**
         @notice Given the current state of the pair and the trade, computes how much the user
@@ -73,10 +62,7 @@ interface ICurve {
         uint256 protocolFeeMultiplier,
         uint256 nftReserve,
         uint256 tokenReserve
-    )
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 inputValue, uint256 protocolFee);
+    ) external view returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 inputValue, uint256 protocolFee);
 
     /**
         @notice Given the current state of the pair and the trade, computes how much the user
@@ -100,10 +86,7 @@ interface ICurve {
         uint256 protocolFeeMultiplier,
         uint256 nftReserve,
         uint256 tokenReserve
-    )
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 outputValue, uint256 protocolFee);
+    ) external view returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 outputValue, uint256 protocolFee);
 
     /**
         @notice Given the current state of the pair and the trade, computes how much the user
@@ -119,20 +102,8 @@ interface ICurve {
         @return outputValue The amount that the user should receive, in tokens
         @return protocolFee The amount of fee to send to the protocol, in tokens
      */
-    function getSellInfo(
-        uint128 spotPrice,
-        uint128 delta,
-        uint256 numItems,
-        uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier
-    )
+    function getSellInfo(uint128 spotPrice, uint128 delta, uint256 numItems, uint256 feeMultiplier, uint256 protocolFeeMultiplier)
         external
         view
-        returns (
-            CurveErrorCodes.Error error,
-            uint128 newSpotPrice,
-            uint128 newDelta,
-            uint256 outputValue,
-            uint256 protocolFee
-        );
+        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee);
 }

@@ -15,21 +15,9 @@ interface ISeacowsPair {
         TRADE
     }
 
-    function initialize(
-        address _owner,
-        address payable _assetRecipient,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice
-    ) external;
+    function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external;
 
-    function swapTokenForAnyNFTs(
-        uint256 numNFTs,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external;
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller) external;
 
     function swapTokenForSpecificNFTs(
         uint256[] calldata nftIds,

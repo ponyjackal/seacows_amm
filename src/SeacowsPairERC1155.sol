@@ -28,10 +28,7 @@ abstract contract SeacowsPairERC1155 is SeacowsPair {
 
     /** Deprecated functions, just overrided based on design pattern */
     /// @inheritdoc SeacowsPair
-    function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds)
-        internal
-        override
-    {}
+    function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal override {}
 
     /// @inheritdoc SeacowsPair
     function getAllHeldIds() external view override returns (uint256[] memory) {

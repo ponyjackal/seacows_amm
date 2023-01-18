@@ -31,14 +31,11 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds)
-        internal
-        override
-    {
+    function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal override {
         // Send NFTs to recipient
         uint256 numNFTs = nftIds.length;
         for (uint256 i; i < numNFTs; ) {
-            _nft.safeTransferFrom(address(this), nftRecipient, nftIds[i]);
+            IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftIds[i]);
 
             unchecked {
                 ++i;

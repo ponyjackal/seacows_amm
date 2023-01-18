@@ -84,12 +84,12 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return remainingValue The unspent ETH amount
      */
-    function swapETHForAnyNFTs(
-        PairSwapAny[] calldata swapList,
-        address payable ethRecipient,
-        address nftRecipient,
-        uint256 deadline
-    ) external payable checkDeadline(deadline) returns (uint256 remainingValue) {
+    function swapETHForAnyNFTs(PairSwapAny[] calldata swapList, address payable ethRecipient, address nftRecipient, uint256 deadline)
+        external
+        payable
+        checkDeadline(deadline)
+        returns (uint256 remainingValue)
+    {
         return _swapETHForAnyNFTs(swapList, msg.value, ethRecipient, nftRecipient);
     }
 
@@ -101,12 +101,12 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return remainingValue The unspent ETH amount
      */
-    function swapETHForSpecificNFTs(
-        PairSwapSpecific[] calldata swapList,
-        address payable ethRecipient,
-        address nftRecipient,
-        uint256 deadline
-    ) external payable checkDeadline(deadline) returns (uint256 remainingValue) {
+    function swapETHForSpecificNFTs(PairSwapSpecific[] calldata swapList, address payable ethRecipient, address nftRecipient, uint256 deadline)
+        external
+        payable
+        checkDeadline(deadline)
+        returns (uint256 remainingValue)
+    {
         return _swapETHForSpecificNFTs(swapList, msg.value, ethRecipient, nftRecipient);
     }
 
@@ -136,9 +136,7 @@ contract SeacowsRouter {
 
         // Swap ETH for any NFTs
         // cost <= inputValue = outputAmount - minOutput, so outputAmount' = (outputAmount - minOutput - cost) + minOutput >= minOutput
-        outputAmount =
-            _swapETHForAnyNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, ethRecipient, nftRecipient) +
-            minOutput;
+        outputAmount = _swapETHForAnyNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, ethRecipient, nftRecipient) + minOutput;
     }
 
     /**
@@ -167,9 +165,7 @@ contract SeacowsRouter {
 
         // Swap ETH for specific NFTs
         // cost <= inputValue = outputAmount - minOutput, so outputAmount' = (outputAmount - minOutput - cost) + minOutput >= minOutput
-        outputAmount =
-            _swapETHForSpecificNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, ethRecipient, nftRecipient) +
-            minOutput;
+        outputAmount = _swapETHForSpecificNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, ethRecipient, nftRecipient) + minOutput;
     }
 
     /**
@@ -191,12 +187,11 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return remainingValue The unspent token amount
      */
-    function swapERC20ForAnyNFTs(
-        PairSwapAny[] calldata swapList,
-        uint256 inputAmount,
-        address nftRecipient,
-        uint256 deadline
-    ) external checkDeadline(deadline) returns (uint256 remainingValue) {
+    function swapERC20ForAnyNFTs(PairSwapAny[] calldata swapList, uint256 inputAmount, address nftRecipient, uint256 deadline)
+        external
+        checkDeadline(deadline)
+        returns (uint256 remainingValue)
+    {
         return _swapERC20ForAnyNFTs(swapList, inputAmount, nftRecipient);
     }
 
@@ -208,12 +203,11 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return remainingValue The unspent token amount
      */
-    function swapERC20ForSpecificNFTs(
-        PairSwapSpecific[] calldata swapList,
-        uint256 inputAmount,
-        address nftRecipient,
-        uint256 deadline
-    ) external checkDeadline(deadline) returns (uint256 remainingValue) {
+    function swapERC20ForSpecificNFTs(PairSwapSpecific[] calldata swapList, uint256 inputAmount, address nftRecipient, uint256 deadline)
+        external
+        checkDeadline(deadline)
+        returns (uint256 remainingValue)
+    {
         return _swapERC20ForSpecificNFTs(swapList, inputAmount, nftRecipient);
     }
 
@@ -225,12 +219,11 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return outputAmount The total tokens received
      */
-    function swapNFTsForToken(
-        PairSwapSpecific[] calldata swapList,
-        uint256 minOutput,
-        address tokenRecipient,
-        uint256 deadline
-    ) external checkDeadline(deadline) returns (uint256 outputAmount) {
+    function swapNFTsForToken(PairSwapSpecific[] calldata swapList, uint256 minOutput, address tokenRecipient, uint256 deadline)
+        external
+        checkDeadline(deadline)
+        returns (uint256 outputAmount)
+    {
         return _swapNFTsForToken(swapList, minOutput, payable(tokenRecipient));
     }
 
@@ -293,15 +286,14 @@ contract SeacowsRouter {
         // Swap ERC20 for specific NFTs
         // cost <= maxCost = outputAmount - minOutput, so outputAmount' = outputAmount - cost >= minOutput
         // input tokens are taken directly from msg.sender
-        outputAmount =
-            _swapERC20ForSpecificNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, nftRecipient) +
-            minOutput;
+        outputAmount = _swapERC20ForSpecificNFTs(trade.tokenToNFTTrades, outputAmount - minOutput, nftRecipient) + minOutput;
     }
 
     /**
         Robust Swaps
         These are "robust" versions of the NFT<>Token swap functions which will never revert due to slippage
-        Instead, users specify a per-swap max cost. If the price changes more than the user specifies, no swap is attempted. This allows users to specify a batch of swaps, and execute as many of them as possible.
+        Instead, users specify a per-swap max cost. If the price changes more than the user specifies, no swap is attempted. 
+        This allows users to specify a batch of swaps, and execute as many of them as possible.
      */
 
     /**
@@ -313,12 +305,12 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return remainingValue The unspent token amount
      */
-    function robustSwapETHForAnyNFTs(
-        RobustPairSwapAny[] calldata swapList,
-        address payable ethRecipient,
-        address nftRecipient,
-        uint256 deadline
-    ) external payable checkDeadline(deadline) returns (uint256 remainingValue) {
+    function robustSwapETHForAnyNFTs(RobustPairSwapAny[] calldata swapList, address payable ethRecipient, address nftRecipient, uint256 deadline)
+        external
+        payable
+        checkDeadline(deadline)
+        returns (uint256 remainingValue)
+    {
         remainingValue = msg.value;
 
         // Try doing each swap
@@ -379,10 +371,7 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate actual cost per swap
-            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(
-                swapList[i].swapInfo.nftIds,
-                swapList[i].swapInfo.details
-            );
+            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(swapList[i].swapInfo.nftIds, swapList[i].swapInfo.details);
 
             // If within our maxCost and no error, proceed
             if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
@@ -418,12 +407,11 @@ contract SeacowsRouter {
         @return remainingValue The unspent token amount
         
      */
-    function robustSwapERC20ForAnyNFTs(
-        RobustPairSwapAny[] calldata swapList,
-        uint256 inputAmount,
-        address nftRecipient,
-        uint256 deadline
-    ) external checkDeadline(deadline) returns (uint256 remainingValue) {
+    function robustSwapERC20ForAnyNFTs(RobustPairSwapAny[] calldata swapList, uint256 inputAmount, address nftRecipient, uint256 deadline)
+        external
+        checkDeadline(deadline)
+        returns (uint256 remainingValue)
+    {
         remainingValue = inputAmount;
         uint256 pairCost;
         CurveErrorCodes.Error error;
@@ -461,12 +449,11 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return remainingValue The unspent token amount
      */
-    function robustSwapERC20ForSpecificNFTs(
-        RobustPairSwapSpecific[] calldata swapList,
-        uint256 inputAmount,
-        address nftRecipient,
-        uint256 deadline
-    ) public checkDeadline(deadline) returns (uint256 remainingValue) {
+    function robustSwapERC20ForSpecificNFTs(RobustPairSwapSpecific[] calldata swapList, uint256 inputAmount, address nftRecipient, uint256 deadline)
+        public
+        checkDeadline(deadline)
+        returns (uint256 remainingValue)
+    {
         remainingValue = inputAmount;
         uint256 pairCost;
         CurveErrorCodes.Error error;
@@ -475,10 +462,7 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate actual cost per swap
-            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(
-                swapList[i].swapInfo.nftIds,
-                swapList[i].swapInfo.details
-            );
+            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(swapList[i].swapInfo.nftIds, swapList[i].swapInfo.details);
 
             // If within our maxCost and no error, proceed
             if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
@@ -505,11 +489,11 @@ contract SeacowsRouter {
         @param deadline The Unix timestamp (in seconds) at/after which the swap will revert
         @return outputAmount The total ETH/ERC20 received
      */
-    function robustSwapNFTsForToken(
-        RobustPairSwapSpecificForToken[] calldata swapList,
-        address payable tokenRecipient,
-        uint256 deadline
-    ) public checkDeadline(deadline) returns (uint256 outputAmount) {
+    function robustSwapNFTsForToken(RobustPairSwapSpecificForToken[] calldata swapList, address payable tokenRecipient, uint256 deadline)
+        public
+        checkDeadline(deadline)
+        returns (uint256 outputAmount)
+    {
         // Try doing each swap
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
@@ -518,10 +502,7 @@ contract SeacowsRouter {
             // Locally scoped to avoid stack too deep error
             {
                 CurveErrorCodes.Error error;
-                (error, , , pairOutput, ) = swapList[i].swapInfo.pair.getSellNFTQuote(
-                    swapList[i].swapInfo.nftIds,
-                    swapList[i].swapInfo.details
-                );
+                (error, , , pairOutput, ) = swapList[i].swapInfo.pair.getSellNFTQuote(swapList[i].swapInfo.nftIds, swapList[i].swapInfo.details);
                 if (error != CurveErrorCodes.Error.OK) {
                     unchecked {
                         ++i;
@@ -582,9 +563,7 @@ contract SeacowsRouter {
                 if (pairCost <= params.tokenToNFTTrades[i].maxCost && error == CurveErrorCodes.Error.OK) {
                     // We know how much ETH to send because we already did the math above
                     // So we just send that much
-                    remainingValue -= params.tokenToNFTTrades[i].swapInfo.pair.swapTokenForSpecificNFTs{
-                        value: pairCost
-                    }(
+                    remainingValue -= params.tokenToNFTTrades[i].swapInfo.pair.swapTokenForSpecificNFTs{ value: pairCost }(
                         params.tokenToNFTTrades[i].swapInfo.nftIds,
                         params.tokenToNFTTrades[i].swapInfo.details,
                         pairCost,
@@ -747,13 +726,7 @@ contract SeacowsRouter {
         @param amount The amount of tokens to transfer
         @param variant The pair variant of the pair contract
      */
-    function pairTransferERC20From(
-        ERC20 token,
-        address from,
-        address to,
-        uint256 amount,
-        ISeacowsPairFactoryLike.PairVariant variant
-    ) external {
+    function pairTransferERC20From(ERC20 token, address from, address to, uint256 amount, ISeacowsPairFactoryLike.PairVariant variant) external {
         // verify caller is a trusted pair contract
         require(factory.isPair(msg.sender, variant), "Not pair");
 
@@ -777,13 +750,7 @@ contract SeacowsRouter {
         @param id The ID of the NFT to transfer
         @param variant The pair variant of the pair contract
      */
-    function pairTransferNFTFrom(
-        IERC721 nft,
-        address from,
-        address to,
-        uint256 id,
-        ISeacowsPairFactoryLike.PairVariant variant
-    ) external {
+    function pairTransferNFTFrom(IERC721 nft, address from, address to, uint256 id, ISeacowsPairFactoryLike.PairVariant variant) external {
         // verify caller is a trusted pair contract
         require(factory.isPair(msg.sender, variant), "Not pair");
 
@@ -810,12 +777,10 @@ contract SeacowsRouter {
         @param nftRecipient The address receiving the NFTs from the pairs
         @return remainingValue The unspent token amount
      */
-    function _swapETHForAnyNFTs(
-        PairSwapAny[] calldata swapList,
-        uint256 inputAmount,
-        address payable ethRecipient,
-        address nftRecipient
-    ) internal returns (uint256 remainingValue) {
+    function _swapETHForAnyNFTs(PairSwapAny[] calldata swapList, uint256 inputAmount, address payable ethRecipient, address nftRecipient)
+        internal
+        returns (uint256 remainingValue)
+    {
         remainingValue = inputAmount;
 
         uint256 pairCost;
@@ -859,12 +824,10 @@ contract SeacowsRouter {
         @param nftRecipient The address receiving the NFTs from the pairs
         @return remainingValue The unspent token amount
      */
-    function _swapETHForSpecificNFTs(
-        PairSwapSpecific[] calldata swapList,
-        uint256 inputAmount,
-        address payable ethRecipient,
-        address nftRecipient
-    ) internal returns (uint256 remainingValue) {
+    function _swapETHForSpecificNFTs(PairSwapSpecific[] calldata swapList, uint256 inputAmount, address payable ethRecipient, address nftRecipient)
+        internal
+        returns (uint256 remainingValue)
+    {
         remainingValue = inputAmount;
 
         uint256 pairCost;
@@ -924,13 +887,7 @@ contract SeacowsRouter {
             // Tokens are transferred in by the pair calling router.pairTransferERC20From
             // Total tokens taken from sender cannot exceed inputAmount
             // because otherwise the deduction from remainingValue will fail
-            remainingValue -= swapList[i].pair.swapTokenForAnyNFTs(
-                swapList[i].numItems,
-                remainingValue,
-                nftRecipient,
-                true,
-                msg.sender
-            );
+            remainingValue -= swapList[i].pair.swapTokenForAnyNFTs(swapList[i].numItems, remainingValue, nftRecipient, true, msg.sender);
 
             unchecked {
                 ++i;
@@ -994,14 +951,7 @@ contract SeacowsRouter {
         for (uint256 i; i < numSwaps; ) {
             // Do the swap for token and then update outputAmount
             // Note: minExpectedTokenOutput is set to 0 since we're doing an aggregate slippage check below
-            outputAmount += swapList[i].pair.swapNFTsForToken(
-                swapList[i].nftIds,
-                swapList[i].details,
-                0,
-                tokenRecipient,
-                true,
-                msg.sender
-            );
+            outputAmount += swapList[i].pair.swapNFTsForToken(swapList[i].nftIds, swapList[i].details, 0, tokenRecipient, true, msg.sender);
 
             unchecked {
                 ++i;

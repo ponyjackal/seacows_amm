@@ -86,13 +86,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
       @param _fee The initial % fee taken, if this is a trade pair 
       @param _spotPrice The initial price to sell an asset into the pair
      */
-    function initialize(
-        address _owner,
-        address payable _assetRecipient,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice
-    ) external payable {
+    function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external payable {
         require(owner() == address(0), "Initialized");
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
@@ -155,13 +149,13 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         ETH pairs.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForAnyNFTs(
-        uint256 numNFTs,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external payable virtual nonReentrant returns (uint256 inputAmount) {
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
+        external
+        payable
+        virtual
+        nonReentrant
+        returns (uint256 inputAmount)
+    {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
@@ -171,10 +165,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require(
-                (numNFTs > 0) && (numNFTs <= IERC721(_nft).balanceOf(address(this))),
-                "Ask for > 0 and <= balanceOf NFTs"
-            );
+            require((numNFTs > 0) && (numNFTs <= IERC721(_nft).balanceOf(address(this))), "Ask for > 0 and <= balanceOf NFTs");
         }
 
         // Call bonding curve for pricing information
@@ -232,17 +223,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(
-            nftIds,
-            details,
-            maxExpectedTokenInput,
-            _bondingCurve,
-            _factory
-        );
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, details, maxExpectedTokenInput, _bondingCurve, _factory);
 
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
 
-        _sendSpecificNFTsToRecipient(IERC721(nft()), nftRecipient, nftIds);
+        _sendSpecificNFTsToRecipient(nft(), nftRecipient, nftIds);
 
         _refundTokenToSender(inputAmount);
 
@@ -283,13 +268,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(
-            nftIds,
-            details,
-            minExpectedTokenOutput,
-            _bondingCurve,
-            _factory
-        );
+        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(nftIds, details, minExpectedTokenOutput, _bondingCurve, _factory);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
@@ -300,11 +279,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         emit SwapNFTInPair();
     }
 
-    function _applyWithOraclePrice(
-        uint256[] memory _nftIds,
-        SeacowsRouter.NFTDetail[] memory _details,
-        uint256 _spotPrice
-    ) internal view returns (uint256 newPrice) {
+    function _applyWithOraclePrice(uint256[] memory _nftIds, SeacowsRouter.NFTDetail[] memory _details, uint256 _spotPrice)
+        internal
+        view
+        returns (uint256 newPrice)
+    {
         address oracleRegisrtyAddr = factory().priceOracleRegistry();
         SeacowsCollectionRegistry registry = SeacowsCollectionRegistry(oracleRegisrtyAddr);
         address _nft = address(nft());
@@ -315,9 +294,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         uint256 denominator = 1000;
 
         for (uint256 i = 0; i < _nftIds.length; ) {
-            uint256 oraclePrice = uint256(
-                registry.getAssetPrice(_nft, _nftIds[i], _details[i].groupId, _details[i].merkleProof)
-            );
+            uint256 oraclePrice = uint256(registry.getAssetPrice(_nft, _nftIds[i], _details[i].groupId, _details[i].merkleProof));
             uint256 priceDiff = oraclePrice - _spotPrice;
             uint256 priceDelta = priceDiff > 0 ? (priceDiff * numerator) / denominator : 0;
             uint256 appliedPrice = _spotPrice + priceDelta;
@@ -343,13 +320,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     function getBuyNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
         external
         view
-        returns (
-            CurveErrorCodes.Error error,
-            uint256 newSpotPrice,
-            uint256 newDelta,
-            uint256 inputAmount,
-            uint256 protocolFee
-        )
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
     {
         uint256 currentSpotPrice;
         (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve().getBuyInfo(
@@ -370,13 +341,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     function getSellNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
         external
         view
-        returns (
-            CurveErrorCodes.Error error,
-            uint256 newSpotPrice,
-            uint256 newDelta,
-            uint256 outputAmount,
-            uint256 protocolFee
-        )
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
     {
         uint256 currentSpotPrice;
         (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve().getSellInfo(
@@ -658,11 +623,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param nftRecipient The receiving address for the NFTs
         @param numNFTs The number of NFTs to send  
      */
-    function _sendAnyNFTsToRecipient(
-        IERC721 _nft,
-        address nftRecipient,
-        uint256 numNFTs
-    ) internal virtual;
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal virtual;
 
     /**
         @notice Sends specific NFTs to a recipient address
@@ -672,11 +633,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param nftRecipient The receiving address for the NFTs
         @param nftIds The specific IDs of NFTs to send  
      */
-    function _sendSpecificNFTsToRecipient(
-        IERC721 _nft,
-        address nftRecipient,
-        uint256[] calldata nftIds
-    ) internal virtual;
+    function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal virtual;
 
     /**
         @notice Takes NFTs from the caller and sends them into the pair's asset recipient
@@ -688,13 +645,10 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
         ETH pairs.
      */
-    function _takeNFTsFromSender(
-        IERC721 _nft,
-        uint256[] calldata nftIds,
-        ISeacowsPairFactoryLike _factory,
-        bool isRouter,
-        address routerCaller
-    ) internal virtual {
+    function _takeNFTsFromSender(IERC721 _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
+        internal
+        virtual
+    {
         {
             address _assetRecipient = getAssetRecipient();
             uint256 numNFTs = nftIds.length;
@@ -852,13 +806,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155, ERC1155Receiver, AccessControl)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, ERC1155Receiver, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -900,12 +848,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
      * note only used trade pair
      * @dev we override _mint function to track totalSupply
      */
-    function _mint(
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual override onlyTrade {
+    function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal virtual override onlyTrade {
         totalSupply[id] += amount;
         super._mint(to, id, amount, data);
 
@@ -917,11 +860,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
      * note only used trade pair
      * @dev we override _mint function to track totalSupply
      */
-    function _burn(
-        address from,
-        uint256 id,
-        uint256 amount
-    ) internal virtual override onlyTrade {
+    function _burn(address from, uint256 id, uint256 amount) internal virtual override onlyTrade {
         totalSupply[id] -= amount;
         super._burn(from, id, amount);
 

@@ -38,10 +38,7 @@ contract SeacowsGroupFeed is AggregatorV2V3Interface {
         getStartedAt[latestRound] = block.timestamp;
     }
 
-    function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt)
-        public
-        onlyRegistry
-    {
+    function updateRoundData(uint80 _roundId, int256 _answer, uint256 _timestamp, uint256 _startedAt) public onlyRegistry {
         latestRound = _roundId;
         latestAnswer = _answer;
         latestTimestamp = _timestamp;
@@ -65,13 +62,7 @@ contract SeacowsGroupFeed is AggregatorV2V3Interface {
         override
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        return (
-            uint80(latestRound),
-            getAnswer[latestRound],
-            getStartedAt[latestRound],
-            getTimestamp[latestRound],
-            uint80(latestRound)
-        );
+        return (uint80(latestRound), getAnswer[latestRound], getStartedAt[latestRound], getTimestamp[latestRound], uint80(latestRound));
     }
 
     function description() external view override returns (string memory) {

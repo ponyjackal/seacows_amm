@@ -38,15 +38,12 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
     }
 
     /// @inheritdoc SeacowsPair
-    function _sendSpecificNFTsToRecipient(IERC721 _nft, address nftRecipient, uint256[] calldata nftIds)
-        internal
-        override
-    {
+    function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal override {
         // Send NFTs to caller
         // If missing enumerable, update pool's own ID set
         uint256 numNFTs = nftIds.length;
         for (uint256 i; i < numNFTs; ) {
-            _nft.safeTransferFrom(address(this), nftRecipient, nftIds[i]);
+            IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftIds[i]);
             // Remove from id set
             idSet.remove(nftIds[i]);
 
