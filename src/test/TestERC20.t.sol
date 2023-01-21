@@ -2,7 +2,7 @@
 pragma solidity >=0.8.4;
 
 import "forge-std/Test.sol";
-import { TestERC20 } from "../src/TestCollectionToken/TestERC20.sol";
+import { TestERC20 } from "../TestCollectionToken/TestERC20.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests

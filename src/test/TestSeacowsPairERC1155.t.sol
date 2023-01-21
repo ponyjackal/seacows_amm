@@ -4,19 +4,19 @@ pragma solidity >=0.8.4;
 import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { HelperConfig } from "../script/HelperConfig.sol";
-import { SeacowsPairFactory } from "../src/SeacowsPairFactory.sol";
-import { ISeacowsPairFactoryLike } from "../src/interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPairEnumerableERC20 } from "../src/SeacowsPairEnumerableERC20.sol";
-import { SeacowsPairMissingEnumerableERC20 } from "../src/SeacowsPairMissingEnumerableERC20.sol";
-import { SeacowsPairERC20 } from "../src/SeacowsPairERC20.sol";
-import { SeacowsPairERC1155ERC20 } from "../src/SeacowsPairERC1155ERC20.sol";
-import { UniswapPriceOracle } from "../src/priceoracle/UniswapPriceOracle.sol";
-import { ChainlinkAggregator } from "../src/priceoracle/ChainlinkAggregator.sol";
-import { TestSeacowsSFT } from "../src/TestCollectionToken/TestSeacowsSFT.sol";
-import { ISeacowsPairERC1155 } from "../src/interfaces/ISeacowsPairERC1155.sol";
-import { CPMMCurve } from "../src/bondingcurve/CPMMCurve.sol";
-import { TestERC20 } from "../src/TestCollectionToken/TestERC20.sol";
+import { HelperConfig } from "../../script/HelperConfig.sol";
+import { SeacowsPairFactory } from "../SeacowsPairFactory.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import { SeacowsPairEnumerableERC20 } from "../SeacowsPairEnumerableERC20.sol";
+import { SeacowsPairMissingEnumerableERC20 } from "../SeacowsPairMissingEnumerableERC20.sol";
+import { SeacowsPairERC20 } from "../SeacowsPairERC20.sol";
+import { SeacowsPairERC1155ERC20 } from "../SeacowsPairERC1155ERC20.sol";
+import { UniswapPriceOracle } from "../priceoracle/UniswapPriceOracle.sol";
+import { ChainlinkAggregator } from "../priceoracle/ChainlinkAggregator.sol";
+import { TestSeacowsSFT } from "../TestCollectionToken/TestSeacowsSFT.sol";
+import { ISeacowsPairERC1155 } from "../interfaces/ISeacowsPairERC1155.sol";
+import { CPMMCurve } from "../bondingcurve/CPMMCurve.sol";
+import { TestERC20 } from "../TestCollectionToken/TestERC20.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
