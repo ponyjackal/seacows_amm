@@ -103,13 +103,19 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
         }
     }
 
-    function withdrawERC20(ERC20 a, uint256 amount) external onlyAdmin {
-        a.safeTransfer(msg.sender, amount);
+    /**
+     * @dev withraw erc20 tokens from pair to recipient
+     * @param _recipient The address for token withdarw
+     * @param _amount The amount of token to withdraw
+     */
+    function withdrawERC20(address _recipient, uint256 _amount) external onlyFactory {
+        require(_recipient != address(0), "Invalid address");
+        require(_amount > 0, "Invalid amount");
 
-        if (a == token()) {
-            // emit event since it is the pair token
-            emit TokenWithdrawal(amount);
-        }
+        token().safeTransfer(_recipient, _amount);
+
+        // emit event since it is the pair token
+        emit TokenWithdrawal(_recipient, _amount);
     }
 
     /**

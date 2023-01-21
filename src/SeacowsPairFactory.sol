@@ -713,7 +713,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev remove ERC20 liquidity from ERC1155 trading pair
      * @param _amount lp token amount to remove
      */
-    function removeLiquidityERC20ERC1155(SeacowsPairERC1155ERC20 _pair, uint256 _amount, bool _toEth) external {
+    function removeLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20 _pair, uint256 _amount, bool _toEth) external {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
         require(_amount > 0, "Invalid amount");
@@ -724,15 +724,15 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         // transfer tokens to the user
         uint256 tokenAmount = _amount * _pair.spotPrice();
         if (address(_pair.token()) == weth && _toEth) {
-            _pair.token().safeTransferFrom(address(_pair), address(this), tokenAmount);
+            _pair.withdrawERC20(address(this), tokenAmount);
             IWETH(weth).withdraw(tokenAmount);
             payable(msg.sender).transfer(tokenAmount);
         } else {
-            _pair.token().safeTransferFrom(address(_pair), msg.sender, tokenAmount);
+            _pair.withdrawERC20(msg.sender, tokenAmount);
         }
 
         // transfer NFTs from sender to pair
-        IERC1155(_pair.nft()).safeTransferFrom(address(_pair), msg.sender, _pair.tokenId(), _amount, "");
+        _pair.withdrawERC1155(msg.sender, _amount);
     }
 
     /**
@@ -748,7 +748,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev remove ETH liquidity from ERC1155 trading pair
      * @param _amount lp token amount to remove
      */
-    function removeLiquidityETHERC1155(SeacowsPairERC1155ERC20 _pair, uint256 _amount) external {
+    function removeLiquidityETHERC1155(ISeacowsPairERC1155ERC20 _pair, uint256 _amount) external {
         this.removeLiquidityERC20ERC1155(_pair, _amount, true);
     }
 }

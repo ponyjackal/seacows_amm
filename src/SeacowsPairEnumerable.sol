@@ -73,6 +73,6 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
             }
         }
 
-        emit NFTWithdrawal();
+        emit NFTWithdrawal(msg.sender, numNFTs);
     }
 }

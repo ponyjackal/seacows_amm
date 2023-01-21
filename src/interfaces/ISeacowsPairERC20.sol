@@ -6,4 +6,6 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 
 interface ISeacowsPairERC20 is ISeacowsPair {
     function token() external returns (ERC20 _token);
+
+    function withdrawERC20(address recipient, uint256 amount) external;
 }

@@ -95,9 +95,11 @@ contract SeacowsPairERC1155Test is Test {
         // deploy sft contract
         testSeacowsSFT = new TestSeacowsSFT();
         testSeacowsSFT.safeMint(owner);
+        testSeacowsSFT.safeMint(spender);
 
         token = new TestERC20();
         token.mint(owner, 1e18);
+        token.mint(spender, 1e18);
 
         // deploy CPMM
         cpmmCurve = new CPMMCurve();
@@ -110,6 +112,14 @@ contract SeacowsPairERC1155Test is Test {
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
         pair = seacowsPairFactory.createPairERC1155ERC20(testSeacowsSFT, 1, cpmmCurve, 1000, ERC20(token), 100000, 10);
+
+        vm.stopPrank();
+
+        vm.startPrank(spender);
+
+        token.approve(address(seacowsPairFactory), 1000000);
+
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
         vm.stopPrank();
     }
@@ -125,14 +135,7 @@ contract SeacowsPairERC1155Test is Test {
     }
 
     function test_add_liquidity() public {
-        token.mint(spender, 1e18);
-        testSeacowsSFT.safeMint(spender);
-
         vm.startPrank(spender);
-
-        token.approve(address(seacowsPairFactory), 1000000);
-
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
         seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
 
@@ -141,5 +144,19 @@ contract SeacowsPairERC1155Test is Test {
         uint256 lpBalance = pair.balanceOf(spender, 1);
 
         assertEq(lpBalance, 100);
+    }
+
+    function test_remove_liquidity() public {
+        vm.startPrank(spender);
+
+        seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
+
+        seacowsPairFactory.removeLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, false);
+
+        vm.stopPrank();
+
+        uint256 lpBalance = pair.balanceOf(spender, 1);
+
+        assertEq(lpBalance, 0);
     }
 }

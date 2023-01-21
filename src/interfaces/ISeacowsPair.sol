@@ -62,8 +62,6 @@ interface ISeacowsPair {
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;
 
-    function withdrawERC20(ERC20 a, uint256 amount) external;
-
     function changeSpotPrice(uint128 newSpotPrice) external;
 
     function changeDelta(uint128 newDelta) external;
