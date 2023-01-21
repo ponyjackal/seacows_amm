@@ -125,13 +125,17 @@ contract SeacowsPairERC1155Test is Test {
     }
 
     function test_create_erc20_pair() public {
-        uint256 tokenId = ISeacowsPairERC1155(address(pair)).tokenId();
+        address nft = ISeacowsPairERC1155(address(pair)).nft();
+        assertEq(nft, address(testSeacowsSFT));
 
+        uint256 tokenId = ISeacowsPairERC1155(address(pair)).tokenId();
         assertEq(tokenId, 1);
 
         uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
-
         assertEq(spotPrice, 100);
+
+        ERC20 token = ISeacowsPairERC1155ERC20(address(pair)).token();
+        assertEq(address(token), address(token));
     }
 
     function test_add_liquidity() public {
