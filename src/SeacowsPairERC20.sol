@@ -108,7 +108,9 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
      * @param _recipient The address for token withdarw
      * @param _amount The amount of token to withdraw
      */
-    function withdrawERC20(address _recipient, uint256 _amount) external onlyFactory {
+    function withdrawERC20(address _recipient, uint256 _amount) external virtual {
+        // For NFT, TOKEN pairs, only owner can call this function
+        require(msg.sender == owner(), "Caller should be an owner");
         require(_recipient != address(0), "Invalid address");
         require(_amount > 0, "Invalid amount");
 
