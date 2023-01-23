@@ -145,11 +145,27 @@ contract SeacowsPairERC1155Test is Test {
         vm.startPrank(spender);
 
         seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
-
-        vm.stopPrank();
-
+        // check LP token balance
         uint256 lpBalance = pair.balanceOf(spender, 1);
         assertEq(lpBalance, 100);
+        // check pair erc20 token balance
+        uint256 tokenBalance = token.balanceOf(address(pair));
+        assertEq(tokenBalance, 110000);
+        // check pair erc1155 balance
+        uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
+        assertEq(sftBalance, 1100);
+        // check spot price
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+        assertEq(spotPrice, 100);
+
+        // revert cases
+        vm.expectRevert("Invalid token amount based on spot price");
+        seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 100);
+
+        vm.expectRevert("Invalid NFT amount");
+        seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 0, 10000);
+
+        vm.stopPrank();
     }
 
     function test_remove_liquidity() public {
@@ -157,11 +173,24 @@ contract SeacowsPairERC1155Test is Test {
 
         seacowsPairFactory.addLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
 
+        seacowsPairFactory.removeLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 10, false);
+
+        // check pair erc20 token balance
+        uint256 tokenBalance = token.balanceOf(address(pair));
+        assertEq(tokenBalance, 109000);
+        // check pair erc1155 balance
+        uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
+        assertEq(sftBalance, 1090);
+        // check LP token balance
+        uint256 lpBalance = pair.balanceOf(spender, 1);
+        assertEq(lpBalance, 90);
+        // check spot price
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+        assertEq(spotPrice, 100);
+        // trying to remove invalid LP token
+        vm.expectRevert("Insufficient LP token");
         seacowsPairFactory.removeLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, false);
 
         vm.stopPrank();
-
-        uint256 lpBalance = pair.balanceOf(spender, 1);
-        assertEq(lpBalance, 0);
     }
 }
