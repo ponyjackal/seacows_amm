@@ -136,6 +136,9 @@ contract SeacowsPairERC1155Test is Test {
 
         ERC20 token = ISeacowsPairERC1155ERC20(address(pair)).token();
         assertEq(address(token), address(token));
+
+        uint256 lpBalance = pair.balanceOf(owner, 1);
+        assertEq(lpBalance, 1000);
     }
 
     function test_add_liquidity() public {
@@ -146,7 +149,6 @@ contract SeacowsPairERC1155Test is Test {
         vm.stopPrank();
 
         uint256 lpBalance = pair.balanceOf(spender, 1);
-
         assertEq(lpBalance, 100);
     }
 
@@ -160,7 +162,6 @@ contract SeacowsPairERC1155Test is Test {
         vm.stopPrank();
 
         uint256 lpBalance = pair.balanceOf(spender, 1);
-
         assertEq(lpBalance, 0);
     }
 }
