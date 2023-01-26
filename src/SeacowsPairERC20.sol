@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
@@ -118,15 +117,5 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
 
         // emit event since it is the pair token
         emit TokenWithdrawal(_recipient, _amount);
-    }
-
-    /**
-     * @notice get reserves in the pool, only available for trade pair
-     */
-    function _getReserve() internal view override returns (uint256 nftReserve, uint256 tokenReserve) {
-        // nft balance
-        nftReserve = IERC721(nft()).balanceOf(address(this));
-        // token balance
-        tokenReserve = token().balanceOf(address(this));
     }
 }

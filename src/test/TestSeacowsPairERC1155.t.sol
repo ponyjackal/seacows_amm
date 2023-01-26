@@ -17,16 +17,20 @@ import { TestSeacowsSFT } from "../TestCollectionToken/TestSeacowsSFT.sol";
 import { ISeacowsPairERC1155 } from "../interfaces/ISeacowsPairERC1155.sol";
 import { CPMMCurve } from "../bondingcurve/CPMMCurve.sol";
 import { TestERC20 } from "../TestCollectionToken/TestERC20.sol";
+import { SeacowsPair } from "../SeacowsPair.sol";
+import { ISeacowsPairERC1155ERC20 } from "../interfaces/ISeacowsPairERC1155ERC20.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract SeacowsPairERC1155Test is Test {
     uint256 internal ownerPrivateKey;
     uint256 internal spenderPrivateKey;
+    uint256 internal traderPrivateKey;
 
     address internal weth;
     address internal owner;
     address internal spender;
+    address internal trader;
 
     SeacowsPairFactory internal seacowsPairFactory;
     SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
@@ -54,9 +58,11 @@ contract SeacowsPairERC1155Test is Test {
 
         ownerPrivateKey = 0xA11CE;
         spenderPrivateKey = 0xB0B;
+        traderPrivateKey = 0xA12DF;
 
         owner = vm.addr(ownerPrivateKey);
         spender = vm.addr(spenderPrivateKey);
+        trader = vm.addr(traderPrivateKey);
 
         /** deploy TestWETH */
         weth = _weth;
@@ -96,19 +102,19 @@ contract SeacowsPairERC1155Test is Test {
         testSeacowsSFT = new TestSeacowsSFT();
         testSeacowsSFT.safeMint(owner);
         testSeacowsSFT.safeMint(spender);
+        testSeacowsSFT.safeMint(trader);
 
         token = new TestERC20();
         token.mint(owner, 1e18);
         token.mint(spender, 1e18);
+        token.mint(trader, 1e18);
 
         // deploy CPMM
         cpmmCurve = new CPMMCurve();
 
         // create a pair
         vm.startPrank(owner);
-
         token.approve(address(seacowsPairFactory), 1000000);
-
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
 
         pair = seacowsPairFactory.createPairERC1155ERC20(testSeacowsSFT, 1, cpmmCurve, 1000, ERC20(token), 100000, 10);
@@ -116,11 +122,13 @@ contract SeacowsPairERC1155Test is Test {
         vm.stopPrank();
 
         vm.startPrank(spender);
-
         token.approve(address(seacowsPairFactory), 1000000);
-
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        vm.stopPrank();
 
+        vm.startPrank(trader);
+        token.approve(address(seacowsPairFactory), 1000000);
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
         vm.stopPrank();
     }
 
@@ -136,6 +144,9 @@ contract SeacowsPairERC1155Test is Test {
 
         ERC20 token = ISeacowsPairERC1155ERC20(address(pair)).token();
         assertEq(address(token), address(token));
+
+        SeacowsPair.PoolType poolType = ISeacowsPairERC1155ERC20(address(pair)).poolType();
+        assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TRADE));
 
         uint256 lpBalance = pair.balanceOf(owner, 1);
         assertEq(lpBalance, 1000);
@@ -190,6 +201,25 @@ contract SeacowsPairERC1155Test is Test {
         // trying to remove invalid LP token
         vm.expectRevert("Insufficient LP token");
         seacowsPairFactory.removeLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, false);
+
+        vm.stopPrank();
+    }
+
+    function test_swap_any_nfts() public {
+        vm.startPrank(spender);
+        // approve erc20 tokens to the pair
+        token.approve(address(pair), 1000000);
+        // nft and token balance before swap
+        uint256 tokenBeforeBalance = token.balanceOf(spender);
+        uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(spender, 1);
+        // swap tokens for any nfts
+        pair.swapTokenForAnyNFTs(100, 10150, spender, false, address(0));
+        // check balances after swap
+        uint256 tokenAfterBalance = token.balanceOf(spender);
+        uint256 sftAfterBalance = testSeacowsSFT.balanceOf(spender, 1);
+
+        assertEq(tokenAfterBalance, tokenBeforeBalance - 10050);
+        assertEq(sftAfterBalance, sftBeforeBalance + 100);
 
         vm.stopPrank();
     }

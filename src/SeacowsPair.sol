@@ -16,6 +16,7 @@ import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.so
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegistry.sol";
+import "forge-std/console.sol";
 
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -165,23 +166,19 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require((numNFTs > 0) && (numNFTs <= IERC721(_nft).balanceOf(address(this))), "Ask for > 0 and <= balanceOf NFTs");
+            require(numNFTs > 0, "Invalid nft amount");
         }
-
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(
-            new uint256[](0),
-            new SeacowsRouter.NFTDetail[](0),
+            new uint256[](numNFTs),
+            new SeacowsRouter.NFTDetail[](numNFTs),
             maxExpectedTokenInput,
             _bondingCurve,
             _factory
         );
-
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
-
         _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
-
         _refundTokenToSender(inputAmount);
 
         emit SwapNFTOutPair();
@@ -480,7 +477,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         if (error != CurveErrorCodes.Error.OK) {
             revert BondingCurveError(error);
         }
-
         // Revert if input is more than expected
         require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
 

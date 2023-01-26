@@ -127,7 +127,6 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require((numNFTs > 0) && (numNFTs <= _nft.balanceOf(address(this))), "Ask for > 0 and <= balanceOf NFTs");
         }
 
         // Call bonding curve for pricing information

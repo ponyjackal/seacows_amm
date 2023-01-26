@@ -60,4 +60,14 @@ contract SeacowsPairERC1155ERC20 is SeacowsPairERC1155, SeacowsPairERC20 {
         // emit event since it is the pair token
         emit TokenWithdrawal(_recipient, _amount);
     }
+
+    /**
+     * @notice get reserves in the pool, only available for trade pair
+     */
+    function _getReserve() internal view override returns (uint256 nftReserve, uint256 tokenReserve) {
+        // nft balance
+        nftReserve = IERC1155(nft()).balanceOf(address(this), tokenId());
+        // token balance
+        tokenReserve = token().balanceOf(address(this));
+    }
 }

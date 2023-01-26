@@ -6,6 +6,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
+import "forge-std/console.sol";
 
 /**
     @title An NFT/Token pair for an NFT that implements ERC721Enumerable
@@ -16,6 +17,7 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
 
     /// @inheritdoc SeacowsPair
     function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal override {
+        console.log("seacowspairEnumerable _sendAnyNFTsToRecipient");
         // Send NFTs to recipient
         // (we know NFT implements IERC721Enumerable so we just iterate)
         uint256 lastIndex = IERC721(_nft).balanceOf(address(this)) - 1;
