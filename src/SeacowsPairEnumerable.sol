@@ -17,7 +17,6 @@ abstract contract SeacowsPairEnumerable is SeacowsPair {
 
     /// @inheritdoc SeacowsPair
     function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal override {
-        console.log("seacowspairEnumerable _sendAnyNFTsToRecipient");
         // Send NFTs to recipient
         // (we know NFT implements IERC721Enumerable so we just iterate)
         uint256 lastIndex = IERC721(_nft).balanceOf(address(this)) - 1;

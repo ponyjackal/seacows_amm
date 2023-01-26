@@ -218,8 +218,16 @@ contract SeacowsPairERC1155Test is Test {
         uint256 tokenAfterBalance = token.balanceOf(spender);
         uint256 sftAfterBalance = testSeacowsSFT.balanceOf(spender, 1);
 
-        assertEq(tokenAfterBalance, tokenBeforeBalance - 10050);
+        assertEq(tokenAfterBalance, tokenBeforeBalance - 10150);
         assertEq(sftAfterBalance, sftBeforeBalance + 100);
+
+        // trying to swap with insufficient amount of tokens
+        vm.expectRevert("In too many tokens");
+        pair.swapTokenForAnyNFTs(100, 10150, spender, false, address(0));
+
+        // trying to swap with invalid nft amount
+        vm.expectRevert("Invalid nft amount");
+        pair.swapTokenForAnyNFTs(0, 10150, spender, false, address(0));
 
         vm.stopPrank();
     }
