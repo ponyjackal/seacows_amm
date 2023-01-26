@@ -64,6 +64,8 @@ contract TestSeacowsPairEnumerableERC20 is BaseFactorySetup, BaseCurveSetup {
 
     function testAddLiquidity() public {
         vm.startPrank(owner);
+        // check original LP token balance: 1
+        assertEq(pair.balanceOf(owner, pair.LP_TOKEN()), 1);
         token.approve(address(seacowsPairFactory), 1000 ether);
 
         nft.safeMint(owner);
@@ -75,6 +77,9 @@ contract TestSeacowsPairEnumerableERC20 is BaseFactorySetup, BaseCurveSetup {
 
         assertEq(token.balanceOf(address(pair)), 4 ether);
         assertEq(nft.ownerOf(1), address(pair));
+    
+        // check LP token balance: 2
+        assertEq(pair.balanceOf(owner, pair.LP_TOKEN()), 2);
         
         vm.stopPrank();
     }
