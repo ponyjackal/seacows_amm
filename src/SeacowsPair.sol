@@ -16,7 +16,6 @@ import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.so
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegistry.sol";
-import "forge-std/console.sol";
 
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -546,6 +545,57 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
             newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
         }
+
+        _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
+    }
+
+    /**
+        @notice Calculates the amount needed to be sent by the pair for a sell and adjusts spot price or delta if necessary
+        @param numNFTs the amount of erc1155 tokens
+        @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
+        amount is less than this value, the transaction will be reverted.
+        @param protocolFee The percentage of protocol fee to be taken, as a percentage
+        @return protocolFee The amount of tokens to send as protocol fee
+        @return outputAmount The amount of tokens total tokens receive
+     */
+    function _calculateSellInfoAndUpdatePoolParamsERC1155(
+        uint256 numNFTs,
+        uint256 minExpectedTokenOutput,
+        ICurve _bondingCurve,
+        ISeacowsPairFactoryLike _factory
+    ) internal virtual returns (uint256 protocolFee, uint256 outputAmount) {
+        CurveErrorCodes.Error error;
+        // Save on 2 SLOADs by caching
+        uint128 currentSpotPrice = spotPrice;
+        uint128 newSpotPrice;
+        // uint128 newSpotPriceOriginal;
+        uint128 currentDelta = delta;
+        uint128 newDelta = delta;
+
+        // For trade pair, we only accept CPMM
+        // get reserve
+        (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
+        (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
+            currentSpotPrice,
+            numNFTs,
+            fee,
+            _factory.protocolFeeMultiplier(),
+            nftReserve,
+            tokenReserve
+        );
+
+        _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
+    }
+
+    function _updateSpotPrice(
+        CurveErrorCodes.Error error,
+        uint256 outputAmount,
+        uint256 minExpectedTokenOutput,
+        uint128 currentDelta,
+        uint128 newDelta,
+        uint128 currentSpotPrice,
+        uint128 newSpotPrice
+    ) internal {
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
             revert BondingCurveError(error);
@@ -683,6 +733,17 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             }
         }
     }
+
+    // /**
+    //     @notice Takes ERC1155 NFTs from the caller and sends them into the pair's asset recipient
+    //     @dev This is used by the swapNFTsForTokenERC1155's swapNFTForToken function.
+    //     @param numNFTs The number of erc1155 tokens
+    //     @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
+    //     ETH pairs.
+    //     @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
+    //     ETH pairs.
+    //  */
+    // function _takeNFTsFromSenderERC1155(uint256 numNFTs, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller) internal virtual;
 
     /**
         @dev Used internally to grab pair parameters from calldata, see SeacowsPairCloner for technical details

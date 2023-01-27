@@ -39,7 +39,7 @@ contract SeacowsPairERC1155Test is Test {
     UniswapPriceOracle internal uniswapPriceOracle;
     ChainlinkAggregator internal chainlinkAggregator;
     TestSeacowsSFT internal testSeacowsSFT;
-    SeacowsPairERC20 internal pair;
+    SeacowsPairERC1155ERC20 internal pair;
     CPMMCurve internal cpmmCurve;
     TestERC20 internal token;
 
@@ -218,7 +218,7 @@ contract SeacowsPairERC1155Test is Test {
         uint256 tokenAfterBalance = token.balanceOf(spender);
         uint256 sftAfterBalance = testSeacowsSFT.balanceOf(spender, 1);
 
-        assertEq(tokenAfterBalance, tokenBeforeBalance - 10150);
+        assertEq(tokenAfterBalance, tokenBeforeBalance - 10050);
         assertEq(sftAfterBalance, sftBeforeBalance + 100);
 
         // trying to swap with insufficient amount of tokens
@@ -228,6 +228,33 @@ contract SeacowsPairERC1155Test is Test {
         // trying to swap with invalid nft amount
         vm.expectRevert("Invalid nft amount");
         pair.swapTokenForAnyNFTs(0, 10150, spender, false, address(0));
+
+        vm.stopPrank();
+    }
+
+    function test_swap_tokens() public {
+        vm.startPrank(spender);
+        // approve erc1155 tokens to the pair
+        testSeacowsSFT.setApprovalForAll(address(pair), true);
+        // nft and token balance before swap
+        uint256 tokenBeforeBalance = token.balanceOf(spender);
+        uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(spender, 1);
+        // swap tokens for any nfts
+        uint256 outputAmount = pair.swapNFTsForTokenERC1155(100, 9950, payable(spender), false, address(0));
+        // check balances after swap
+        uint256 tokenAfterBalance = token.balanceOf(spender);
+        uint256 sftAfterBalance = testSeacowsSFT.balanceOf(spender, 1);
+
+        assertEq(tokenAfterBalance, tokenBeforeBalance + 9950);
+        assertEq(sftAfterBalance, sftBeforeBalance - 100);
+
+        // expect too much output tokens
+        vm.expectRevert("Out too little tokens");
+        pair.swapNFTsForTokenERC1155(100, 9950, payable(spender), false, address(0));
+
+        // trying to swap with invalid nft amount
+        vm.expectRevert("Must ask for > 0 NFTs");
+        pair.swapNFTsForTokenERC1155(0, 9950, payable(spender), false, address(0));
 
         vm.stopPrank();
     }

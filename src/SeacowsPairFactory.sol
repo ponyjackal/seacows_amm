@@ -151,7 +151,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         );
         pair = _createPairERC20(params);
         pair.initialize(msg.sender, params.assetRecipient, params.delta, params.fee, params.spotPrice);
-        
+
         // transfer WETH from this contract to pair
         params.token.transferFrom(address(this), address(pair), params.initialTokenBalance);
 
@@ -179,7 +179,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function createPairERC1155ETH(IERC1155 _nft, uint256 _tokenId, ICurve _bondingCurve, uint256 _amounts, uint96 _fee)
         external
         payable
-        returns (SeacowsPairERC20 pair)
+        returns (SeacowsPairERC1155ERC20 pair)
     {
         IWETH(weth).deposit{ value: msg.value }();
         pair = _createPairERC1155ERC20(_nft, _tokenId, _bondingCurve, _amounts, IERC20(weth));
@@ -266,7 +266,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         pair = _createPairERC20(params);
         pair.initialize(msg.sender, params.assetRecipient, params.delta, params.fee, params.spotPrice);
-        
+
         // transfer initial tokens to pair
         params.token.transferFrom(msg.sender, address(pair), params.initialTokenBalance);
 
@@ -301,7 +301,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         IERC20 _token,
         uint256 _tokenAmount,
         uint96 _fee
-    ) external payable returns (SeacowsPairERC20 pair) {
+    ) external payable returns (SeacowsPairERC1155ERC20 pair) {
         pair = _createPairERC1155ERC20(_nft, _tokenId, _bondingCurve, _amounts, _token);
         _initializePairERC20ERC1155(pair, _amounts, _tokenAmount, _fee);
 
@@ -386,7 +386,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         uint128 tokenPrice = (uniswapPriceOracle.getPrice(address(_token)) * _spotPrice) / 10**18;
 
         pair.initialize(msg.sender, _assetRecipient, _delta, _fee, tokenPrice);
-        
+
         // transfer initial tokens to pair
         _token.transferFrom(msg.sender, address(pair), _initialTokenBalance);
 
@@ -537,16 +537,13 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
     }
 
-    function _createPairERC1155ERC20(
-        IERC1155 _nft,
-        uint256 _tokenId,
-        ICurve _bondingCurve,
-        uint256 _amounts,
-        IERC20 _token
-    ) internal returns (SeacowsPairERC20 pair) {
+    function _createPairERC1155ERC20(IERC1155 _nft, uint256 _tokenId, ICurve _bondingCurve, uint256 _amounts, IERC20 _token)
+        internal
+        returns (SeacowsPairERC1155ERC20 pair)
+    {
         address template = address(erc1155ERC20Template);
         // create a pair
-        pair = SeacowsPairERC20(
+        pair = SeacowsPairERC1155ERC20(
             payable(template.cloneERC1155ERC20Pair(this, _bondingCurve, address(_nft), uint8(SeacowsPair.PoolType.TRADE), _token, _tokenId))
         );
 
@@ -554,12 +551,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         pair.mintLPToken(msg.sender, _amounts);
     }
 
-    function _initializePairERC20ERC1155(
-        SeacowsPairERC20 _pair,
-        uint256 _amounts,
-        uint256 _tokenAmount,
-        uint96 _fee
-    ) internal {
+    function _initializePairERC20ERC1155(SeacowsPairERC20 _pair, uint256 _amounts, uint256 _tokenAmount, uint96 _fee) internal {
         uint128 initSpotPrice = (uint128)(_tokenAmount / _amounts);
 
         // initialize pair,

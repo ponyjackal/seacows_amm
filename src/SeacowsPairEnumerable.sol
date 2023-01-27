@@ -6,7 +6,6 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
-import "forge-std/console.sol";
 
 /**
     @title An NFT/Token pair for an NFT that implements ERC721Enumerable

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
@@ -757,6 +758,31 @@ contract SeacowsRouter {
 
         // transfer NFTs to pair
         nft.safeTransferFrom(from, to, id);
+    }
+
+    /**
+        @dev Allows a pair contract to transfer ERC1155 NFTs directly from
+        the sender, in order to minimize the number of token transfers. Only callable by a pair.
+        @param nft The ERC1155 NFT to transfer
+        @param tokenId The ERC1155 token id
+        @param from The address to transfer tokens from
+        @param to The address to transfer tokens to
+        @param numNFTs The NFT amount
+        @param variant The pair variant of the pair contract
+     */
+    function pairTransferNFTFromERC1155(
+        IERC1155 nft,
+        uint256 tokenId,
+        address from,
+        address to,
+        uint256 numNFTs,
+        ISeacowsPairFactoryLike.PairVariant variant
+    ) external {
+        // verify caller is a trusted pair contract
+        require(factory.isPair(msg.sender, variant), "Not pair");
+
+        // transfer NFTs to pair
+        nft.safeTransferFrom(from, to, tokenId, numNFTs, "");
     }
 
     /**
