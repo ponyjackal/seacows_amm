@@ -15,13 +15,11 @@ import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
 import { TestERC721Enumerable } from "../../TestCollectionToken/TestERC721Enumerable.sol";
 import { BaseFactorySetup } from "../BaseFactorySetup.t.sol";
 import { BaseCurveSetup } from "../BaseCurveSetup.t.sol";
+import { BaseSetup } from "../BaseSetup.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract WhenUsingTokenPair is BaseFactorySetup, BaseCurveSetup {
-    address internal owner;
-    address internal spender;
-
+contract WhenCreateTokenPair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
     SeacowsPairERC20 internal erc721ERC20Pair;
     SeacowsPairERC20 internal erc721EnumerableERC20Pair;
 
@@ -29,12 +27,10 @@ contract WhenUsingTokenPair is BaseFactorySetup, BaseCurveSetup {
     TestERC721 internal nft;
     TestERC20 internal token;
 
-    function setUp() public virtual override(BaseFactorySetup, BaseCurveSetup) {
-        owner = vm.addr(1);
-        spender = vm.addr(2);
-        
+    function setUp() public virtual override(BaseFactorySetup, BaseCurveSetup, BaseSetup) {
         BaseFactorySetup.setUp();
         BaseCurveSetup.setUp();
+        BaseSetup.setUp();
 
         token = new TestERC20();
         token.mint(owner, 1000 ether);
@@ -49,11 +45,11 @@ contract WhenUsingTokenPair is BaseFactorySetup, BaseCurveSetup {
         seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
 
         /** create ERC721Enumerable-ERC20 Token Pair */
-        // vm.startPrank(owner);
+        vm.startPrank(owner);
         uint256[] memory nftEnumerableIds = new uint256[](1);
         nftEnumerableIds[0] = 0;
-        // token.approve(address(seacowsPairFactory), 1 ether);
-        // nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairFactory), 1 ether);
+        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
         // SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
         //     token,
         //     nftEnumerable,
@@ -67,7 +63,7 @@ contract WhenUsingTokenPair is BaseFactorySetup, BaseCurveSetup {
         //     1 ether
         // );
         // erc721EnumerableERC20Pair = seacowsPairFactory.createPairERC20(params);
-        erc721EnumerableERC20Pair = this.createTokenPair(
+        erc721EnumerableERC20Pair = createTokenPair(
             token,
             nftEnumerable,
             linearCurve,
@@ -77,6 +73,7 @@ contract WhenUsingTokenPair is BaseFactorySetup, BaseCurveSetup {
             nftEnumerableIds,
             1 ether
         );
+        vm.stopPrank();
     }
 
     function createTokenPair(
@@ -89,7 +86,7 @@ contract WhenUsingTokenPair is BaseFactorySetup, BaseCurveSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPairERC20 pair) {
-        vm.startPrank(owner);
+        // vm.startPrank(owner);
         _token.approve(address(seacowsPairFactory), _initialTokenBalance);
         _nft.setApprovalForAll(address(seacowsPairFactory), true);
         SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
@@ -105,7 +102,30 @@ contract WhenUsingTokenPair is BaseFactorySetup, BaseCurveSetup {
             _initialTokenBalance
         );
         pair = seacowsPairFactory.createPairERC20(params);
-        vm.stopPrank();
+        // vm.stopPrank();
+    }
+
+    function createTokenPairETH(
+        IERC721 _nft,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        uint128 _delta,
+        uint128 _spotPrice,
+        uint256[] memory _initialNFTIDs
+    ) public payable returns (SeacowsPairERC20 pair) {
+        // vm.startPrank(owner);
+        _nft.setApprovalForAll(address(seacowsPairFactory), true);
+        pair = seacowsPairFactory.createPairETH{ value: msg.value }(
+            _nft,
+            _bondingCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.TOKEN,
+            _delta,
+            0, // Must be 0 for TOKEN Pool
+            _spotPrice,
+            _initialNFTIDs
+        );
+        // vm.stopPrank();
     }
 
     function testERC721EnumerableERC20TokenPair() public {

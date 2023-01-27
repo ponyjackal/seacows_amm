@@ -114,5 +114,6 @@ contract SeacowsPairERC1155Test is Test {
         uint256 tokenId = ISeacowsPairERC1155(address(ethPair)).tokenId();
 
         assertEq(tokenId, 1);
+        vm.stopPrank();
     }
 }
