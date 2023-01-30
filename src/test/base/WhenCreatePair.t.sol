@@ -18,8 +18,6 @@ import { BaseFactorySetup } from "./BaseFactorySetup.t.sol";
 import { BaseCurveSetup } from "./BaseCurveSetup.t.sol";
 import { BaseSetup } from "./BaseSetup.t.sol";
 
-import "forge-std/console.sol";
-
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {

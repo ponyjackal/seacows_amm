@@ -63,11 +63,11 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
             // so there is no incentive to *not* pay protocol fee
         } else {
             // Transfer tokens directly
-            _token.safeTransferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
+            _token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
 
             // Take protocol fee (if it exists)
             if (protocolFee > 0) {
-                _token.safeTransferFrom(msg.sender, address(_factory), protocolFee);
+                _token.transferFrom(msg.sender, address(_factory), protocolFee);
             }
         }
     }

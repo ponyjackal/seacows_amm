@@ -31,8 +31,6 @@ import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.so
 import { ISeacowsPairERC20 } from "./interfaces/ISeacowsPairERC20.sol";
 import { ISeacowsPairERC1155ERC20 } from "./interfaces/ISeacowsPairERC1155ERC20.sol";
 
-import "forge-std/console.sol";
-
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     using SeacowsPairCloner for address;
@@ -689,7 +687,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         IWETH(weth).deposit{ value: msg.value }();
         // transfer weth to pair
         IWETH(weth).transfer(address(_pair), msg.value);
-        console.log("weth balance", IWETH(weth).balanceOf(msg.sender), msg.sender);
 
         // transfer NFTs from sender to pair
         IERC1155(_pair.nft()).safeTransferFrom(msg.sender, address(_pair), _pair.tokenId(), _amount, "");
