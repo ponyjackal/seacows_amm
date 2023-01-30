@@ -13,13 +13,11 @@ import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
 import { TestERC721Enumerable } from "../../TestCollectionToken/TestERC721Enumerable.sol";
-import { BaseFactorySetup } from "../BaseFactorySetup.t.sol";
-import { BaseCurveSetup } from "../BaseCurveSetup.t.sol";
-import { BaseSetup } from "../BaseSetup.t.sol";
+import { WhenCreatePair } from "./WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract WhenCreateTradePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
+contract WhenCreateTradePair is WhenCreatePair {
     SeacowsPairERC20 internal erc721ERC20TradePair;
     SeacowsPairERC20 internal erc721EnumerableERC20TradePair;
 
@@ -27,10 +25,8 @@ contract WhenCreateTradePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
     TestERC721Enumerable internal nftEnumerable;
     TestERC20 internal token;
 
-    function setUp() public virtual override(BaseFactorySetup, BaseCurveSetup, BaseSetup) {
-        BaseSetup.setUp();
-        BaseFactorySetup.setUp();
-        BaseCurveSetup.setUp();
+    function setUp() public virtual override(WhenCreatePair) {
+        WhenCreatePair.setUp();
 
         token = new TestERC20();
         token.mint(owner, 1000 ether);
@@ -71,85 +67,41 @@ contract WhenCreateTradePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
             2 ether,
             nftIds,
             1 ether);
-
-        /** create ERC721Enumerable-ERC20 Trade Pair from ETH */
-        // uint256[] memory nftIds = new uint256[](1);
-        // nftIds[0] = 0;
-        // createTradePairETH{value: 10 ether}(
-        //     nft,
-        //     linearCurve,
-        //     payable(owner),
-        //     0.2 ether,
-        //     2 ether,
-        //     nftIds
-        // );
         
         vm.stopPrank();
     }
 
-    function createTradePair(
-        IERC20 _token,
-        IERC721 _nft,
-        ICurve _bondingCurve,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] memory _initialNFTIDs,
-        uint256 _initialTokenBalance
-    ) public returns (SeacowsPairERC20 pair) {
-        _token.approve(address(seacowsPairFactory), _initialTokenBalance);
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
-        SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
-            _token,
-            _nft,
-            _bondingCurve,
-            payable(address(0)),
-            SeacowsPair.PoolType.TRADE,
-            _delta,
-            _fee,
-            _spotPrice,
-            _initialNFTIDs,
-            _initialTokenBalance
+    function testCreateERC721EnumerableERC20TradePairFromETH() public {
+        vm.startPrank(owner);
+        /** create ERC721-ERC20 Trade Pair from ETH */
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+
+        nftEnumerable.safeMint(owner);
+        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
+        SeacowsPairERC20 pair = createTradePairETH(
+            nftEnumerable,
+            linearCurve,
+            0.2 ether,
+            0.2 ether,
+            2 ether,
+            nftIds,
+            1 ether
         );
-        pair = seacowsPairFactory.createPairERC20(params);
+        assertEq(address(pair.nft()), address(nftEnumerable));
+        assertEq(address(pair.token()), weth);
+        assertEq(address(pair.bondingCurve()), address(linearCurve));
+        assertEq(pair.spotPrice(), 2 ether);
+        assertEq(pair.delta(), 0.2 ether);
+        assertEq(pair.fee(), 0.2 ether);
+        assertEq(pair.owner(), owner);
+
+        assertEq(IERC20(weth).balanceOf(address(pair)), 1 ether);
+        assertEq(nftEnumerable.ownerOf(1), address(pair));
+        // check LP token balance: 1
+        assertEq(pair.balanceOf(owner, pair.LP_TOKEN()), 1);
+        vm.stopPrank();
     }
-
-    function createTradePairETH(
-        IERC721 _nft,
-        ICurve _bondingCurve,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] memory _initialNFTIDs,
-        uint256 _initialETHBalance
-    ) public returns (SeacowsPairERC20 pair) {
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
-        pair = seacowsPairFactory.createPairETH{ value: _initialETHBalance }(
-            _nft,
-            _bondingCurve,
-            payable(address(0)),
-            SeacowsPair.PoolType.TRADE,
-            _delta,
-            _fee,
-            _spotPrice,
-            _initialNFTIDs
-        );
-    }
-
-    // function testCreateERC721EnumerableERC20TradePairFromETH() public {
-    //     assertEq(address(erc721EnumerableERC20TradePair.nft()), address(nftEnumerable));
-    //     assertEq(address(erc721EnumerableERC20TradePair.token()), address(token));
-    //     assertEq(address(erc721EnumerableERC20TradePair.bondingCurve()), address(linearCurve));
-    //     assertEq(erc721EnumerableERC20TradePair.spotPrice(), 2 ether);
-    //     assertEq(erc721EnumerableERC20TradePair.delta(), 0.2 ether);
-    //     assertEq(erc721EnumerableERC20TradePair.fee(), 0.2 ether);
-    //     assertEq(erc721EnumerableERC20TradePair.owner(), owner);
-
-    //     assertEq(token.balanceOf(address(erc721EnumerableERC20TradePair)), 1 ether);
-    //     assertEq(nftEnumerable.ownerOf(0), address(erc721EnumerableERC20TradePair));
-    //     // check LP token balance: 1
-    //     assertEq(erc721EnumerableERC20TradePair.balanceOf(owner, erc721EnumerableERC20TradePair.LP_TOKEN()), 1);
-    // }
 
     function testCreateERC721ERC20TradePairFromETH() public {
         vm.startPrank(owner);
@@ -212,51 +164,6 @@ contract WhenCreateTradePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
 
         // check LP token balance: 1
         assertEq(erc721ERC20TradePair.balanceOf(owner, erc721ERC20TradePair.LP_TOKEN()), 1);
-    }
-
-    function testERC721EnumerableERC20AddLiquidity() public {
-        vm.startPrank(owner);
-        // check original LP token balance: 1
-        assertEq(erc721EnumerableERC20TradePair.balanceOf(owner, erc721EnumerableERC20TradePair.LP_TOKEN()), 1);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-
-        nftEnumerable.safeMint(owner);
-        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
-        assertEq(nftEnumerable.ownerOf(1), owner);
-        
-        uint256[] memory nftIds = new uint256[](1);
-        nftIds[0] = 1;
-        seacowsPairFactory.addLiquidityERC20(erc721EnumerableERC20TradePair, nftIds, 3 ether);
-
-        assertEq(token.balanceOf(address(erc721EnumerableERC20TradePair)), 4 ether);
-        assertEq(nftEnumerable.ownerOf(1), address(erc721EnumerableERC20TradePair));
-    
-        // check LP token balance: 2
-        assertEq(erc721EnumerableERC20TradePair.balanceOf(owner, erc721EnumerableERC20TradePair.LP_TOKEN()), 2);
-        
-        vm.stopPrank();
-    }
-
-    function testERC721ERC20AddLiquidity() public {
-        vm.startPrank(owner);
-        // check original LP token balance: 1
-        assertEq(erc721ERC20TradePair.balanceOf(owner, erc721ERC20TradePair.LP_TOKEN()), 1);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-
-        nft.safeMint(owner);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
-        assertEq(nft.ownerOf(1), owner);
-        
-        uint256[] memory nftIds = new uint256[](1);
-        nftIds[0] = 1;
-        seacowsPairFactory.addLiquidityERC20(erc721ERC20TradePair, nftIds, 3 ether);
-
-        assertEq(token.balanceOf(address(erc721ERC20TradePair)), 4 ether);
-        assertEq(nft.ownerOf(1), address(erc721ERC20TradePair));
-    
-        // check LP token balance: 2
-        assertEq(erc721ERC20TradePair.balanceOf(owner, erc721ERC20TradePair.LP_TOKEN()), 2);
-        vm.stopPrank();
     }
 
     function testCreateAnotherERC721EnumerableERC20TradePair() public {
