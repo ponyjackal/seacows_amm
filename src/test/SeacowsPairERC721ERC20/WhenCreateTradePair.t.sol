@@ -13,7 +13,7 @@ import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
 import { TestERC721Enumerable } from "../../TestCollectionToken/TestERC721Enumerable.sol";
-import { WhenCreatePair } from "./WhenCreatePair.t.sol";
+import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests

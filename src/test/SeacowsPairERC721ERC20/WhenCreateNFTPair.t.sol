@@ -17,7 +17,7 @@ import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract WhenCreateTokenPair is WhenCreatePair {
+contract WhenCreateNFTPair is WhenCreatePair {
     SeacowsPairERC20 internal erc721ERC20Pair;
     SeacowsPairERC20 internal erc721EnumerableERC20Pair;
 
@@ -40,13 +40,13 @@ contract WhenCreateTokenPair is WhenCreatePair {
         /** Approve Bonding Curve */
         seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
 
-        /** Create ERC721Enumerable-ERC20 Token Pair */
+        /** Create ERC721Enumerable-ERC20 NFT Pair */
         vm.startPrank(owner);
         uint256[] memory nftEnumerableIds = new uint256[](1);
         nftEnumerableIds[0] = 0;
         token.approve(address(seacowsPairFactory), 1 ether);
         nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721EnumerableERC20Pair = createTokenPair(
+        erc721EnumerableERC20Pair = createNFTPair(
             token,
             nftEnumerable,
             linearCurve,
@@ -57,12 +57,12 @@ contract WhenCreateTokenPair is WhenCreatePair {
             1 ether
         );
 
-        /** Create ERC721-ERC20 Token Pair */
+        /** Create ERC721-ERC20 NFT Pair */
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 0;
         token.approve(address(seacowsPairFactory), 1 ether);
         nft.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721ERC20Pair = createTokenPair(
+        erc721ERC20Pair = createNFTPair(
             token,
             nft,
             linearCurve,
@@ -75,7 +75,7 @@ contract WhenCreateTokenPair is WhenCreatePair {
         vm.stopPrank();
     }
 
-    function testERC721EnumerableERC20TokenPair() public {
+    function testERC721EnumerableERC20NFTPair() public {
         assertEq(erc721EnumerableERC20Pair.nft(), address(nftEnumerable));
         assertEq(address(erc721EnumerableERC20Pair.token()), address(token));
         assertEq(address(erc721EnumerableERC20Pair.bondingCurve()), address(linearCurve));
@@ -90,7 +90,7 @@ contract WhenCreateTokenPair is WhenCreatePair {
         assertEq(erc721EnumerableERC20Pair.balanceOf(owner, erc721EnumerableERC20Pair.LP_TOKEN()), 0);
     }
 
-    function testCannotAddLiquidityToTokenPair() public {
+    function testCannotAddLiquidityToNFTPair() public {
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 0;
 

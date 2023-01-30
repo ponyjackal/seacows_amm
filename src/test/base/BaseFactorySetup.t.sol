@@ -3,19 +3,18 @@ pragma solidity >=0.8.4;
 
 import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-// import { HelperConfig } from "../script/HelperConfig.sol";
-import { SeacowsPairCloner } from "../lib/SeacowsPairCloner.sol";
-import { SeacowsPairFactory } from "../SeacowsPairFactory.sol";
-import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPairEnumerableERC20 } from "../SeacowsPairEnumerableERC20.sol";
-import { SeacowsPairMissingEnumerableERC20 } from "../SeacowsPairMissingEnumerableERC20.sol";
-import { SeacowsPairERC20 } from "../SeacowsPairERC20.sol";
-import { SeacowsPair } from "../SeacowsPair.sol";
-import { SeacowsPairERC1155ERC20 } from "../SeacowsPairERC1155ERC20.sol";
-import { UniswapPriceOracle } from "../priceoracle/UniswapPriceOracle.sol";
-import { ChainlinkAggregator } from "../priceoracle/ChainlinkAggregator.sol";
-import { LinearCurve } from "../bondingcurve/LinearCurve.sol";
-import { TestWETH } from "../TestCollectionToken/TestWETH.sol";
+import { SeacowsPairCloner } from "../../lib/SeacowsPairCloner.sol";
+import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
+import { ISeacowsPairFactoryLike } from "../../interfaces/ISeacowsPairFactoryLike.sol";
+import { SeacowsPairEnumerableERC20 } from "../../SeacowsPairEnumerableERC20.sol";
+import { SeacowsPairMissingEnumerableERC20 } from "../../SeacowsPairMissingEnumerableERC20.sol";
+import { SeacowsPairERC20 } from "../../SeacowsPairERC20.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
+import { UniswapPriceOracle } from "../../priceoracle/UniswapPriceOracle.sol";
+import { ChainlinkAggregator } from "../../priceoracle/ChainlinkAggregator.sol";
+import { LinearCurve } from "../../bondingcurve/LinearCurve.sol";
+import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
