@@ -10,7 +10,7 @@ contract TestERC721 is ERC721, Ownable {
     constructor() ERC721("TestERC721", "Test ERC721") {}
 
     function safeMint(address to) public {
-        totalSupply++;
         _safeMint(to, totalSupply);
+        totalSupply++;
     }
 }
