@@ -14,7 +14,7 @@ import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract SeacowsPairERC1155Test is WhenCreatePair {
+contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
     SeacowsPairERC1155ERC20 internal pair;
     TestERC20 internal token;

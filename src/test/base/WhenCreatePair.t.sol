@@ -18,6 +18,8 @@ import { BaseFactorySetup } from "./BaseFactorySetup.t.sol";
 import { BaseCurveSetup } from "./BaseCurveSetup.t.sol";
 import { BaseSetup } from "./BaseSetup.t.sol";
 
+import "forge-std/console.sol";
+
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
@@ -179,5 +181,14 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         _nft.setApprovalForAll(address(seacowsPairFactory), true);
         _token.approve(address(seacowsPairFactory), _tokenAmount);
         pair = seacowsPairFactory.createPairERC1155ERC20(_nft, _tokenId, cpmmCurve, _amounts, _token, _tokenAmount, _fee);
+    }
+
+    function createERC1155ETHPair(IERC1155 _nft, uint256 _tokenId, uint256 _amounts, uint256 _ethAmount, uint96 _fee)
+        public
+        payable
+        returns (SeacowsPairERC1155ERC20 pair)
+    {
+        _nft.setApprovalForAll(address(seacowsPairFactory), true);
+        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(_nft, _tokenId, cpmmCurve, _amounts, _fee);
     }
 }
