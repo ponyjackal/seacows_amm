@@ -44,24 +44,6 @@ contract SeacowsPairERC1155ERC20 is SeacowsPairERC1155, SeacowsPairERC20 {
     }
 
     /**
-     * @dev withraw erc20 tokens from pair to recipient
-     * @param _recipient The address for token withdarw
-     * @param _amount The amount of token to withdraw
-     */
-    function withdrawERC20(address _recipient, uint256 _amount) external override {
-        // For ERC1155 - ERC20 pair, only factory can call this function
-        require(msg.sender == address(factory()), "Caller should be a factory");
-        require(poolType() == PoolType.TRADE, "Invalid pool type");
-        require(_recipient != address(0), "Invalid address");
-        require(_amount > 0, "Invalid amount");
-
-        token().safeTransfer(_recipient, _amount);
-
-        // emit event since it is the pair token
-        emit TokenWithdrawal(_recipient, _amount);
-    }
-
-    /**
      * @notice get reserves in the pool, only available for trade pair
      */
     function _getReserve() internal view override returns (uint256 nftReserve, uint256 tokenReserve) {

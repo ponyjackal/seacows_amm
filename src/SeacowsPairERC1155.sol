@@ -74,6 +74,44 @@ abstract contract SeacowsPairERC1155 is SeacowsPair {
     }
 
     /**
+        @notice Calculates the amount needed to be sent by the pair for a sell and adjusts spot price or delta if necessary
+        @param numNFTs the amount of erc1155 tokens
+        @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
+        amount is less than this value, the transaction will be reverted.
+        @param protocolFee The percentage of protocol fee to be taken, as a percentage
+        @return protocolFee The amount of tokens to send as protocol fee
+        @return outputAmount The amount of tokens total tokens receive
+     */
+    function _calculateSellInfoAndUpdatePoolParamsERC1155(
+        uint256 numNFTs,
+        uint256 minExpectedTokenOutput,
+        ICurve _bondingCurve,
+        ISeacowsPairFactoryLike _factory
+    ) internal returns (uint256 protocolFee, uint256 outputAmount) {
+        CurveErrorCodes.Error error;
+        // Save on 2 SLOADs by caching
+        uint128 currentSpotPrice = spotPrice;
+        uint128 newSpotPrice;
+        // uint128 newSpotPriceOriginal;
+        uint128 currentDelta = delta;
+        uint128 newDelta = delta;
+
+        // For trade pair, we only accept CPMM
+        // get reserve
+        (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
+        (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
+            currentSpotPrice,
+            numNFTs,
+            fee,
+            _factory.protocolFeeMultiplier(),
+            nftReserve,
+            tokenReserve
+        );
+
+        _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
+    }
+
+    /**
         @notice Takes ERC1155 NFTs from the caller and sends them into the pair's asset recipient
         @dev This is used by the swapNFTsForTokenERC1155's swapNFTForToken function. 
         @param numNFTs The number of erc1155 tokens
@@ -107,6 +145,13 @@ abstract contract SeacowsPairERC1155 is SeacowsPair {
         }
     }
 
+    function withdrawERC1155(address _recipient, uint256 _amount) external onlyFactory {
+        require(poolType() == PoolType.TRADE, "Invalid pool type");
+        IERC1155(nft()).safeTransferFrom(address(this), _recipient, tokenId(), _amount, "");
+
+        emit NFTWithdrawal(_recipient, _amount);
+    }
+
     /** Deprecated functions, just overrided based on design pattern */
     /// @inheritdoc SeacowsPair
     function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal override {}
@@ -115,12 +160,5 @@ abstract contract SeacowsPairERC1155 is SeacowsPair {
     function getAllHeldIds() external view override returns (uint256[] memory) {
         uint256[] memory res;
         return res;
-    }
-
-    function withdrawERC1155(address _recipient, uint256 _amount) external onlyFactory {
-        require(poolType() == PoolType.TRADE, "Invalid pool type");
-        IERC1155(nft()).safeTransferFrom(address(this), _recipient, tokenId(), _amount, "");
-
-        emit NFTWithdrawal(_recipient, _amount);
     }
 }
