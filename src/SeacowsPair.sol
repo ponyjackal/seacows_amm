@@ -275,35 +275,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         emit SwapNFTInPair();
     }
 
-    function _applyWithOraclePrice(uint256[] memory _nftIds, SeacowsRouter.NFTDetail[] memory _details, uint256 _spotPrice)
-        internal
-        view
-        returns (uint256 newPrice)
-    {
-        address oracleRegisrtyAddr = factory().priceOracleRegistry();
-        SeacowsCollectionRegistry registry = SeacowsCollectionRegistry(oracleRegisrtyAddr);
-        address _nft = address(nft());
-
-        uint256 totalPrice;
-        // factor = 1/10
-        uint256 numerator = 100;
-        uint256 denominator = 1000;
-
-        for (uint256 i = 0; i < _nftIds.length; ) {
-            uint256 oraclePrice = uint256(registry.getAssetPrice(_nft, _nftIds[i], _details[i].groupId, _details[i].merkleProof));
-            uint256 priceDiff = oraclePrice - _spotPrice;
-            uint256 priceDelta = priceDiff > 0 ? (priceDiff * numerator) / denominator : 0;
-            uint256 appliedPrice = _spotPrice + priceDelta;
-            totalPrice += appliedPrice;
-            unchecked {
-                ++i;
-            }
-        }
-
-        // average price
-        newPrice = totalPrice / _nftIds.length;
-    }
-
     /**
      * View functions
      */
@@ -311,9 +282,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
         @dev Used as read function to query the bonding curve for buy pricing info
         @param nftIds The nftIds to buy from the pair
-        @param details The details of NFTs to buy from the pair
      */
-    function getBuyNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
+    function getBuyNFTQuote(uint256[] memory nftIds)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
@@ -326,15 +296,14 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             fee,
             factory().protocolFeeMultiplier()
         );
-        newSpotPrice = _applyWithOraclePrice(nftIds, details, currentSpotPrice);
+        newSpotPrice = currentSpotPrice;
     }
 
     /**
         @dev Used as read function to query the bonding curve for sell pricing info
         @param nftIds The nftIds to buy from the pair
-        @param details The details of NFTs to buy from the pair
      */
-    function getSellNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
+    function getSellNFTQuote(uint256[] memory nftIds)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
@@ -347,7 +316,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             fee,
             factory().protocolFeeMultiplier()
         );
-        newSpotPrice = _applyWithOraclePrice(nftIds, details, currentSpotPrice);
+        newSpotPrice = currentSpotPrice;
     }
 
     /**
@@ -469,7 +438,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 _factory.protocolFeeMultiplier()
             );
 
-            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+            // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
         }
 
         // Revert if bonding curve had an error
@@ -543,7 +512,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 _factory.protocolFeeMultiplier()
             );
 
-            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+            // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
         }
 
         _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
