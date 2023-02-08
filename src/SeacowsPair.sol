@@ -270,7 +270,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _payProtocolFeeFromPair(_factory, protocolFee);
 
-        _takeNFTsFromSender(IERC721(nft()), nftIds, _factory, isRouter, routerCaller);
+        _takeNFTsFromSender(nft(), nftIds, _factory, isRouter, routerCaller);
 
         emit SwapNFTInPair();
     }
@@ -622,7 +622,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
         ETH pairs.
      */
-    function _takeNFTsFromSender(IERC721 _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
+    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
         internal
         virtual
     {
@@ -639,23 +639,23 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 // Call router to pull NFTs
                 // If more than 1 NFT is being transfered, we can do a balance check instead of an ownership check, as pools are indifferent between NFTs from the same collection
                 if (numNFTs > 1) {
-                    uint256 beforeBalance = _nft.balanceOf(_assetRecipient);
+                    uint256 beforeBalance = IERC721(_nft).balanceOf(_assetRecipient);
                     for (uint256 i = 0; i < numNFTs; ) {
-                        router.pairTransferNFTFrom(_nft, routerCaller, _assetRecipient, nftIds[i], pairVariant());
+                        router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[i], pairVariant());
 
                         unchecked {
                             ++i;
                         }
                     }
-                    require((_nft.balanceOf(_assetRecipient) - beforeBalance) == numNFTs, "NFTs not transferred");
+                    require((IERC721(_nft).balanceOf(_assetRecipient) - beforeBalance) == numNFTs, "NFTs not transferred");
                 } else {
-                    router.pairTransferNFTFrom(_nft, routerCaller, _assetRecipient, nftIds[0], pairVariant());
-                    require(_nft.ownerOf(nftIds[0]) == _assetRecipient, "NFT not transferred");
+                    router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[0], pairVariant());
+                    require(IERC721(_nft).ownerOf(nftIds[0]) == _assetRecipient, "NFT not transferred");
                 }
             } else {
                 // Pull NFTs directly from sender
                 for (uint256 i; i < numNFTs; ) {
-                    _nft.safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
+                    IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
 
                     unchecked {
                         ++i;
