@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
@@ -29,121 +28,87 @@ abstract contract SeacowsPairERC1155 is SeacowsPair {
         IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, tokenId(), numNFTs, "");
     }
 
-    /**
-        @notice Sends a set of ERC115 NFTs to the pair in exchange for token
-        @dev To compute the amount of token to that will be received, call bondingCurve.getSellInfo.
-        @param numNFTs The amount of erc1155 nft amount
-        @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
-        amount is less than this value, the transaction will be reverted.
-        @param tokenRecipient The recipient of the token output
-        @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
-        ETH pairs.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
-        ETH pairs.
-        @return outputAmount The amount of token received
-     */
-    function swapNFTsForTokenERC1155(
-        uint256 numNFTs,
-        uint256 minExpectedTokenOutput,
-        address payable tokenRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external virtual nonReentrant returns (uint256 outputAmount) {
-        // Store locally to remove extra calls
-        ISeacowsPairFactoryLike _factory = factory();
-        ICurve _bondingCurve = bondingCurve();
+    // /**
+    //     @notice Sends a set of ERC115 NFTs to the pair in exchange for token
+    //     @dev To compute the amount of token to that will be received, call bondingCurve.getSellInfo.
+    //     @param numNFTs The amount of erc1155 nft amount
+    //     @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
+    //     amount is less than this value, the transaction will be reverted.
+    //     @param tokenRecipient The recipient of the token output
+    //     @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
+    //     ETH pairs.
+    //     @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
+    //     ETH pairs.
+    //     @return outputAmount The amount of token received
+    //  */
+    // function swapNFTsForTokenERC1155(
+    //     uint256 numNFTs,
+    //     uint256 minExpectedTokenOutput,
+    //     address payable tokenRecipient,
+    //     bool isRouter,
+    //     address routerCaller
+    // ) external virtual nonReentrant returns (uint256 outputAmount) {
+    //     // Store locally to remove extra calls
+    //     ISeacowsPairFactoryLike _factory = factory();
+    //     ICurve _bondingCurve = bondingCurve();
 
-        // Input validation
-        {
-            PoolType _poolType = poolType();
-            require(_poolType == PoolType.TRADE, "Wrong Pool type");
-            require(numNFTs > 0, "Must ask for > 0 NFTs");
-        }
+    //     // Input validation
+    //     {
+    //         PoolType _poolType = poolType();
+    //         require(_poolType == PoolType.TRADE, "Wrong Pool type");
+    //         require(numNFTs > 0, "Must ask for > 0 NFTs");
+    //     }
 
-        // Call bonding curve for pricing information
-        uint256 protocolFee;
-        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParamsERC1155(numNFTs, minExpectedTokenOutput, _bondingCurve, _factory);
+    //     // Call bonding curve for pricing information
+    //     uint256 protocolFee;
+    //     (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParamsERC1155(numNFTs, minExpectedTokenOutput, _bondingCurve, _factory);
 
-        _sendTokenOutput(tokenRecipient, outputAmount);
+    //     _sendTokenOutput(tokenRecipient, outputAmount);
 
-        _payProtocolFeeFromPair(_factory, protocolFee);
+    //     _payProtocolFeeFromPair(_factory, protocolFee);
 
-        _takeNFTsFromSenderERC1155(numNFTs, _factory, isRouter, routerCaller);
+    //     _takeNFTsFromSenderERC1155(numNFTs, _factory, isRouter, routerCaller);
 
-        emit SwapNFTInPair();
-    }
+    //     emit SwapNFTInPair();
+    // }
 
-    /**
-        @notice Calculates the amount needed to be sent by the pair for a sell and adjusts spot price or delta if necessary
-        @param numNFTs the amount of erc1155 tokens
-        @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
-        amount is less than this value, the transaction will be reverted.
-        @param protocolFee The percentage of protocol fee to be taken, as a percentage
-        @return protocolFee The amount of tokens to send as protocol fee
-        @return outputAmount The amount of tokens total tokens receive
-     */
-    function _calculateSellInfoAndUpdatePoolParamsERC1155(
-        uint256 numNFTs,
-        uint256 minExpectedTokenOutput,
-        ICurve _bondingCurve,
-        ISeacowsPairFactoryLike _factory
-    ) internal returns (uint256 protocolFee, uint256 outputAmount) {
-        CurveErrorCodes.Error error;
-        // Save on 2 SLOADs by caching
-        uint128 currentSpotPrice = spotPrice;
-        uint128 newSpotPrice;
-        // uint128 newSpotPriceOriginal;
-        uint128 currentDelta = delta;
-        uint128 newDelta = delta;
+    // /**
+    //     @notice Calculates the amount needed to be sent by the pair for a sell and adjusts spot price or delta if necessary
+    //     @param numNFTs the amount of erc1155 tokens
+    //     @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
+    //     amount is less than this value, the transaction will be reverted.
+    //     @param protocolFee The percentage of protocol fee to be taken, as a percentage
+    //     @return protocolFee The amount of tokens to send as protocol fee
+    //     @return outputAmount The amount of tokens total tokens receive
+    //  */
+    // function _calculateSellInfoAndUpdatePoolParamsERC1155(
+    //     uint256 numNFTs,
+    //     uint256 minExpectedTokenOutput,
+    //     ICurve _bondingCurve,
+    //     ISeacowsPairFactoryLike _factory
+    // ) internal returns (uint256 protocolFee, uint256 outputAmount) {
+    //     CurveErrorCodes.Error error;
+    //     // Save on 2 SLOADs by caching
+    //     uint128 currentSpotPrice = spotPrice;
+    //     uint128 newSpotPrice;
+    //     // uint128 newSpotPriceOriginal;
+    //     uint128 currentDelta = delta;
+    //     uint128 newDelta = delta;
 
-        // For trade pair, we only accept CPMM
-        // get reserve
-        (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
-        (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
-            currentSpotPrice,
-            numNFTs,
-            fee,
-            _factory.protocolFeeMultiplier(),
-            nftReserve,
-            tokenReserve
-        );
+    //     // For trade pair, we only accept CPMM
+    //     // get reserve
+    //     (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
+    //     (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
+    //         currentSpotPrice,
+    //         numNFTs,
+    //         fee,
+    //         _factory.protocolFeeMultiplier(),
+    //         nftReserve,
+    //         tokenReserve
+    //     );
 
-        _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
-    }
-
-    /**
-        @notice Takes ERC1155 NFTs from the caller and sends them into the pair's asset recipient
-        @dev This is used by the swapNFTsForTokenERC1155's swapNFTForToken function. 
-        @param numNFTs The number of erc1155 tokens
-        @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
-        ETH pairs.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
-        ETH pairs.
-     */
-    function _takeNFTsFromSenderERC1155(uint256 numNFTs, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller) internal {
-        {
-            address _assetRecipient = getAssetRecipient();
-            IERC1155 _nft = IERC1155(nft());
-            uint256 _tokenId = tokenId();
-
-            if (isRouter) {
-                // Verify if router is allowed
-                SeacowsRouter router = SeacowsRouter(payable(msg.sender));
-                (bool routerAllowed, ) = _factory.routerStatus(router);
-                require(routerAllowed, "Not router");
-
-                // Call router to pull NFTs
-                uint256 beforeBalance = _nft.balanceOf(_assetRecipient, _tokenId);
-                _nft.safeTransferFrom(msg.sender, _assetRecipient, _tokenId, numNFTs, "");
-                router.pairTransferNFTFromERC1155(_nft, _tokenId, routerCaller, _assetRecipient, numNFTs, pairVariant());
-
-                require((_nft.balanceOf(_assetRecipient, _tokenId) - beforeBalance) == numNFTs, "NFTs not transferred");
-            } else {
-                // Pull NFTs directly from sender
-                _nft.safeTransferFrom(msg.sender, _assetRecipient, _tokenId, numNFTs, "");
-            }
-        }
-    }
+    //     _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
+    // }
 
     function withdrawERC1155(address _recipient, uint256 _amount) external onlyFactory {
         require(poolType() == PoolType.TRADE, "Invalid pool type");

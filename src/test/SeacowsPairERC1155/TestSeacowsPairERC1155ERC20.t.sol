@@ -4,6 +4,7 @@ pragma solidity >=0.8.4;
 import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
@@ -157,7 +158,7 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 tokenBeforeBalance = token.balanceOf(alice);
         uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
         // swap tokens for any nfts
-        uint256 outputAmount = pair.swapNFTsForTokenERC1155(100, 9950, payable(alice), false, address(0));
+        uint256 outputAmount = pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
         // check balances after swap
         uint256 tokenAfterBalance = token.balanceOf(alice);
         uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
@@ -167,11 +168,11 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
 
         // expect too much output tokens
         vm.expectRevert("Out too little tokens");
-        pair.swapNFTsForTokenERC1155(100, 9950, payable(alice), false, address(0));
+        pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
 
         // trying to swap with invalid nft amount
         vm.expectRevert("Must ask for > 0 NFTs");
-        pair.swapNFTsForTokenERC1155(0, 9950, payable(alice), false, address(0));
+        pair.swapNFTsForToken(new uint256[](0), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
 
         vm.stopPrank();
     }
