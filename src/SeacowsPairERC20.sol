@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
-import { ERC20 } from "solmate/tokens/ERC20.sol";
-import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
@@ -15,7 +14,7 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm 
  */
 abstract contract SeacowsPairERC20 is SeacowsPair {
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for ERC20;
 
     /**
         @notice Returns the ERC20 token associated with the pair
@@ -64,11 +63,11 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
             // so there is no incentive to *not* pay protocol fee
         } else {
             // Transfer tokens directly
-            _token.safeTransferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
+            _token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
 
             // Take protocol fee (if it exists)
             if (protocolFee > 0) {
-                _token.safeTransferFrom(msg.sender, address(_factory), protocolFee);
+                _token.transferFrom(msg.sender, address(_factory), protocolFee);
             }
         }
     }
@@ -103,22 +102,18 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
         }
     }
 
-    function withdrawERC20(ERC20 a, uint256 amount) external onlyAdmin {
-        a.safeTransfer(msg.sender, amount);
-
-        if (a == token()) {
-            // emit event since it is the pair token
-            emit TokenWithdrawal(amount);
-        }
-    }
-
     /**
-     * @notice get reserves in the pool, only available for trade pair
+     * @dev withraw erc20 tokens from pair to recipient
+     * @param _recipient The address for token withdarw
+     * @param _amount The amount of token to withdraw
      */
-    function _getReserve() internal view override returns (uint256 nftReserve, uint256 tokenReserve) {
-        // nft balance
-        nftReserve = IERC721(nft()).balanceOf(address(this));
-        // token balance
-        tokenReserve = token().balanceOf(address(this));
+    function withdrawERC20(address _recipient, uint256 _amount) external virtual onlyWithdrawable {
+        require(_recipient != address(0), "Invalid address");
+        require(_amount > 0, "Invalid amount");
+
+        token().safeTransfer(_recipient, _amount);
+
+        // emit event since it is the pair token
+        emit TokenWithdrawal(_recipient, _amount);
     }
 }

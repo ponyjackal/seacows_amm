@@ -5,4 +5,6 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 
 interface ISeacowsPairERC1155 is ISeacowsPair {
     function tokenId() external pure returns (uint256 _tokenId);
+
+    function withdrawERC1155(address _recipient, uint256 _amount) external;
 }

@@ -2,7 +2,9 @@
 pragma solidity ^0.8.0;
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
@@ -10,7 +12,7 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
 contract SeacowsRouter {
     using SafeTransferLib for address payable;
-    using SafeTransferLib for ERC20;
+    using SafeERC20 for ERC20;
 
     struct PairSwapAny {
         SeacowsPair pair;
@@ -321,8 +323,7 @@ contract SeacowsRouter {
             // Calculate actual cost per swap
             (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(
                 // swapList[i].swapInfo.numItems
-                new uint256[](0),
-                new NFTDetail[](0)
+                new uint256[](0)
             );
 
             // If within our maxCost and no error, proceed
@@ -371,7 +372,7 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate actual cost per swap
-            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(swapList[i].swapInfo.nftIds, swapList[i].swapInfo.details);
+            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(swapList[i].swapInfo.nftIds /*, swapList[i].swapInfo.details*/);
 
             // If within our maxCost and no error, proceed
             if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
@@ -421,8 +422,7 @@ contract SeacowsRouter {
         for (uint256 i; i < numSwaps; ) {
             // Calculate actual cost per swap
             // swapList[i].swapInfo.numItems
-            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(new uint256[](0), new NFTDetail[](0));
-
+            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(new uint256[](0) /*, new NFTDetail[](0)*/);
             // If within our maxCost and no error, proceed
             if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
                 remainingValue -= swapList[i].swapInfo.pair.swapTokenForAnyNFTs(
@@ -462,7 +462,7 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate actual cost per swap
-            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(swapList[i].swapInfo.nftIds, swapList[i].swapInfo.details);
+            (error, , , pairCost, ) = swapList[i].swapInfo.pair.getBuyNFTQuote(swapList[i].swapInfo.nftIds /*, swapList[i].swapInfo.details*/);
 
             // If within our maxCost and no error, proceed
             if (pairCost <= swapList[i].maxCost && error == CurveErrorCodes.Error.OK) {
@@ -502,7 +502,7 @@ contract SeacowsRouter {
             // Locally scoped to avoid stack too deep error
             {
                 CurveErrorCodes.Error error;
-                (error, , , pairOutput, ) = swapList[i].swapInfo.pair.getSellNFTQuote(swapList[i].swapInfo.nftIds, swapList[i].swapInfo.details);
+                (error, , , pairOutput, ) = swapList[i].swapInfo.pair.getSellNFTQuote(swapList[i].swapInfo.nftIds /*, swapList[i].swapInfo.details*/);
                 if (error != CurveErrorCodes.Error.OK) {
                     unchecked {
                         ++i;
@@ -555,8 +555,8 @@ contract SeacowsRouter {
             for (uint256 i; i < numSwaps; ) {
                 // Calculate actual cost per swap
                 (error, , , pairCost, ) = params.tokenToNFTTrades[i].swapInfo.pair.getBuyNFTQuote(
-                    params.tokenToNFTTrades[i].swapInfo.nftIds,
-                    params.tokenToNFTTrades[i].swapInfo.details
+                    params.tokenToNFTTrades[i].swapInfo.nftIds
+                    // ,params.tokenToNFTTrades[i].swapInfo.details
                 );
 
                 // If within our maxCost and no error, proceed
@@ -593,8 +593,8 @@ contract SeacowsRouter {
                 {
                     CurveErrorCodes.Error error;
                     (error, , , pairOutput, ) = params.nftToTokenTrades[i].swapInfo.pair.getSellNFTQuote(
-                        params.nftToTokenTrades[i].swapInfo.nftIds,
-                        params.nftToTokenTrades[i].swapInfo.details
+                        params.nftToTokenTrades[i].swapInfo.nftIds
+                        // ,params.nftToTokenTrades[i].swapInfo.details
                     );
                     if (error != CurveErrorCodes.Error.OK) {
                         unchecked {
@@ -649,8 +649,8 @@ contract SeacowsRouter {
             for (uint256 i; i < numSwaps; ) {
                 // Calculate actual cost per swap
                 (error, , , pairCost, ) = params.tokenToNFTTrades[i].swapInfo.pair.getBuyNFTQuote(
-                    params.tokenToNFTTrades[i].swapInfo.nftIds,
-                    params.tokenToNFTTrades[i].swapInfo.details
+                    params.tokenToNFTTrades[i].swapInfo.nftIds
+                    // ,params.tokenToNFTTrades[i].swapInfo.details
                 );
 
                 // If within our maxCost and no error, proceed
@@ -680,8 +680,8 @@ contract SeacowsRouter {
                 {
                     CurveErrorCodes.Error error;
                     (error, , , pairOutput, ) = params.nftToTokenTrades[i].swapInfo.pair.getSellNFTQuote(
-                        params.nftToTokenTrades[i].swapInfo.nftIds,
-                        params.nftToTokenTrades[i].swapInfo.details
+                        params.nftToTokenTrades[i].swapInfo.nftIds
+                        // ,params.nftToTokenTrades[i].swapInfo.details
                     );
                     if (error != CurveErrorCodes.Error.OK) {
                         unchecked {
@@ -759,6 +759,31 @@ contract SeacowsRouter {
     }
 
     /**
+        @dev Allows a pair contract to transfer ERC1155 NFTs directly from
+        the sender, in order to minimize the number of token transfers. Only callable by a pair.
+        @param nft The ERC1155 NFT to transfer
+        @param tokenId The ERC1155 token id
+        @param from The address to transfer tokens from
+        @param to The address to transfer tokens to
+        @param numNFTs The NFT amount
+        @param variant The pair variant of the pair contract
+     */
+    function pairTransferNFTFromERC1155(
+        IERC1155 nft,
+        uint256 tokenId,
+        address from,
+        address to,
+        uint256 numNFTs,
+        ISeacowsPairFactoryLike.PairVariant variant
+    ) external {
+        // verify caller is a trusted pair contract
+        require(factory.isPair(msg.sender, variant), "Not pair");
+
+        // transfer NFTs to pair
+        nft.safeTransferFrom(from, to, tokenId, numNFTs, "");
+    }
+
+    /**
         Internal functions
      */
 
@@ -790,7 +815,7 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate the cost per swap first to send exact amount of ETH over, saves gas by avoiding the need to send back excess ETH
-            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(new uint256[](0), new NFTDetail[](0));
+            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(new uint256[](0) /*, new NFTDetail[](0)*/);
 
             // Require no error
             require(error == CurveErrorCodes.Error.OK, "Bonding curve error");
@@ -837,7 +862,7 @@ contract SeacowsRouter {
         uint256 numSwaps = swapList.length;
         for (uint256 i; i < numSwaps; ) {
             // Calculate the cost per swap first to send exact amount of ETH over, saves gas by avoiding the need to send back excess ETH
-            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(swapList[i].nftIds, swapList[i].details);
+            (error, , , pairCost, ) = swapList[i].pair.getBuyNFTQuote(swapList[i].nftIds /*, swapList[i].details*/);
 
             // Require no errors
             require(error == CurveErrorCodes.Error.OK, "Bonding curve error");

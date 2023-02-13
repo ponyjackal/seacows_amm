@@ -47,19 +47,15 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
         // If we buy n items, then the total cost is equal to:
         // (spot price) * numOfNFTs
         inputValue = numItems * spotPrice;
-
         // Account for the protocol fee, a flat percentage of the buy amount
         protocolFee = inputValue.fmul(protocolFeeMultiplier, FixedPointMathLib.WAD);
-
         // Account for the trade fee, only for Trade pools
         inputValue += inputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
-
         // Add the protocol fee to the required input amount
         inputValue += protocolFee;
 
         // For a CPMM curve, the spot price is updated based on x * y = k
         newSpotPrice = uint128((tokenReserve + inputValue) / (nftReserve - numItems));
-
         // If we got all the way here, no math error happened
         error = Error.OK;
     }

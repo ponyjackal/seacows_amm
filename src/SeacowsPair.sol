@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
@@ -63,8 +63,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     event SwapNFTOutPair();
     event SpotPriceUpdate(uint128 newSpotPrice);
     event TokenDeposit(uint256 amount);
-    event TokenWithdrawal(uint256 amount);
-    event NFTWithdrawal();
+    event TokenWithdrawal(address recipient, uint256 amount);
+    event NFTWithdrawal(address recipient, uint256 amount);
     event DeltaUpdate(uint128 newDelta);
     event FeeUpdate(uint96 newFee);
     event AssetRecipientChange(address a);
@@ -131,6 +131,18 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         _;
     }
 
+    modifier onlyWithdrawable() {
+        // For NFT, TOKEN pairs, only owner can call this function
+        // For TRADE pairs, only factory can call this function
+        if (poolType() == PoolType.TRADE) {
+            //TODO; if we move liquidity functions to router, this should be updated to router
+            require(msg.sender == address(factory()), "Caller should be a factory");
+        } else {
+            require(msg.sender == owner(), "Caller should be an owner");
+        }
+        _;
+    }
+
     /**
      * External state-changing functions
      */
@@ -165,23 +177,19 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require((numNFTs > 0) && (numNFTs <= IERC721(_nft).balanceOf(address(this))), "Ask for > 0 and <= balanceOf NFTs");
+            require(numNFTs > 0, "Invalid nft amount");
         }
-
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(
-            new uint256[](0),
-            new SeacowsRouter.NFTDetail[](0),
+            new uint256[](numNFTs),
+            new SeacowsRouter.NFTDetail[](numNFTs),
             maxExpectedTokenInput,
             _bondingCurve,
             _factory
         );
-
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
-
         _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
-
         _refundTokenToSender(inputAmount);
 
         emit SwapNFTOutPair();
@@ -274,38 +282,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         _payProtocolFeeFromPair(_factory, protocolFee);
 
-        _takeNFTsFromSender(IERC721(nft()), nftIds, _factory, isRouter, routerCaller);
+        _takeNFTsFromSender(nft(), nftIds, _factory, isRouter, routerCaller);
 
         emit SwapNFTInPair();
-    }
-
-    function _applyWithOraclePrice(uint256[] memory _nftIds, SeacowsRouter.NFTDetail[] memory _details, uint256 _spotPrice)
-        internal
-        view
-        returns (uint256 newPrice)
-    {
-        address oracleRegisrtyAddr = factory().priceOracleRegistry();
-        SeacowsCollectionRegistry registry = SeacowsCollectionRegistry(oracleRegisrtyAddr);
-        address _nft = address(nft());
-
-        uint256 totalPrice;
-        // factor = 1/10
-        uint256 numerator = 100;
-        uint256 denominator = 1000;
-
-        for (uint256 i = 0; i < _nftIds.length; ) {
-            uint256 oraclePrice = uint256(registry.getAssetPrice(_nft, _nftIds[i], _details[i].groupId, _details[i].merkleProof));
-            uint256 priceDiff = oraclePrice - _spotPrice;
-            uint256 priceDelta = priceDiff > 0 ? (priceDiff * numerator) / denominator : 0;
-            uint256 appliedPrice = _spotPrice + priceDelta;
-            totalPrice += appliedPrice;
-            unchecked {
-                ++i;
-            }
-        }
-
-        // average price
-        newPrice = totalPrice / _nftIds.length;
     }
 
     /**
@@ -315,9 +294,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
         @dev Used as read function to query the bonding curve for buy pricing info
         @param nftIds The nftIds to buy from the pair
-        @param details The details of NFTs to buy from the pair
      */
-    function getBuyNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
+    function getBuyNFTQuote(uint256[] memory nftIds)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
@@ -330,15 +308,14 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             fee,
             factory().protocolFeeMultiplier()
         );
-        newSpotPrice = _applyWithOraclePrice(nftIds, details, currentSpotPrice);
+        newSpotPrice = currentSpotPrice;
     }
 
     /**
         @dev Used as read function to query the bonding curve for sell pricing info
         @param nftIds The nftIds to buy from the pair
-        @param details The details of NFTs to buy from the pair
      */
-    function getSellNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
+    function getSellNFTQuote(uint256[] memory nftIds)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
@@ -351,7 +328,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             fee,
             factory().protocolFeeMultiplier()
         );
-        newSpotPrice = _applyWithOraclePrice(nftIds, details, currentSpotPrice);
+        newSpotPrice = currentSpotPrice;
     }
 
     /**
@@ -473,14 +450,13 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 _factory.protocolFeeMultiplier()
             );
 
-            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+            // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
         }
 
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
             revert BondingCurveError(error);
         }
-
         // Revert if input is more than expected
         require(inputAmount <= maxExpectedTokenInput, "In too many tokens");
 
@@ -548,8 +524,21 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 _factory.protocolFeeMultiplier()
             );
 
-            newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
+            // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
         }
+
+        _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
+    }
+
+    function _updateSpotPrice(
+        CurveErrorCodes.Error error,
+        uint256 outputAmount,
+        uint256 minExpectedTokenOutput,
+        uint128 currentDelta,
+        uint128 newDelta,
+        uint128 currentSpotPrice,
+        uint128 newSpotPrice
+    ) internal {
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
             revert BondingCurveError(error);
@@ -645,7 +634,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
         ETH pairs.
      */
-    function _takeNFTsFromSender(IERC721 _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
+    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
         internal
         virtual
     {
@@ -662,23 +651,23 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 // Call router to pull NFTs
                 // If more than 1 NFT is being transfered, we can do a balance check instead of an ownership check, as pools are indifferent between NFTs from the same collection
                 if (numNFTs > 1) {
-                    uint256 beforeBalance = _nft.balanceOf(_assetRecipient);
+                    uint256 beforeBalance = IERC721(_nft).balanceOf(_assetRecipient);
                     for (uint256 i = 0; i < numNFTs; ) {
-                        router.pairTransferNFTFrom(_nft, routerCaller, _assetRecipient, nftIds[i], pairVariant());
+                        router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[i], pairVariant());
 
                         unchecked {
                             ++i;
                         }
                     }
-                    require((_nft.balanceOf(_assetRecipient) - beforeBalance) == numNFTs, "NFTs not transferred");
+                    require((IERC721(_nft).balanceOf(_assetRecipient) - beforeBalance) == numNFTs, "NFTs not transferred");
                 } else {
-                    router.pairTransferNFTFrom(_nft, routerCaller, _assetRecipient, nftIds[0], pairVariant());
-                    require(_nft.ownerOf(nftIds[0]) == _assetRecipient, "NFT not transferred");
+                    router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[0], pairVariant());
+                    require(IERC721(_nft).ownerOf(nftIds[0]) == _assetRecipient, "NFT not transferred");
                 }
             } else {
                 // Pull NFTs directly from sender
                 for (uint256 i; i < numNFTs; ) {
-                    _nft.safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
+                    IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
 
                     unchecked {
                         ++i;

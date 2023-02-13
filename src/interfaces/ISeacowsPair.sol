@@ -7,17 +7,16 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { SeacowsRouter } from "../SeacowsRouter.sol";
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
+import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
+import { SeacowsPair } from "../SeacowsPair.sol";
 
 interface ISeacowsPair {
-    enum PoolType {
-        TOKEN,
-        NFT,
-        TRADE
-    }
+    function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external payable;
 
-    function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external;
-
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller) external;
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
+        external
+        payable
+        returns (uint256 inputAmount);
 
     function swapTokenForSpecificNFTs(
         uint256[] calldata nftIds,
@@ -26,7 +25,7 @@ interface ISeacowsPair {
         address nftRecipient,
         bool isRouter,
         address routerCaller
-    ) external;
+    ) external payable returns (uint256 inputAmount);
 
     function swapNFTsForToken(
         uint256[] calldata nftIds,
@@ -35,11 +34,15 @@ interface ISeacowsPair {
         address payable tokenRecipient,
         bool isRouter,
         address routerCaller
-    ) external;
+    ) external returns (uint256 outputAmount);
 
-    function getBuyNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details) external;
+    function getBuyNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
+        external
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee);
 
-    function getSellNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details) external;
+    function getSellNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
+        external
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee);
 
     function getAllHeldIds() external view returns (uint256[] memory);
 
@@ -49,15 +52,15 @@ interface ISeacowsPair {
 
     function bondingCurve() external pure returns (ICurve _bondingCurve);
 
-    function nft() external pure returns (IERC721 _nft);
+    function nft() external pure returns (address _nft);
 
-    function poolType() external pure returns (PoolType _poolType);
+    function spotPrice() external view returns (uint128 spotPrice);
+
+    function poolType() external pure returns (SeacowsPair.PoolType _poolType);
 
     function getAssetRecipient() external view returns (address payable _assetRecipient);
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;
-
-    function withdrawERC20(ERC20 a, uint256 amount) external;
 
     function changeSpotPrice(uint128 newSpotPrice) external;
 
@@ -70,4 +73,8 @@ interface ISeacowsPair {
     function call(address payable target, bytes calldata data) external;
 
     function multicall(bytes[] calldata calls, bool revertOnFail) external;
+
+    function mintLPToken(address recipient, uint256 amount) external;
+
+    function burnLPToken(address recipient, uint256 amount) external;
 }

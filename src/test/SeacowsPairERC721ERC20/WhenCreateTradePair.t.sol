@@ -44,30 +44,13 @@ contract WhenCreateTradePair is WhenCreatePair {
         vm.startPrank(owner);
         uint256[] memory nftEnumerableIds = new uint256[](1);
         nftEnumerableIds[0] = 0;
-        erc721EnumerableERC20TradePair = createTradePair(
-            token,
-            nftEnumerable,
-            linearCurve,
-            0.2 ether,
-            0.2 ether,
-            2 ether,
-            nftEnumerableIds,
-            1 ether
-        );
+        erc721EnumerableERC20TradePair = createTradePair(token, nftEnumerable, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftEnumerableIds, 1 ether);
 
         /** create ERC721-ERC20 Trade Pair */
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 0;
-        erc721ERC20TradePair = createTradePair(
-            token,
-            nft,
-            linearCurve,
-            0.2 ether,
-            0.2 ether,
-            2 ether,
-            nftIds,
-            1 ether);
-        
+        erc721ERC20TradePair = createTradePair(token, nft, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
+
         vm.stopPrank();
     }
 
@@ -79,15 +62,7 @@ contract WhenCreateTradePair is WhenCreatePair {
 
         nftEnumerable.safeMint(owner);
         nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
-        SeacowsPairERC20 pair = createTradePairETH(
-            nftEnumerable,
-            linearCurve,
-            0.2 ether,
-            0.2 ether,
-            2 ether,
-            nftIds,
-            1 ether
-        );
+        SeacowsPairERC20 pair = createTradePairETH(nftEnumerable, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
         assertEq(address(pair.nft()), address(nftEnumerable));
         assertEq(address(pair.token()), weth);
         assertEq(address(pair.bondingCurve()), address(linearCurve));
@@ -111,15 +86,7 @@ contract WhenCreateTradePair is WhenCreatePair {
 
         nft.safeMint(owner);
         nft.setApprovalForAll(address(seacowsPairFactory), true);
-        SeacowsPairERC20 pair = createTradePairETH(
-            nft,
-            linearCurve,
-            0.2 ether,
-            0.2 ether,
-            2 ether,
-            nftIds,
-            1 ether
-        );
+        SeacowsPairERC20 pair = createTradePairETH(nft, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
         assertEq(address(pair.nft()), address(nft));
         assertEq(address(pair.token()), weth);
         assertEq(address(pair.bondingCurve()), address(linearCurve));
@@ -173,16 +140,7 @@ contract WhenCreateTradePair is WhenCreatePair {
         nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 1;
-        SeacowsPairERC20 pair = createTradePair(
-            token,
-            nftEnumerable,
-            linearCurve,
-            10 ether,
-            0,
-            2 ether,
-            nftIds,
-            10 ether
-        );
+        SeacowsPairERC20 pair = createTradePair(token, nftEnumerable, linearCurve, 10 ether, 0, 2 ether, nftIds, 10 ether);
         assertEq(address(pair.nft()), address(nftEnumerable));
         assertEq(address(pair.token()), address(token));
         assertEq(address(pair.bondingCurve()), address(linearCurve));

@@ -105,7 +105,7 @@ abstract contract SeacowsPairMissingEnumerable is SeacowsPair {
                 }
             }
 
-            emit NFTWithdrawal();
+            emit NFTWithdrawal(msg.sender, numNFTs);
         }
     }
 }
