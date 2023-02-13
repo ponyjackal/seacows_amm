@@ -107,14 +107,7 @@ abstract contract SeacowsPairERC20 is SeacowsPair {
      * @param _recipient The address for token withdarw
      * @param _amount The amount of token to withdraw
      */
-    function withdrawERC20(address _recipient, uint256 _amount) external virtual {
-        // For NFT, TOKEN pairs, only owner can call this function
-        // For TRADE pairs, only factory can call this function
-        if (poolType() == PoolType.TRADE) {
-            require(msg.sender == address(factory()), "Caller should be a factory");
-        } else {
-            require(msg.sender == owner(), "Caller should be an owner");
-        }
+    function withdrawERC20(address _recipient, uint256 _amount) external virtual onlyWithdrawable {
         require(_recipient != address(0), "Invalid address");
         require(_amount > 0, "Invalid amount");
 

@@ -28,7 +28,7 @@ abstract contract SeacowsPairERC1155 is SeacowsPair {
         IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, tokenId(), numNFTs, "");
     }
 
-    function withdrawERC1155(address _recipient, uint256 _amount) external onlyFactory {
+    function withdrawERC1155(address _recipient, uint256 _amount) external onlyWithdrawable {
         require(poolType() == PoolType.TRADE, "Invalid pool type");
         IERC1155(nft()).safeTransferFrom(address(this), _recipient, tokenId(), _amount, "");
 

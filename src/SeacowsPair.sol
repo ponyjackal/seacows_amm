@@ -131,6 +131,18 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         _;
     }
 
+    modifier onlyWithdrawable() {
+        // For NFT, TOKEN pairs, only owner can call this function
+        // For TRADE pairs, only factory can call this function
+        if (poolType() == PoolType.TRADE) {
+            //TODO; if we move liquidity functions to router, this should be updated to router
+            require(msg.sender == address(factory()), "Caller should be a factory");
+        } else {
+            require(msg.sender == owner(), "Caller should be an owner");
+        }
+        _;
+    }
+
     /**
      * External state-changing functions
      */
