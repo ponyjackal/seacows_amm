@@ -9,7 +9,8 @@ import "hardhat-deploy";
 import "hardhat-gas-reporter";
 import "hardhat-preprocessor";
 import fs from "fs";
-import { HardhatUserConfig, task } from "hardhat/config";
+import { HardhatUserConfig, subtask } from "hardhat/config";
+import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from "hardhat/builtin-tasks/task-names";
 
 function getRemappings() {
   return fs
@@ -32,9 +33,15 @@ function getRemappings() {
 //   }
 // });
 
+// Exclude test cases since test cases are run with Foundry
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
+  const paths = await runSuper();
+
+  return paths.filter((p) => !p.endsWith(".t.sol"));
+});
+
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
-
 const config: HardhatUserConfig = {
   // @ts-ignore
   preprocess: {
