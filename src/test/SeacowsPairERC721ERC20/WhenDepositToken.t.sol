@@ -10,6 +10,7 @@ import { SeacowsPairERC20 } from "../../SeacowsPairERC20.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
+import { IWETH } from "../../interfaces/IWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
 import { TestERC721Enumerable } from "../../TestCollectionToken/TestERC721Enumerable.sol";
@@ -85,6 +86,31 @@ contract WhenDepositToken is WhenCreatePair {
         vm.startPrank(alice);
         vm.expectRevert("Not a pair owner");
         seacowsPairFactory.depositERC20(token, address(erc721ERC20Pair), 100 ether);
+        vm.stopPrank();
+    }
+
+    function testdepositWETH() public {
+        vm.startPrank(owner);
+        /** owner deposits ETH to erc721-weth pair */
+        seacowsPairFactory.depositETH{ value: 4 ether }(address(erc721WETHPair));
+        /** check ETH balance */
+        uint256 wethBalance = IWETH(weth).balanceOf(address(erc721WETHPair));
+        assertEq(wethBalance, 18 ether);
+        /** check bonding curve */
+        ICurve curve = erc721WETHPair.bondingCurve();
+        assertEq(address(curve), address(linearCurve));
+        /** check delta */
+        uint128 delta = erc721WETHPair.delta();
+        assertEq(delta, 0.1 ether);
+        /** check  */
+        uint128 spotPrice = erc721WETHPair.spotPrice();
+        assertEq(spotPrice, 5 ether);
+        vm.stopPrank();
+
+        // /** alice is trying to deposit tokens */
+        vm.startPrank(alice);
+        vm.expectRevert("Not a pair owner");
+        seacowsPairFactory.depositETH{ value: 4 ether }(address(erc721WETHPair));
         vm.stopPrank();
     }
 }
