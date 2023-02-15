@@ -37,19 +37,31 @@ contract WhenDepositToken is WhenCreatePair {
         seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
         seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
 
+        vm.startPrank(owner);
         /** Create ERC721-WETH Token Pair */
-        uint256[] memory nftIds = new uint256[](1);
-        nftIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721WETHPair = createTokenPairETH(nft, linearCurve, payable(owner), 0.1 ether, 5 ether, nftIds, 14 ether);
+        nft.safeMint(owner);
+        uint256[] memory nftIdsforWETHPair = new uint256[](1);
+        nftIdsforWETHPair[0] = 0;
+        erc721WETHPair = createTokenPairETH(nft, linearCurve, payable(owner), 0.1 ether, 5 ether, nftIdsforWETHPair, 14 ether);
 
         /** Create ERC721-ERC20 Token Pair */
-        uint256[] memory nftIds = new uint256[](1);
-        nftIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 1.01 ether, 20 ether, nftIds, 100 ether);
+        nft.safeMint(owner);
+        uint256[] memory nftIdsforERC20Pair = new uint256[](1);
+        nftIdsforERC20Pair[0] = 1;
+        erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 1.01 ether, 20 ether, nftIdsforERC20Pair, 100 ether);
+        vm.stopPrank();
+    }
+
+    function testdepositERC20() public {
+        vm.startPrank(owner);
+        /** allow more tokens before deposit */
+        token.approve(address(seacowsPairFactory), 1000 ether);
+        /** owner deposits token to erc721-erc20 token pair */
+        seacowsPairFactory.depositERC20(token, address(erc721ERC20Pair), 120 ether);
+        /** check token balance */
+        uint256 tokenBalance = token.balanceOf(address(erc721ERC20Pair));
+        assertEq(tokenBalance, 220 ether);
+
         vm.stopPrank();
     }
 }
