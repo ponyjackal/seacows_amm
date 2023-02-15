@@ -50,6 +50,15 @@ contract WhenDepositToken is WhenCreatePair {
         nftIdsforERC20Pair[0] = 1;
         erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 1.01 ether, 20 ether, nftIdsforERC20Pair, 100 ether);
         vm.stopPrank();
+
+        /** mint nft and tokens to alice */
+        token.mint(alice, 1000 ether);
+        nft.safeMint(alice);
+        /** approve tokens and nft to factory */
+        vm.startPrank(alice);
+        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairFactory), 1000 ether);
+        vm.stopPrank();
     }
 
     function testdepositERC20() public {
@@ -61,7 +70,21 @@ contract WhenDepositToken is WhenCreatePair {
         /** check token balance */
         uint256 tokenBalance = token.balanceOf(address(erc721ERC20Pair));
         assertEq(tokenBalance, 220 ether);
+        /** check bonding curve */
+        ICurve curve = erc721ERC20Pair.bondingCurve();
+        assertEq(address(curve), address(exponentialCurve));
+        /** check delta */
+        uint128 delta = erc721ERC20Pair.delta();
+        assertEq(delta, 1.01 ether);
+        /** check  */
+        uint128 spotPrice = erc721ERC20Pair.spotPrice();
+        assertEq(spotPrice, 20 ether);
+        vm.stopPrank();
 
+        // /** alice is trying to deposit tokens */
+        vm.startPrank(alice);
+        vm.expectRevert("Not a pair owner");
+        seacowsPairFactory.depositERC20(token, address(erc721ERC20Pair), 100 ether);
         vm.stopPrank();
     }
 }

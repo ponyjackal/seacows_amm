@@ -591,6 +591,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function depositERC20(ERC20 token, address recipient, uint256 amount) external {
         token.safeTransferFrom(msg.sender, recipient, amount);
         if (isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
+            require(ISeacowsPairERC20(recipient).owner() == msg.sender, "Not a pair owner");
             if (token == SeacowsPairERC20(recipient).token()) {
                 emit TokenDeposit(recipient);
             }

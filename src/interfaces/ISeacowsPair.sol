@@ -48,6 +48,8 @@ interface ISeacowsPair {
 
     function pairVariant() external pure returns (ISeacowsPairFactoryLike.PairVariant);
 
+    function owner() external view returns (address);
+
     function factory() external pure returns (ISeacowsPairFactoryLike _factory);
 
     function bondingCurve() external pure returns (ICurve _bondingCurve);
