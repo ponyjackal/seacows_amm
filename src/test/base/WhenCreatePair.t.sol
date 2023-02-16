@@ -37,8 +37,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPairERC20 pair) {
-        _token.approve(address(seacowsPairFactory), _initialTokenBalance);
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
             _token,
             _nft,
@@ -63,7 +61,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialETHBalance
     ) public returns (SeacowsPairERC20 pair) {
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         pair = seacowsPairFactory.createPairETH{ value: _initialETHBalance }(
             _nft,
             _bondingCurve,
@@ -86,8 +83,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPairERC20 pair) {
-        _token.approve(address(seacowsPairFactory), _initialTokenBalance);
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
             _token,
             _nft,
@@ -111,7 +106,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint128 _spotPrice,
         uint256[] memory _initialNFTIDs
     ) public payable returns (SeacowsPairERC20 pair) {
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         pair = seacowsPairFactory.createPairETH{ value: msg.value }(
             _nft,
             _bondingCurve,
@@ -134,8 +128,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPairERC20 pair) {
-        _token.approve(address(seacowsPairFactory), _initialTokenBalance);
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
             _token,
             _nft,
@@ -159,7 +151,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint128 _spotPrice,
         uint256[] memory _initialNFTIDs
     ) public payable returns (SeacowsPairERC20 pair) {
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         pair = seacowsPairFactory.createPairETH{ value: msg.value }(
             _nft,
             _bondingCurve,
@@ -176,8 +167,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         public
         returns (SeacowsPairERC1155ERC20 pair)
     {
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
-        _token.approve(address(seacowsPairFactory), _tokenAmount);
         pair = seacowsPairFactory.createPairERC1155ERC20(_nft, _tokenId, cpmmCurve, _amounts, _token, _tokenAmount, _fee);
     }
 
@@ -186,7 +175,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         payable
         returns (SeacowsPairERC1155ERC20 pair)
     {
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(_nft, _tokenId, cpmmCurve, _amounts, _fee);
     }
 }

@@ -41,24 +41,20 @@ contract WhenCreateTokenPair is WhenCreatePair {
         seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
         seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
 
-        /** Create ERC721Enumerable-ERC20 Token Pair */
         vm.startPrank(owner);
-        uint256[] memory nftEnumerableIds = new uint256[](1);
-        nftEnumerableIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721EnumerableERC20Pair = createTokenPair(token, nftEnumerable, linearCurve, payable(owner), 2.2 ether, 2 ether, nftEnumerableIds, 1 ether);
-
-        /** Create ERC721-ERC20 Token Pair */
-        uint256[] memory nftIds = new uint256[](1);
-        nftIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
+        token.approve(address(seacowsPairFactory), 1000 ether);
         nft.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 2.2 ether, 2 ether, nftIds, 1 ether);
+        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
         vm.stopPrank();
     }
 
     function testERC721EnumerableERC20TokenPair() public {
+        /** Create ERC721Enumerable-ERC20 Token Pair */
+        vm.startPrank(owner);
+        uint256[] memory nftEnumerableIds = new uint256[](1);
+        nftEnumerableIds[0] = 0;
+        erc721EnumerableERC20Pair = createTokenPair(token, nftEnumerable, linearCurve, payable(owner), 2.2 ether, 2 ether, nftEnumerableIds, 1 ether);
+
         assertEq(erc721EnumerableERC20Pair.nft(), address(nftEnumerable));
         assertEq(address(erc721EnumerableERC20Pair.token()), address(token));
         assertEq(address(erc721EnumerableERC20Pair.bondingCurve()), address(linearCurve));
@@ -69,9 +65,18 @@ contract WhenCreateTokenPair is WhenCreatePair {
 
         assertEq(token.balanceOf(address(erc721EnumerableERC20Pair)), 1 ether);
         assertEq(nftEnumerable.ownerOf(0), address(erc721EnumerableERC20Pair));
+
+        vm.stopPrank();
     }
 
     function testERC721ERC20TokenPair() public {
+        /** Create ERC721-ERC20 Token Pair */
+        vm.startPrank(owner);
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 0;
+
+        erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 2.2 ether, 2 ether, nftIds, 1 ether);
+
         assertEq(erc721ERC20Pair.nft(), address(nft));
         assertEq(address(erc721ERC20Pair.token()), address(token));
         assertEq(address(erc721ERC20Pair.bondingCurve()), address(exponentialCurve));
@@ -82,5 +87,22 @@ contract WhenCreateTokenPair is WhenCreatePair {
 
         assertEq(token.balanceOf(address(erc721ERC20Pair)), 1 ether);
         assertEq(nft.ownerOf(0), address(erc721ERC20Pair));
+
+        vm.stopPrank();
+    }
+
+    function testWithInvalidParams() public {
+        vm.startPrank(owner);
+        /** Create ERC721-ERC20 Token Pair with exponential curve*/
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 0;
+
+        vm.expectRevert("Invalid delta for curve");
+        createTokenPair(token, nft, exponentialCurve, payable(owner), 0 ether, 2 ether, nftIds, 1 ether);
+
+        vm.expectRevert("Invalid new spot price for curve");
+        erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 2 ether, 0, nftIds, 1 ether);
+
+        vm.stopPrank();
     }
 }
