@@ -740,6 +740,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     function changeAssetRecipient(address payable newRecipient) external onlyOwner {
         PoolType _poolType = poolType();
         require(_poolType != PoolType.TRADE, "Not for Trade pools");
+        require(newRecipient != address(0), "Invalid address");
+
         if (assetRecipient != newRecipient) {
             assetRecipient = newRecipient;
             emit AssetRecipientChange(newRecipient);
