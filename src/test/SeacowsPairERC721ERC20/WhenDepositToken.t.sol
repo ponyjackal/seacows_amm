@@ -77,12 +77,12 @@ contract WhenDepositToken is WhenCreatePair {
         /** check delta */
         uint128 delta = erc721ERC20Pair.delta();
         assertEq(delta, 1.01 ether);
-        /** check  */
+        /** check spot price */
         uint128 spotPrice = erc721ERC20Pair.spotPrice();
         assertEq(spotPrice, 20 ether);
         vm.stopPrank();
 
-        // /** alice is trying to deposit tokens */
+        /** alice is trying to deposit tokens */
         vm.startPrank(alice);
         vm.expectRevert("Not a pair owner");
         seacowsPairFactory.depositERC20(token, address(erc721ERC20Pair), 100 ether);
@@ -102,12 +102,12 @@ contract WhenDepositToken is WhenCreatePair {
         /** check delta */
         uint128 delta = erc721WETHPair.delta();
         assertEq(delta, 0.1 ether);
-        /** check  */
+        /** check spot price */
         uint128 spotPrice = erc721WETHPair.spotPrice();
         assertEq(spotPrice, 5 ether);
         vm.stopPrank();
 
-        // /** alice is trying to deposit tokens */
+        /** alice is trying to deposit tokens */
         vm.startPrank(alice);
         vm.expectRevert("Not a pair owner");
         seacowsPairFactory.depositETH{ value: 4 ether }(address(erc721WETHPair));
