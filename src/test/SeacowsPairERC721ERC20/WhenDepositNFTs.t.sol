@@ -19,9 +19,8 @@ import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 /// https://book.getfoundry.sh/forge/writing-tests
 contract WhenDepositNFTs is WhenCreatePair {
     SeacowsPairERC20 internal erc721ERC20Pair;
-    SeacowsPairERC20 internal erc721EnumerableERC20Pair;
+    SeacowsPairERC20 internal erc721ETH0Pair;
 
-    TestERC721Enumerable internal nftEnumerable;
     TestERC721 internal nft;
     TestERC20 internal token;
 
@@ -31,29 +30,57 @@ contract WhenDepositNFTs is WhenCreatePair {
         token = new TestERC20();
         token.mint(owner, 1000 ether);
 
-        nftEnumerable = new TestERC721Enumerable();
-        nftEnumerable.safeMint(owner);
-
         nft = new TestERC721();
-        nft.safeMint(owner);
-
+        for (uint256 i = 0; i < 10; i++) {
+            nft.safeMint(owner);
+        }
         /** Approve Bonding Curve */
         seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
 
         /** Create ERC721Enumerable-ERC20 NFT Pair */
         vm.startPrank(owner);
-        uint256[] memory nftEnumerableIds = new uint256[](1);
-        nftEnumerableIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721EnumerableERC20Pair = createNFTPair(token, nftEnumerable, linearCurve, payable(owner), 2.2 ether, 2 ether, nftEnumerableIds, 1 ether);
-
-        /** Create ERC721-ERC20 NFT Pair */
-        uint256[] memory nftIds = new uint256[](1);
-        nftIds[0] = 0;
         token.approve(address(seacowsPairFactory), 1 ether);
         nft.setApprovalForAll(address(seacowsPairFactory), true);
-        erc721ERC20Pair = createNFTPair(token, nft, linearCurve, payable(owner), 2.2 ether, 2 ether, nftIds, 1 ether);
+
+        uint256[] memory nftETHIds = new uint256[](3);
+        nftETHIds[0] = 1;
+        nftETHIds[1] = 3;
+        nftETHIds[2] = 6;
+
+        erc721ETH0Pair = createNFTPairETH(nft, linearCurve, payable(owner), 1 ether, 5 ether, nftETHIds);
+
+        /** Create ERC721-ERC20 NFT Pair */
+        uint256[] memory nftIds = new uint256[](2);
+        nftIds[0] = 0;
+        nftIds[1] = 5;
+
+        erc721ERC20Pair = createNFTPair(token, nft, exponentialCurve, payable(owner), 1.05 ether, 20 ether, nftIds, 1 ether);
+        vm.stopPrank();
+    }
+
+    function testDepositNFTs() public {
+        vm.startPrank(owner);
+        uint256[] memory nftETHIds = new uint256[](2);
+        nftETHIds[0] = 2;
+        nftETHIds[1] = 4;
+
+        /** Deposit NFTs */
+        seacowsPairFactory.depositNFTs(nft, nftETHIds, address(erc721ETH0Pair));
+        /** Check nft balance */
+        uint256 balance = nft.balanceOf(address(erc721ETH0Pair));
+        assertEq(balance, 5);
+        /** check bonding curve */
+        ICurve curve = erc721ETH0Pair.bondingCurve();
+        assertEq(address(curve), address(linearCurve));
+        /** check delta */
+        uint128 delta = erc721ETH0Pair.delta();
+        assertEq(delta, 1 ether);
+        /** check  spot price */
+        uint128 spotPrice = erc721ETH0Pair.spotPrice();
+        assertEq(spotPrice, 5 ether);
+        vm.stopPrank();
+
         vm.stopPrank();
     }
 }
