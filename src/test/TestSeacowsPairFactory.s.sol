@@ -6,7 +6,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
-import { SeacowsPair } from "../SeacowsPair.sol";
+
 import { SeacowsPairFactory } from "../SeacowsPairFactory.sol";
 import { SeacowsPair } from "../SeacowsPair.sol";
 import { TestWETH } from "../TestCollectionToken/TestWETH.sol";
@@ -58,21 +58,21 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         vm.stopPrank();
     }
 
-    function testEnableProtocolFee() public {
-        /** Check protocol fee */
-        uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
-        assertEq(protocolFeeMultiplier, 5000000000000000);
+    function testProtocolFeeRecipient() public {
+        /** Check protocol recipient */
+        address protocolRecipient = seacowsPairFactory.protocolFeeRecipient();
+        assertEq(protocolRecipient, address(0));
 
-        // /** Factory owner updates protocol recipient */
-        // seacowsPairFactory.changeProtocolFeeRecipient(payable(alice));
-        // /** Check if protocol recipient is updated*/
-        // address updatedProtocolRecipient = seacowsPairFactory.protocolFeeRecipient();
-        // assertEq(updatedProtocolRecipient, alice);
+        /** Factory owner updates protocol recipient */
+        seacowsPairFactory.changeProtocolFeeRecipient(payable(alice));
+        /** Check if protocol recipient is updated*/
+        address updatedProtocolRecipient = seacowsPairFactory.protocolFeeRecipient();
+        assertEq(updatedProtocolRecipient, alice);
 
-        // /** Non-owner is trying to update protocol recipient */
-        // vm.startPrank(alice);
-        // vm.expectRevert("Ownable: caller is not the owner");
-        // seacowsPairFactory.changeProtocolFeeRecipient(payable(alice));
-        // vm.stopPrank();
+        /** Non-owner is trying to update protocol recipient */
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        seacowsPairFactory.changeProtocolFeeRecipient(payable(alice));
+        vm.stopPrank();
     }
 }
