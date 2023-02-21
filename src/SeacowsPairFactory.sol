@@ -519,6 +519,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * Internal functions
      */
     function _createPairERC20(CreateERC20PairParams memory params) internal returns (SeacowsPairERC20 pair) {
+        require(params.poolType != SeacowsPair.PoolType.TOKEN || params.initialTokenBalance > params.spotPrice, "Insufficient initial token amount");
+
         // Check to see if the NFT supports Enumerable to determine which template to use
         address template;
         try IERC165(address(params.nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {

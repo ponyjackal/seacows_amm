@@ -96,7 +96,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         if ((_poolType == PoolType.TOKEN) || (_poolType == PoolType.NFT)) {
             require(_fee == 0, "Only Trade Pools can have nonzero fee");
-            assetRecipient = _assetRecipient;
+            if (_assetRecipient != address(0)) {
+                assetRecipient = _assetRecipient;
+            } else {
+                assetRecipient = payable(_owner);
+            }
         } else if (_poolType == PoolType.TRADE) {
             require(_fee < MAX_FEE, "Trade fee must be less than 90%");
             require(_assetRecipient == address(0), "Trade pools can't set asset recipient");
@@ -736,6 +740,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     function changeAssetRecipient(address payable newRecipient) external onlyOwner {
         PoolType _poolType = poolType();
         require(_poolType != PoolType.TRADE, "Not for Trade pools");
+        require(newRecipient != address(0), "Invalid address");
+
         if (assetRecipient != newRecipient) {
             assetRecipient = newRecipient;
             emit AssetRecipientChange(newRecipient);

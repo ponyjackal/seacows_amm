@@ -42,6 +42,10 @@ contract WhenCreateTradePair is WhenCreatePair {
 
         /** create ERC721Enumerable-ERC20 Trade Pair */
         vm.startPrank(owner);
+        token.approve(address(seacowsPairFactory), 1000 ether);
+        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(seacowsPairFactory), true);
+
         uint256[] memory nftEnumerableIds = new uint256[](1);
         nftEnumerableIds[0] = 0;
         erc721EnumerableERC20TradePair = createTradePair(token, nftEnumerable, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftEnumerableIds, 1 ether);
