@@ -39,6 +39,8 @@ contract WhenDepositToken is WhenCreatePair {
         seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
 
         vm.startPrank(owner);
+        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairFactory), 1000 ether);
         /** Create ERC721-WETH Token Pair */
         nft.safeMint(owner);
         uint256[] memory nftIdsforWETHPair = new uint256[](1);

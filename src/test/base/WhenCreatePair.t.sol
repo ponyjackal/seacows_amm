@@ -107,7 +107,6 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _ethAmount
     ) public payable returns (SeacowsPairERC20 pair) {
-        _nft.setApprovalForAll(address(seacowsPairFactory), true);
         pair = seacowsPairFactory.createPairETH{ value: _ethAmount }(
             _nft,
             _bondingCurve,
