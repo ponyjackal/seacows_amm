@@ -591,7 +591,23 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function depositERC20(ERC20 token, address recipient, uint256 amount) external {
         token.safeTransferFrom(msg.sender, recipient, amount);
         if (isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
+            require(ISeacowsPairERC20(recipient).owner() == msg.sender, "Not a pair owner");
             if (token == SeacowsPairERC20(recipient).token()) {
+                emit TokenDeposit(recipient);
+            }
+        }
+    }
+
+    /**
+      @dev Used to deposit ETH into a pair after creation and emit an event for indexing 
+      (if recipient is indeed an ETH pair and the token matches)
+     */
+    function depositETH(address recipient) external payable {
+        IWETH(weth).deposit{ value: msg.value }();
+        IWETH(weth).transfer(recipient, msg.value);
+        if (isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
+            require(ISeacowsPairERC20(recipient).owner() == msg.sender, "Not a pair owner");
+            if (address(weth) == address(SeacowsPairERC20(recipient).token())) {
                 emit TokenDeposit(recipient);
             }
         }

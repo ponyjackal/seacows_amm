@@ -104,9 +104,10 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         address payable _assetRecipient,
         uint128 _delta,
         uint128 _spotPrice,
-        uint256[] memory _initialNFTIDs
+        uint256[] memory _initialNFTIDs,
+        uint256 _ethAmount
     ) public payable returns (SeacowsPairERC20 pair) {
-        pair = seacowsPairFactory.createPairETH{ value: msg.value }(
+        pair = seacowsPairFactory.createPairETH{ value: _ethAmount }(
             _nft,
             _bondingCurve,
             _assetRecipient,
