@@ -99,6 +99,14 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         /** Check spot price */
         uint128 spotPrice = erc721ETHPair.spotPrice();
         assertEq(spotPrice, 5 ether);
+
+        /** Trying to withdraw non-existing NFTs */
+        uint256[] memory nftMissingIds = new uint256[](2);
+        nftMissingIds[0] = 5;
+        nftMissingIds[1] = 8;
+        vm.expectRevert();
+        ISeacowsPairMissingEnumerable(address(erc721ETHPair)).withdrawERC721(IERC721(address(nft)), nftMissingIds);
+
         vm.stopPrank();
 
         vm.startPrank(alice);
@@ -130,6 +138,14 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         /** check spot price */
         uint128 spotPrice = erc721ERC20Pair.spotPrice();
         assertEq(spotPrice, 20 ether);
+
+        /** Trying to withdraw non-existing NFTs */
+        uint256[] memory nftMissingIds = new uint256[](2);
+        nftMissingIds[0] = 5;
+        nftMissingIds[1] = 8;
+        vm.expectRevert();
+        ISeacowsPairEnumerable(address(erc721ERC20Pair)).withdrawERC721(IERC721(address(nftEnumerable)), nftMissingIds);
+
         vm.stopPrank();
 
         vm.startPrank(alice);
