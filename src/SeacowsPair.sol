@@ -55,6 +55,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     // Otherwise, assets will be sent to the set address. Not available for TRADE pools.
     address payable public assetRecipient;
 
+    // If true, protocol fee is enabled. otherwise it's disabled
+    bool public isProtocolFeeEnabled;
+
     // LP total supply; only used in trade pair
     mapping(uint256 => uint256) public totalSupply;
 
