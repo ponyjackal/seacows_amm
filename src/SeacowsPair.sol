@@ -424,7 +424,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         SeacowsRouter.NFTDetail[] memory details,
         uint256 maxExpectedTokenInput,
         ICurve _bondingCurve,
-        ISeacowsPairFactoryLike _factory
+        ISeacowsPairFactoryLike _factory,
+        bool _isProtocolFeeEnabled
     ) internal virtual returns (uint256 protocolFee, uint256 inputAmount) {
         CurveErrorCodes.Error error;
         // Save on 2 SLOADs by caching
@@ -446,7 +447,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 fee,
                 _factory.protocolFeeMultiplier(),
                 nftReserve,
-                tokenReserve
+                tokenReserve,
+                _isProtocolFeeEnabled
             );
         } else {
             (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
@@ -454,7 +456,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 currentDelta,
                 numOfNFTs,
                 fee,
-                _factory.protocolFeeMultiplier()
+                _factory.protocolFeeMultiplier(),
+                _isProtocolFeeEnabled
             );
 
             // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
@@ -864,5 +867,16 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
         // TODO revoke admin role if user's LP balance is not enough
         // _revokeRole(ADMIN_ROLE, from);
+    }
+
+    // -----------------------------------------
+    // OnlyFactory functions
+    // -----------------------------------------
+    /**
+     * @dev enable or disable protocol fee for the pair
+     * @param _isProtocolFeeEnabled The boolean value to represent whether enable or dsiable protocol fee
+     */
+    function enableProtocolFee(bool _isProtocolFeeEnabled) external onlyFactory {
+        isProtocolFeeEnabled = _isProtocolFeeEnabled;
     }
 }

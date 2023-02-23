@@ -29,16 +29,21 @@ interface ICurve {
         @param numItems The number of NFTs the user is buying from the pair
         @param feeMultiplier Determines how much fee the LP takes from this trade, 18 decimals
         @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
+        @param isProtocolFeeEnabled If protocol fee is enabled
         @return error Any math calculation errors, only Error.OK means the returned values are valid
         @return newSpotPrice The updated selling spot price, in tokens
         @return newDelta The updated delta, used to parameterize the bonding curve
         @return inputValue The amount that the user should pay, in tokens
         @return protocolFee The amount of fee to send to the protocol, in tokens
      */
-    function getBuyInfo(uint128 spotPrice, uint128 delta, uint256 numItems, uint256 feeMultiplier, uint256 protocolFeeMultiplier)
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee);
+    function getBuyInfo(
+        uint128 spotPrice,
+        uint128 delta,
+        uint256 numItems,
+        uint256 feeMultiplier,
+        uint256 protocolFeeMultiplier,
+        bool isProtocolFeeEnabled
+    ) external view returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee);
 
     /**
         @notice Given the current state of the pair and the trade, computes how much the user
@@ -49,7 +54,7 @@ interface ICurve {
         @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
         @param nftReserve The NFT reserve in the pair
         @param tokenReserve The token reserve in the pair
-
+        @param isProtocolFeeEnabled If protocol fee is enabled
         @return error Any math calculation errors, only Error.OK means the returned values are valid
         @return newSpotPrice The updated selling spot price, in tokens
         @return inputValue The amount that the user should pay, in tokens
@@ -61,7 +66,8 @@ interface ICurve {
         uint256 feeMultiplier,
         uint256 protocolFeeMultiplier,
         uint256 nftReserve,
-        uint256 tokenReserve
+        uint256 tokenReserve,
+        bool isProtocolFeeEnabled
     ) external view returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 inputValue, uint256 protocolFee);
 
     /**
@@ -73,7 +79,7 @@ interface ICurve {
         @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
         @param nftReserve NFT reserve in the pair
         @param tokenReserve Token reserve in the pair
-
+        @param isProtocolFeeEnabled If protocol fee is enabled
         @return error Any math calculation errors, only Error.OK means the returned values are valid
         @return newSpotPrice The updated selling spot price, in tokens
         @return outputValue The amount that the user should receive, in tokens
@@ -85,7 +91,8 @@ interface ICurve {
         uint256 feeMultiplier,
         uint256 protocolFeeMultiplier,
         uint256 nftReserve,
-        uint256 tokenReserve
+        uint256 tokenReserve,
+        bool isProtocolFeeEnabled
     ) external view returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 outputValue, uint256 protocolFee);
 
     /**
@@ -96,14 +103,19 @@ interface ICurve {
         @param numItems The number of NFTs the user is selling to the pair
         @param feeMultiplier Determines how much fee the LP takes from this trade, 18 decimals
         @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
+        @param isProtocolFeeEnabled If protocol fee is enabled
         @return error Any math calculation errors, only Error.OK means the returned values are valid
         @return newSpotPrice The updated selling spot price, in tokens
         @return newDelta The updated delta, used to parameterize the bonding curve
         @return outputValue The amount that the user should receive, in tokens
         @return protocolFee The amount of fee to send to the protocol, in tokens
      */
-    function getSellInfo(uint128 spotPrice, uint128 delta, uint256 numItems, uint256 feeMultiplier, uint256 protocolFeeMultiplier)
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee);
+    function getSellInfo(
+        uint128 spotPrice,
+        uint128 delta,
+        uint256 numItems,
+        uint256 feeMultiplier,
+        uint256 protocolFeeMultiplier,
+        bool isProtocolFeeEnabled
+    ) external view returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee);
 }

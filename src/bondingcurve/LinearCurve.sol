@@ -31,12 +31,14 @@ contract LinearCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getBuyInfo}
      */
-    function getBuyInfo(uint128 spotPrice, uint128 delta, uint256 numItems, uint256 feeMultiplier, uint256 protocolFeeMultiplier)
-        external
-        pure
-        override
-        returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee)
-    {
+    function getBuyInfo(
+        uint128 spotPrice,
+        uint128 delta,
+        uint256 numItems,
+        uint256 feeMultiplier,
+        uint256 protocolFeeMultiplier,
+        bool isProtocolFeeEnabled
+    ) external pure override returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee) {
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
             return (Error.INVALID_NUMITEMS, 0, 0, 0, 0);
@@ -82,12 +84,14 @@ contract LinearCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getSellInfo}
      */
-    function getSellInfo(uint128 spotPrice, uint128 delta, uint256 numItems, uint256 feeMultiplier, uint256 protocolFeeMultiplier)
-        external
-        pure
-        override
-        returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee)
-    {
+    function getSellInfo(
+        uint128 spotPrice,
+        uint128 delta,
+        uint256 numItems,
+        uint256 feeMultiplier,
+        uint256 protocolFeeMultiplier,
+        bool isProtocolFeeEnabled
+    ) external pure override returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee) {
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {
             return (Error.INVALID_NUMITEMS, 0, 0, 0, 0);
@@ -143,7 +147,8 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         uint256 feeMultiplier,
         uint256 protocolFeeMultiplier,
         uint256 nftReserve,
-        uint256 tokenReserve
+        uint256 tokenReserve,
+        bool isProtocolFeeEnabled
     ) external pure override returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 inputValue, uint256 protocolFee) {
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
@@ -179,7 +184,8 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         uint256 feeMultiplier,
         uint256 protocolFeeMultiplier,
         uint256 nftReserve,
-        uint256 tokenReserve
+        uint256 tokenReserve,
+        bool isProtocolFeeEnabled
     ) external pure override returns (Error error, uint128 newSpotPrice, uint256 outputValue, uint256 protocolFee) {
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {
