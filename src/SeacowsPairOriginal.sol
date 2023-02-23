@@ -44,6 +44,9 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
     // Otherwise, assets will be sent to the set address. Not available for TRADE pools.
     address payable public assetRecipient;
 
+    // If true, protocol fee is enabled. otherwise it's disabled
+    bool public isProtocolFeeEnabled;
+
     // Events
     event SwapNFTInPair();
     event SwapNFTOutPair();
@@ -250,7 +253,8 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
             delta,
             numNFTs,
             fee,
-            factory().protocolFeeMultiplier()
+            factory().protocolFeeMultiplier(),
+            isProtocolFeeEnabled
         );
     }
 
@@ -268,7 +272,8 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
             delta,
             numNFTs,
             fee,
-            factory().protocolFeeMultiplier()
+            factory().protocolFeeMultiplier(),
+            isProtocolFeeEnabled
         );
     }
 
@@ -369,7 +374,8 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
             currentDelta,
             numNFTs,
             fee,
-            _factory.protocolFeeMultiplier()
+            _factory.protocolFeeMultiplier(),
+            isProtocolFeeEnabled
         );
 
         // Revert if bonding curve had an error
@@ -423,7 +429,8 @@ abstract contract SeacowsPairOriginal is OwnableWithTransferCallback, Reentrancy
             currentDelta,
             numNFTs,
             fee,
-            _factory.protocolFeeMultiplier()
+            _factory.protocolFeeMultiplier(),
+            isProtocolFeeEnabled
         );
 
         // Revert if bonding curve had an error

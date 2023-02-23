@@ -313,7 +313,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             delta,
             nftIds.length,
             fee,
-            factory().protocolFeeMultiplier()
+            factory().protocolFeeMultiplier(),
+            isProtocolFeeEnabled
         );
         newSpotPrice = currentSpotPrice;
     }
@@ -333,7 +334,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             delta,
             nftIds.length,
             fee,
-            factory().protocolFeeMultiplier()
+            factory().protocolFeeMultiplier(),
+            isProtocolFeeEnabled
         );
         newSpotPrice = currentSpotPrice;
     }
@@ -424,8 +426,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         SeacowsRouter.NFTDetail[] memory details,
         uint256 maxExpectedTokenInput,
         ICurve _bondingCurve,
-        ISeacowsPairFactoryLike _factory,
-        bool _isProtocolFeeEnabled
+        ISeacowsPairFactoryLike _factory
     ) internal virtual returns (uint256 protocolFee, uint256 inputAmount) {
         CurveErrorCodes.Error error;
         // Save on 2 SLOADs by caching
@@ -448,7 +449,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 _factory.protocolFeeMultiplier(),
                 nftReserve,
                 tokenReserve,
-                _isProtocolFeeEnabled
+                isProtocolFeeEnabled
             );
         } else {
             (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
@@ -457,7 +458,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 numOfNFTs,
                 fee,
                 _factory.protocolFeeMultiplier(),
-                _isProtocolFeeEnabled
+                isProtocolFeeEnabled
             );
 
             // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
@@ -523,7 +524,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 fee,
                 _factory.protocolFeeMultiplier(),
                 nftReserve,
-                tokenReserve
+                tokenReserve,
+                isProtocolFeeEnabled
             );
         } else {
             (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
@@ -531,7 +533,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
                 currentDelta,
                 numOfNFTs,
                 fee,
-                _factory.protocolFeeMultiplier()
+                _factory.protocolFeeMultiplier(),
+                isProtocolFeeEnabled
             );
 
             // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
