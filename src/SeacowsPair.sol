@@ -177,48 +177,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
      */
 
     /**
-        @dev Used as read function to query the bonding curve for buy pricing info
-        @param nftIds The nftIds to buy from the pair
-     */
-    function getBuyNFTQuote(uint256[] memory nftIds)
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
-    {
-        uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve().getBuyInfo(
-            spotPrice,
-            delta,
-            nftIds.length,
-            fee,
-            factory().protocolFeeMultiplier(),
-            isProtocolFeeEnabled
-        );
-        newSpotPrice = currentSpotPrice;
-    }
-
-    /**
-        @dev Used as read function to query the bonding curve for sell pricing info
-        @param nftIds The nftIds to buy from the pair
-     */
-    function getSellNFTQuote(uint256[] memory nftIds)
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
-    {
-        uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve().getSellInfo(
-            spotPrice,
-            delta,
-            nftIds.length,
-            fee,
-            factory().protocolFeeMultiplier(),
-            isProtocolFeeEnabled
-        );
-        newSpotPrice = currentSpotPrice;
-    }
-
-    /**
         @notice Returns the pair's variant (NFT is enumerable or not, pair uses ETH or ERC20)
      */
     function pairVariant() public pure virtual returns (ISeacowsPairFactoryLike.PairVariant);

@@ -8,7 +8,6 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
-import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { ISeacowsPairERC1155ERC20 } from "../../interfaces/ISeacowsPairERC1155ERC20.sol";
@@ -83,7 +82,7 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
         assertEq(sftBalance, 1100);
         // check spot price
-        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+        uint256 spotPrice = ISeacowsPairERC1155ERC20(address(pair)).spotPrice();
         assertEq(spotPrice, 100);
 
         // revert cases
@@ -113,7 +112,7 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         uint256 lpBalance = pair.balanceOf(alice, 1);
         assertEq(lpBalance, 90);
         // check spot price
-        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+        uint256 spotPrice = ISeacowsPairERC1155ERC20(address(pair)).spotPrice();
         assertEq(spotPrice, 100);
         // trying to remove invalid LP token
         vm.expectRevert("Insufficient LP token");

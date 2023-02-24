@@ -176,7 +176,6 @@ contract SeacowsPairEnumerableERC20 is SeacowsPair {
 
     /** Internal Functions */
 
-    /// @inheritdoc SeacowsPair
     function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal {
         // Send NFTs to recipient
         // (we know NFT implements IERC721Enumerable so we just iterate)
@@ -192,7 +191,6 @@ contract SeacowsPairEnumerableERC20 is SeacowsPair {
         }
     }
 
-    /// @inheritdoc SeacowsPair
     function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal {
         // Send NFTs to recipient
         uint256 numNFTs = nftIds.length;
@@ -335,7 +333,46 @@ contract SeacowsPairEnumerableERC20 is SeacowsPair {
 
     /** View Functions */
 
-    /// @inheritdoc SeacowsPair
+    /**
+        @dev Used as read function to query the bonding curve for buy pricing info
+        @param nftIds The nftIds to buy from the pair
+     */
+    function getBuyNFTQuote(uint256[] memory nftIds)
+        external
+        view
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
+    {
+        uint256 currentSpotPrice;
+        (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve().getBuyInfo(
+            spotPrice,
+            delta,
+            nftIds.length,
+            fee,
+            factory().protocolFeeMultiplier()
+        );
+        newSpotPrice = currentSpotPrice;
+    }
+
+    /**
+        @dev Used as read function to query the bonding curve for sell pricing info
+        @param nftIds The nftIds to buy from the pair
+     */
+    function getSellNFTQuote(uint256[] memory nftIds)
+        external
+        view
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
+    {
+        uint256 currentSpotPrice;
+        (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve().getSellInfo(
+            spotPrice,
+            delta,
+            nftIds.length,
+            fee,
+            factory().protocolFeeMultiplier()
+        );
+        newSpotPrice = currentSpotPrice;
+    }
+
     function getAllHeldIds() external view returns (uint256[] memory) {
         IERC721 _nft = IERC721(nft());
         uint256 numNFTs = _nft.balanceOf(address(this));

@@ -8,7 +8,7 @@ import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
 import { ISeacowsPairFactoryLike } from "../../interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsPairEnumerableERC20 } from "../../SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "../../SeacowsPairMissingEnumerableERC20.sol";
-import { SeacowsPairERC20 } from "../../SeacowsPairERC20.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
 import { LinearCurve } from "../../bondingcurve/LinearCurve.sol";

@@ -4,47 +4,12 @@ pragma solidity >=0.8.0;
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import { SeacowsRouter } from "../SeacowsRouter.sol";
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
-import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 import { SeacowsPair } from "../SeacowsPair.sol";
 
 interface ISeacowsPair {
     function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external payable;
-
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
-        external
-        payable
-        returns (uint256 inputAmount);
-
-    function swapTokenForSpecificNFTs(
-        uint256[] calldata nftIds,
-        SeacowsRouter.NFTDetail[] calldata details,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external payable returns (uint256 inputAmount);
-
-    function swapNFTsForToken(
-        uint256[] calldata nftIds,
-        SeacowsRouter.NFTDetail[] calldata details,
-        uint256 minExpectedTokenOutput,
-        address payable tokenRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external returns (uint256 outputAmount);
-
-    function getBuyNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
-        external
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee);
-
-    function getSellNFTQuote(uint256[] memory nftIds, SeacowsRouter.NFTDetail[] memory details)
-        external
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee);
-
-    function getAllHeldIds() external view returns (uint256[] memory);
 
     function pairVariant() external pure returns (ISeacowsPairFactoryLike.PairVariant);
 
@@ -60,7 +25,11 @@ interface ISeacowsPair {
 
     function poolType() external pure returns (SeacowsPair.PoolType _poolType);
 
+    function token() external returns (ERC20 _token);
+
     function getAssetRecipient() external view returns (address payable _assetRecipient);
+
+    function withdrawERC20(address recipient, uint256 amount) external;
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;
 

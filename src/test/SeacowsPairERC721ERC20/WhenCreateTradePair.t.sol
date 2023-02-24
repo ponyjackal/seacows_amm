@@ -6,7 +6,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
-import { SeacowsPairERC20 } from "../../SeacowsPairERC20.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
@@ -18,8 +18,8 @@ import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract WhenCreateTradePair is WhenCreatePair {
-    SeacowsPairERC20 internal erc721ERC20TradePair;
-    SeacowsPairERC20 internal erc721EnumerableERC20TradePair;
+    SeacowsPair internal erc721ERC20TradePair;
+    SeacowsPair internal erc721EnumerableERC20TradePair;
 
     TestERC721 internal nft;
     TestERC721Enumerable internal nftEnumerable;
@@ -66,7 +66,7 @@ contract WhenCreateTradePair is WhenCreatePair {
 
         nftEnumerable.safeMint(owner);
         nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
-        SeacowsPairERC20 pair = createTradePairETH(nftEnumerable, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
+        SeacowsPair pair = createTradePairETH(nftEnumerable, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
         assertEq(address(pair.nft()), address(nftEnumerable));
         assertEq(address(pair.token()), weth);
         assertEq(address(pair.bondingCurve()), address(linearCurve));
@@ -90,7 +90,7 @@ contract WhenCreateTradePair is WhenCreatePair {
 
         nft.safeMint(owner);
         nft.setApprovalForAll(address(seacowsPairFactory), true);
-        SeacowsPairERC20 pair = createTradePairETH(nft, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
+        SeacowsPair pair = createTradePairETH(nft, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
         assertEq(address(pair.nft()), address(nft));
         assertEq(address(pair.token()), weth);
         assertEq(address(pair.bondingCurve()), address(linearCurve));
@@ -144,7 +144,7 @@ contract WhenCreateTradePair is WhenCreatePair {
         nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 1;
-        SeacowsPairERC20 pair = createTradePair(token, nftEnumerable, linearCurve, 10 ether, 0, 2 ether, nftIds, 10 ether);
+        SeacowsPair pair = createTradePair(token, nftEnumerable, linearCurve, 10 ether, 0, 2 ether, nftIds, 10 ether);
         assertEq(address(pair.nft()), address(nftEnumerable));
         assertEq(address(pair.token()), address(token));
         assertEq(address(pair.bondingCurve()), address(linearCurve));
