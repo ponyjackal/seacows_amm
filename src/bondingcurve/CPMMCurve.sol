@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 import { ICurve } from "./ICurve.sol";
 import { CurveErrorCodes } from "./CurveErrorCodes.sol";
 import { FixedPointMathLib } from "./FixedPointMathLib.sol";
+import { ISeacowsPair } from "../interfaces/ISeacowsPair.sol";
 import { ISeacowsPairEnumerableERC20 } from "../interfaces/ISeacowsPairEnumerableERC20.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 
 /*
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -12,6 +14,16 @@ import { ISeacowsPairEnumerableERC20 } from "../interfaces/ISeacowsPairEnumerabl
 */
 contract CPMMCurve is ICurve, CurveErrorCodes {
     using FixedPointMathLib for uint256;
+
+    modifier onlyPair() {
+        require(
+            ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
+                ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20 ||
+                ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
+            "Not a seacows pair"
+        );
+        _;
+    }
 
     /**
         @dev See {ICurve-validateDelta}, we don't use this function in CPMM curve
@@ -36,6 +48,7 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
         external
         view
         override
+        onlyPair
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee)
     {
         // get pair properties
@@ -76,6 +89,7 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
         external
         view
         override
+        onlyPair
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee)
     {
         // get pair properties

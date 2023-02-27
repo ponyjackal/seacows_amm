@@ -8,11 +8,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface ISeacowsPairFactoryLike {
     enum PairVariant {
-        ENUMERABLE_ETH,
-        MISSING_ENUMERABLE_ETH,
         ENUMERABLE_ERC20,
         MISSING_ENUMERABLE_ERC20,
-        ERC1155_ETH,
         ERC1155_ERC20
     }
 

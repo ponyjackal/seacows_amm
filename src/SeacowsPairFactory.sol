@@ -411,12 +411,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
-        if (
-            isPair(recipient, PairVariant.ENUMERABLE_ERC20) ||
-            isPair(recipient, PairVariant.ENUMERABLE_ETH) ||
-            isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20) ||
-            isPair(recipient, PairVariant.MISSING_ENUMERABLE_ETH)
-        ) {
+        if (isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
             require(address(ISeacowsPair(recipient).owner()) == msg.sender, "Not a pair owner");
             emit NFTDeposit(recipient);
         }
