@@ -290,7 +290,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
      * @notice get reserves in the pool, only available for trade pair
      */
-    function _getReserve() internal view virtual returns (uint256 nftReserve, uint256 tokenReserve);
+    function getReserve() external view virtual returns (uint256 nftReserve, uint256 tokenReserve);
 
     /**
         @notice Pulls the token input of a trade from the trader and pays the protocol fee.

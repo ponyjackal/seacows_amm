@@ -35,6 +35,8 @@ interface ISeacowsPair {
 
     function getAssetRecipient() external view returns (address payable _assetRecipient);
 
+    function getReserve() external view returns (uint256 nftReserve, uint256 tokenReserve);
+
     function withdrawERC20(address recipient, uint256 amount) external;
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;

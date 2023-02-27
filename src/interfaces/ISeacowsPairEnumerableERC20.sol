@@ -43,6 +43,4 @@ interface ISeacowsPairEnumerableERC20 is ISeacowsPair {
     function onERC721Received(address, address, uint256, bytes memory) external returns (bytes4);
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external override;
-
-    function getReserve() external view returns (uint256 nftReserve, uint256 tokenReserve);
 }

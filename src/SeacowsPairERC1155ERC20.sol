@@ -51,7 +51,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
     /**
      * @notice get reserves in the pool, only available for trade pair
      */
-    function _getReserve() internal view override returns (uint256 nftReserve, uint256 tokenReserve) {
+    function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
         nftReserve = IERC1155(nft()).balanceOf(address(this), tokenId());
         // token balance
@@ -105,8 +105,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
 
     /**
         @notice Calculates the amount needed to be sent into the pair for a buy and adjusts spot price or delta if necessary
-        @param nftIds The nftIds to buy from the pair
-        @param details The details of NFTs to buy from the pair
+        @param numOfNFTs The number of nfts
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
         @param protocolFee The percentage of protocol fee to be taken, as a percentage
@@ -114,8 +113,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         @return inputAmount The amount of tokens total tokens receive
      */
     function _calculateBuyInfoAndUpdatePoolParams(
-        uint256[] memory nftIds,
-        SeacowsRouter.NFTDetail[] memory details,
+        uint256 numOfNFTs,
         uint256 maxExpectedTokenInput,
         ICurve _bondingCurve,
         ISeacowsPairFactoryLike _factory
@@ -127,8 +125,6 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
         uint128 newDelta = delta;
-
-        uint256 numOfNFTs = nftIds.length;
 
         (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(numOfNFTs, _factory.protocolFeeMultiplier());
 
@@ -230,13 +226,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         }
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(
-            new uint256[](numNFTs),
-            new SeacowsRouter.NFTDetail[](numNFTs),
-            maxExpectedTokenInput,
-            _bondingCurve,
-            _factory
-        );
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(numNFTs, maxExpectedTokenInput, _bondingCurve, _factory);
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
         _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
         _refundTokenToSender(inputAmount);

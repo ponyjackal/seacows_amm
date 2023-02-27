@@ -5,7 +5,6 @@ import { ICurve } from "./ICurve.sol";
 import { CurveErrorCodes } from "./CurveErrorCodes.sol";
 import { FixedPointMathLib } from "./FixedPointMathLib.sol";
 import { ISeacowsPair } from "../interfaces/ISeacowsPair.sol";
-import { ISeacowsPairEnumerableERC20 } from "../interfaces/ISeacowsPairEnumerableERC20.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 
 /*
@@ -52,10 +51,10 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee)
     {
         // get pair properties
-        uint128 spotPrice = ISeacowsPairEnumerableERC20(msg.sender).spotPrice();
-        uint128 delta = ISeacowsPairEnumerableERC20(msg.sender).delta();
-        uint96 feeMultiplier = ISeacowsPairEnumerableERC20(msg.sender).fee();
-        bool isProtocolFeeEnabled = ISeacowsPairEnumerableERC20(msg.sender).isProtocolFeeEnabled();
+        uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
+        uint128 delta = ISeacowsPair(msg.sender).delta();
+        uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
+        bool isProtocolFeeEnabled = ISeacowsPair(msg.sender).isProtocolFeeEnabled();
 
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
@@ -110,10 +109,10 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee)
     {
         // get pair properties
-        uint128 spotPrice = ISeacowsPairEnumerableERC20(msg.sender).spotPrice();
-        uint128 delta = ISeacowsPairEnumerableERC20(msg.sender).delta();
-        uint96 feeMultiplier = ISeacowsPairEnumerableERC20(msg.sender).fee();
-        bool isProtocolFeeEnabled = ISeacowsPairEnumerableERC20(msg.sender).isProtocolFeeEnabled();
+        uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
+        uint128 delta = ISeacowsPair(msg.sender).delta();
+        uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
+        bool isProtocolFeeEnabled = ISeacowsPair(msg.sender).isProtocolFeeEnabled();
 
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {

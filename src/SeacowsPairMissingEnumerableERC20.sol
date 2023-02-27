@@ -81,7 +81,7 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
     /**
      * @notice get reserves in the pool, only available for trade pair
      */
-    function _getReserve() internal view override returns (uint256 nftReserve, uint256 tokenReserve) {
+    function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
         nftReserve = IERC721(nft()).balanceOf(address(this));
         // token balance
