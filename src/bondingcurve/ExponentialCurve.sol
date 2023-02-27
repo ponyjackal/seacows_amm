@@ -94,8 +94,11 @@ contract ExponentialCurve is ICurve, CurveErrorCodes {
         // Account for the trade fee, only for Trade pools
         inputValue += inputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
-        // Add the protocol fee to the required input amount
-        inputValue += protocolFee;
+        // if protocol fee is enabled
+        if (isProtocolFeeEnabled) {
+            // Add the protocol fee to the required input amount
+            inputValue += protocolFee;
+        }
 
         // Keep delta the same
         newDelta = delta;
@@ -155,8 +158,11 @@ contract ExponentialCurve is ICurve, CurveErrorCodes {
         // Account for the trade fee, only for Trade pools
         outputValue -= outputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
-        // Remove the protocol fee from the output amount
-        outputValue -= protocolFee;
+        // if protocol fee is enabled
+        if (isProtocolFeeEnabled) {
+            // Remove the protocol fee from the output amount
+            outputValue -= protocolFee;
+        }
 
         // Keep delta the same
         newDelta = delta;
