@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { ICurve } from "./ICurve.sol";
 import { CurveErrorCodes } from "./CurveErrorCodes.sol";
 import { FixedPointMathLib } from "./FixedPointMathLib.sol";
+import { ISeacowsPairEnumerableERC20 } from "../interfaces/ISeacowsPairEnumerableERC20.sol";
 
 /*
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -31,14 +32,18 @@ contract LinearCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getBuyInfo}
      */
-    function getBuyInfo(
-        uint128 spotPrice,
-        uint128 delta,
-        uint256 numItems,
-        uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier,
-        bool isProtocolFeeEnabled
-    ) external pure override returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee) {
+    function getBuyInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+        external
+        view
+        override
+        returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee)
+    {
+        // get pair properties
+        uint128 spotPrice = ISeacowsPairEnumerableERC20(msg.sender).spotPrice();
+        uint128 delta = ISeacowsPairEnumerableERC20(msg.sender).delta();
+        uint96 feeMultiplier = ISeacowsPairEnumerableERC20(msg.sender).fee();
+        bool isProtocolFeeEnabled = ISeacowsPairEnumerableERC20(msg.sender).isProtocolFeeEnabled();
+
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
             return (Error.INVALID_NUMITEMS, 0, 0, 0, 0);
@@ -84,14 +89,18 @@ contract LinearCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getSellInfo}
      */
-    function getSellInfo(
-        uint128 spotPrice,
-        uint128 delta,
-        uint256 numItems,
-        uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier,
-        bool isProtocolFeeEnabled
-    ) external pure override returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee) {
+    function getSellInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+        external
+        view
+        override
+        returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee)
+    {
+        // get pair properties
+        uint128 spotPrice = ISeacowsPairEnumerableERC20(msg.sender).spotPrice();
+        uint128 delta = ISeacowsPairEnumerableERC20(msg.sender).delta();
+        uint96 feeMultiplier = ISeacowsPairEnumerableERC20(msg.sender).fee();
+        bool isProtocolFeeEnabled = ISeacowsPairEnumerableERC20(msg.sender).isProtocolFeeEnabled();
+
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {
             return (Error.INVALID_NUMITEMS, 0, 0, 0, 0);
@@ -132,81 +141,6 @@ contract LinearCurve is ICurve, CurveErrorCodes {
 
         // Keep delta the same
         newDelta = delta;
-
-        // If we reached here, no math errors
-        error = Error.OK;
-    }
-
-    /** not used functions for cpmm */
-    /**
-        @dev See {ICurve-getBuyInfo}
-     */
-    function getCPMMBuyInfo(
-        uint128 spotPrice,
-        uint256 numItems,
-        uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier,
-        uint256 nftReserve,
-        uint256 tokenReserve,
-        bool isProtocolFeeEnabled
-    ) external pure override returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint256 inputValue, uint256 protocolFee) {
-        // We only calculate changes for buying 1 or more NFTs
-        if (numItems == 0) {
-            return (Error.INVALID_NUMITEMS, 0, 0, 0);
-        }
-
-        // If we buy n items, then the total cost is equal to:
-        // (spot price) * numOfNFTs
-        inputValue = numItems * spotPrice;
-
-        // Account for the protocol fee, a flat percentage of the buy amount
-        protocolFee = inputValue.fmul(protocolFeeMultiplier, FixedPointMathLib.WAD);
-
-        // Account for the trade fee, only for Trade pools
-        inputValue += inputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
-
-        // Add the protocol fee to the required input amount
-        inputValue += protocolFee;
-
-        // For a CPMM curve, the spot price is updated based on x * y = k
-        newSpotPrice = uint128((tokenReserve + inputValue) / (nftReserve - numItems));
-
-        // If we got all the way here, no math error happened
-        error = Error.OK;
-    }
-
-    /**
-        @dev See {ICurve-getSellInfo}
-     */
-    function getCPMMSellInfo(
-        uint128 spotPrice,
-        uint256 numItems,
-        uint256 feeMultiplier,
-        uint256 protocolFeeMultiplier,
-        uint256 nftReserve,
-        uint256 tokenReserve,
-        bool isProtocolFeeEnabled
-    ) external pure override returns (Error error, uint128 newSpotPrice, uint256 outputValue, uint256 protocolFee) {
-        // We only calculate changes for selling 1 or more NFTs
-        if (numItems == 0) {
-            return (Error.INVALID_NUMITEMS, 0, 0, 0);
-        }
-
-        // If we sell n items, then the total sale amount is:
-        // (spot price) * numOfNFTs
-        outputValue = numItems * spotPrice;
-
-        // Account for the protocol fee, a flat percentage of the sell amount
-        protocolFee = outputValue.fmul(protocolFeeMultiplier, FixedPointMathLib.WAD);
-
-        // Account for the trade fee, only for Trade pools
-        outputValue -= outputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
-
-        // Subtract the protocol fee from the output amount to the seller
-        outputValue -= protocolFee;
-
-        // For a CPMM curve, the spot price is updated based on x * y = k
-        newSpotPrice = uint128((tokenReserve - outputValue) / (nftReserve + numItems));
 
         // If we reached here, no math errors
         error = Error.OK;

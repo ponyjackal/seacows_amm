@@ -23,6 +23,12 @@ interface ISeacowsPair {
 
     function spotPrice() external view returns (uint128 spotPrice);
 
+    function delta() external view returns (uint128 delta);
+
+    function fee() external view returns (uint96 fee);
+
+    function isProtocolFeeEnabled() external view returns (bool isProtocolFeeEnabled);
+
     function poolType() external pure returns (SeacowsPair.PoolType _poolType);
 
     function token() external returns (ERC20 _token);

@@ -130,29 +130,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
 
         uint256 numOfNFTs = nftIds.length;
 
-        if (poolType() == PoolType.TRADE) {
-            // For trade pair, we only accept CPMM
-            // get reserve
-            (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
-            (error, newSpotPrice, inputAmount, protocolFee) = _bondingCurve.getCPMMBuyInfo(
-                currentSpotPrice,
-                numOfNFTs,
-                fee,
-                _factory.protocolFeeMultiplier(),
-                nftReserve,
-                tokenReserve
-            );
-        } else {
-            (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
-                currentSpotPrice,
-                currentDelta,
-                numOfNFTs,
-                fee,
-                _factory.protocolFeeMultiplier()
-            );
-
-            // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
-        }
+        (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(numOfNFTs, _factory.protocolFeeMultiplier());
 
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
@@ -204,29 +182,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         uint128 newDelta = delta;
         uint256 numOfNFTs = nftIds.length;
 
-        if (poolType() == PoolType.TRADE) {
-            // For trade pair, we only accept CPMM
-            // get reserve
-            (uint256 nftReserve, uint256 tokenReserve) = _getReserve();
-            (error, newSpotPrice, outputAmount, protocolFee) = _bondingCurve.getCPMMSellInfo(
-                currentSpotPrice,
-                numOfNFTs,
-                fee,
-                _factory.protocolFeeMultiplier(),
-                nftReserve,
-                tokenReserve
-            );
-        } else {
-            (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
-                currentSpotPrice,
-                currentDelta,
-                numOfNFTs,
-                fee,
-                _factory.protocolFeeMultiplier()
-            );
-
-            // newSpotPrice = uint128(_applyWithOraclePrice(nftIds, details, newSpotPrice));
-        }
+        (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(numOfNFTs, _factory.protocolFeeMultiplier());
 
         _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
     }
