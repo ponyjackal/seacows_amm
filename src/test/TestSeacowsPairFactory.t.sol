@@ -124,7 +124,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
     }
 
     function testDisableTokenPairProtocolFee() public {
-        /** Enable protocol fee for the token pair */
+        /** Disable protocol fee for the token pair */
         seacowsPairFactory.disableProtocolFee(tokenPair, true);
 
         /** Check protocol fee */
@@ -192,6 +192,46 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         vm.startPrank(alice);
         vm.expectRevert("Ownable: caller is not the owner");
         seacowsPairFactory.disableProtocolFee(nftPair, false);
+        vm.stopPrank();
+    }
+
+    function testDisableNFTPairProtocolFee() public {
+        /** Disable protocol fee for the nft pair */
+        seacowsPairFactory.disableProtocolFee(nftPair, true);
+
+        /** Check protocol fee */
+        uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
+        assertEq(protocolFeeMultiplier, 5000000000000000);
+
+        /** Alice buys NFTs to the nft pair without protocol fee */
+        vm.startPrank(alice);
+        uint256 aliceTokenBalance = token.balanceOf(alice);
+        uint256[] memory nftIds = new uint256[](2);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+
+        ISeacowsPairEnumerableERC20(address(nftPair)).swapTokenForSpecificNFTs(
+            nftIds,
+            new SeacowsRouter.NFTDetail[](0),
+            25 ether,
+            payable(alice),
+            false,
+            address(0)
+        );
+        /** Check alice token balance */
+        uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.525 ether);
+
+        /** Check if nfts are transferred to the alice */
+        assertEq(nft.ownerOf(1), alice);
+        assertEq(nft.ownerOf(3), alice);
+
+        vm.stopPrank();
+
+        /** Non-owner is trying to update protocol recipient */
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        seacowsPairFactory.disableProtocolFee(nftPair, true);
         vm.stopPrank();
     }
 }
