@@ -266,4 +266,33 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         seacowsPairFactory.disableProtocolFee(tradePair, false);
         vm.stopPrank();
     }
+
+    function testDisableTradePairProtocolFee() public {
+        /** Disable protocol fee for the nft pair */
+        seacowsPairFactory.disableProtocolFee(tradePair, true);
+
+        /** Check protocol fee */
+        uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
+        assertEq(protocolFeeMultiplier, 5000000000000000);
+
+        /** Alice buys NFTs from the trade pair without protocol fee */
+        vm.startPrank(alice);
+        uint256 aliceTokenBalance = token.balanceOf(alice);
+
+        ISeacowsPairEnumerableERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        /** Check alice token balance */
+        uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 22 ether);
+
+        /** Check if nfts are transferred to the alice */
+        assertEq(nft.balanceOf(alice), 12);
+
+        vm.stopPrank();
+
+        /** Non-owner is trying to update protocol recipient */
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        seacowsPairFactory.disableProtocolFee(tradePair, true);
+        vm.stopPrank();
+    }
 }
