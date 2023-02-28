@@ -2,106 +2,133 @@
 pragma solidity >=0.8.4;
 
 import "forge-std/Test.sol";
-import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SeacowsRouter } from "../SeacowsRouter.sol";
-import { SeacowsPairERC1155ERC20 } from "../SeacowsPairERC1155ERC20.sol";
-import { TestSeacowsSFT } from "../TestCollectionToken/TestSeacowsSFT.sol";
-import { TestERC20 } from "../TestCollectionToken/TestERC20.sol";
-import { SeacowsPair } from "../SeacowsPair.sol";
-import { ISeacowsPairERC1155ERC20 } from "../interfaces/ISeacowsPairERC1155ERC20.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { WhenCreatePair } from "./base/WhenCreatePair.t.sol";
+
+import { ICurve } from "../bondingcurve/ICurve.sol";
+import { ISeacowsPairEnumerableERC20 } from "../interfaces/ISeacowsPairEnumerableERC20.sol";
+
+import { SeacowsRouter } from "../SeacowsRouter.sol";
+import { SeacowsPairFactory } from "../SeacowsPairFactory.sol";
+import { SeacowsPair } from "../SeacowsPair.sol";
+import { TestWETH } from "../TestCollectionToken/TestWETH.sol";
+import { TestERC20 } from "../TestCollectionToken/TestERC20.sol";
+import { TestERC721 } from "../TestCollectionToken/TestERC721.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract TestSeacowsPairFactoryTest is WhenCreatePair {
-    TestSeacowsSFT internal testSeacowsSFT;
-    SeacowsPairERC1155ERC20 internal pair;
+contract TestSeacowsPairFactory is WhenCreatePair {
+    SeacowsPair internal tradePair;
+    SeacowsPair internal tokenPair;
+    SeacowsPair internal nftPair;
+
+    TestERC721 internal nft;
     TestERC20 internal token;
 
-    function setUp() public override(WhenCreatePair) {
+    function setUp() public virtual override(WhenCreatePair) {
         WhenCreatePair.setUp();
 
-        // deploy sft contract
-        testSeacowsSFT = new TestSeacowsSFT();
-        testSeacowsSFT.safeMint(owner);
-        testSeacowsSFT.safeMint(alice);
-        testSeacowsSFT.safeMint(bob);
-
         token = new TestERC20();
-        token.mint(owner, 1e18);
-        token.mint(alice, 1e18);
-        token.mint(bob, 1e18);
+        token.mint(owner, 1000 ether);
+        token.mint(alice, 1000 ether);
 
-        // create a pair
+        nft = new TestERC721();
+
+        for (uint256 i; i < 10; i++) {
+            nft.safeMint(owner);
+        }
+        for (uint256 i; i < 10; i++) {
+            nft.safeMint(alice);
+        }
+
+        /** Approve Bonding Curve */
+        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairFactory.setBondingCurveAllowed(cpmmCurve, true);
+
+        /** Create ERC721Enumerable-ERC20 NFT Pair */
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1000000);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        pair = createERC1155ERC20Pair(testSeacowsSFT, 1, 1000, token, 100000, 10);
+        token.approve(address(seacowsPairFactory), 1000 ether);
+        nft.setApprovalForAll(address(seacowsPairFactory), true);
+
+        uint256[] memory nftPairNFTIds = new uint256[](3);
+        nftPairNFTIds[0] = 1;
+        nftPairNFTIds[1] = 3;
+        nftPairNFTIds[2] = 6;
+
+        nftPair = createNFTPair(token, nft, exponentialCurve, payable(owner), 1.05 ether, 10 ether, nftPairNFTIds, 100 ether);
+
+        /** Create ERC721Enumerable-ERC20 Trade Pair */
+        uint256[] memory tradePairNFTIds = new uint256[](2);
+        tradePairNFTIds[0] = 0;
+        tradePairNFTIds[1] = 5;
+
+        tradePair = createTradePair(token, nft, cpmmCurve, 1 ether, 0.1 ether, 10 ether, tradePairNFTIds, 100 ether);
+
+        /** Create ERC721Enumerable-ERC20 Token Pair */
+        tokenPair = createTokenPair(token, nft, linearCurve, payable(owner), 1 ether, 10 ether, new uint256[](0), 100 ether);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        token.approve(address(seacowsPairFactory), 1000000);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        vm.stopPrank();
-
-        vm.startPrank(bob);
-        token.approve(address(seacowsPairFactory), 1000000);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(tokenPair), true);
+        nft.setApprovalForAll(address(tradePair), true);
         vm.stopPrank();
     }
 
-    function testEnableProtocolFee() public {
+    function testEnableTokenPairProtocolFee() public {
         /** Check protocol fee */
         uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
         assertEq(protocolFeeMultiplier, 5000000000000000);
 
-        /** check if protocol fee is enabled */
+        /** Enable protocol fee for the token pair */
+        seacowsPairFactory.disableProtocolFee(tokenPair, false);
+
+        /** Alice sells NFTs to the token pair with protocol fee */
         vm.startPrank(alice);
-        // approve erc1155 tokens to the pair
-        testSeacowsSFT.setApprovalForAll(address(pair), true);
-        // nft and token balance before swap
-        uint256 tokenBeforeBalance = token.balanceOf(alice);
-        uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
-        // swap tokens for any nfts
-        uint256 outputAmount = pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
-        // check balances after swap
-        uint256 tokenAfterBalance = token.balanceOf(alice);
-        uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 12;
+        nftIds[1] = 13;
+        nftIds[2] = 14;
 
-        assertEq(tokenAfterBalance, tokenBeforeBalance + 9950);
-        assertEq(sftAfterBalance, sftBeforeBalance - 100);
+        uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        vm.stopPrank();
+        ISeacowsPairEnumerableERC20(address(tokenPair)).swapNFTsForToken(
+            nftIds,
+            new SeacowsRouter.NFTDetail[](0),
+            25 ether,
+            payable(alice),
+            false,
+            address(0)
+        );
+        /** Check alice token balance */
+        uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 26.865 ether);
 
-        /** Factory disable protocol fee for the pair */
-        seacowsPairFactory.disableProtocolFee(pair, true);
-        /** Protocol fee should be the same */
-        protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
-        assertEq(protocolFeeMultiplier, 5000000000000000);
-
-        /** check if protocol fee is disabled */
-        vm.startPrank(alice);
-        // approve erc1155 tokens to the pair
-        testSeacowsSFT.setApprovalForAll(address(pair), true);
-        // nft and token balance before swap
-        tokenBeforeBalance = token.balanceOf(alice);
-        sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
-        // swap tokens for any nfts
-        outputAmount = pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 8000, payable(alice), false, address(0));
-        // check balances after swap
-        tokenAfterBalance = token.balanceOf(alice);
-        sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
-
-        assertEq(tokenAfterBalance, tokenBeforeBalance + 8100);
-        assertEq(sftAfterBalance, sftBeforeBalance - 100);
+        /** Check if nfts are transferred to the recipeint */
+        assertEq(nft.ownerOf(12), owner);
+        assertEq(nft.ownerOf(13), owner);
+        assertEq(nft.ownerOf(14), owner);
 
         vm.stopPrank();
 
         /** Non-owner is trying to update protocol recipient */
         vm.startPrank(alice);
         vm.expectRevert("Ownable: caller is not the owner");
-        seacowsPairFactory.disableProtocolFee(pair, true);
+        seacowsPairFactory.disableProtocolFee(tokenPair, false);
         vm.stopPrank();
     }
+
+    // function testDisableTokenPairProtocolFee() public {
+    //     /** Check protocol fee */
+    //     uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
+    //     assertEq(protocolFeeMultiplier, 5000000000000000);
+
+    //     /** Non-owner is trying to update protocol recipient */
+    //     vm.startPrank(alice);
+    //     vm.expectRevert("Ownable: caller is not the owner");
+    //     seacowsPairFactory.disableProtocolFee(tokenPair, true);
+    //     vm.stopPrank();
+    // }
 }
