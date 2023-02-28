@@ -382,6 +382,47 @@ contract TestDisableProtocolFee is WhenCreatePair {
         vm.stopPrank();
     }
 
+    function testChangeProtocolFeeMultiplier() public {
+        /** Change Protocol Fee */
+        seacowsPairFactory.changeProtocolFeeMultiplier(3000000000000000);
+
+        /** Check protocol fee */
+        uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
+        assertEq(protocolFeeMultiplier, 3000000000000000);
+
+        /** Alice buys NFTs from the trade pair with protocol fee */
+        vm.startPrank(alice);
+        uint256 aliceTokenBalance = token.balanceOf(alice);
+
+        ISeacowsPairEnumerableERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        /** Check alice token balance */
+        uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 22.06 ether);
+
+        /** Check if nfts are transferred to the alice */
+        assertEq(nft.balanceOf(alice), 12);
+
+        /** Alice buys NFTs from the nft pair without protocol fee */
+        aliceTokenBalance = token.balanceOf(alice);
+
+        ISeacowsPairEnumerableERC20(address(nftPair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        /** Check alice token balance */
+        aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.589575 ether);
+
+        vm.stopPrank();
+
+        /** Non-owner is trying to change protocol fee */
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        seacowsPairFactory.changeProtocolFeeMultiplier(3000000000000000);
+        vm.stopPrank();
+
+        /** Trying to set protocol fee greater than 10% */
+        vm.expectRevert("Fee too large");
+        seacowsPairFactory.changeProtocolFeeMultiplier(0.12e18);
+    }
+
     function testProtocolFeeRecipient() public {
         /** Check protocol recipient */
         address protocolRecipient = seacowsPairFactory.protocolFeeRecipient();
