@@ -4,21 +4,21 @@ pragma solidity >=0.8.4;
 import "forge-std/Test.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { WhenCreatePair } from "./base/WhenCreatePair.t.sol";
 
 import { ICurve } from "../bondingcurve/ICurve.sol";
 import { ISeacowsPairERC721ERC20 } from "../interfaces/ISeacowsPairERC721ERC20.sol";
 
-import { SeacowsRouter } from "../SeacowsRouter.sol";
-import { SeacowsPairFactory } from "../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../SeacowsPair.sol";
-import { TestWETH } from "../TestCollectionToken/TestWETH.sol";
-import { TestERC20 } from "../TestCollectionToken/TestERC20.sol";
-import { TestERC721 } from "../TestCollectionToken/TestERC721.sol";
+import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
+import { SeacowsRouter } from "../../SeacowsRouter.sol";
+import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
+import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
+import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
+import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract TestSeacowsPairFactory is WhenCreatePair {
+contract TestDisableProtocolFee is WhenCreatePair {
     SeacowsPair internal tradePair;
     SeacowsPair internal tokenPair;
     SeacowsPair internal nftPair;
