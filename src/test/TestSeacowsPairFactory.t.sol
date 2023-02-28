@@ -297,7 +297,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
     }
 
     function testEnableTradePairProtocolFeeSell() public {
-        /** Enable protocol fee for the token pair */
+        /** Enable protocol fee for the trade pair */
         seacowsPairFactory.disableProtocolFee(tradePair, false);
 
         /** Check protocol fee */
@@ -336,6 +336,49 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         vm.startPrank(alice);
         vm.expectRevert("Ownable: caller is not the owner");
         seacowsPairFactory.disableProtocolFee(tradePair, false);
+        vm.stopPrank();
+    }
+
+    function testDisableTradePairProtocolFeeSell() public {
+        /** Disable protocol fee for the trade pair */
+        seacowsPairFactory.disableProtocolFee(tradePair, true);
+
+        /** Check protocol fee */
+        uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
+        assertEq(protocolFeeMultiplier, 5000000000000000);
+
+        /** Alice sells NFTs to the trade pair without protocol fee */
+        vm.startPrank(alice);
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 12;
+        nftIds[1] = 13;
+        nftIds[2] = 14;
+
+        uint256 aliceTokenBalance = token.balanceOf(alice);
+
+        ISeacowsPairEnumerableERC20(address(tradePair)).swapNFTsForToken(
+            nftIds,
+            new SeacowsRouter.NFTDetail[](0),
+            25 ether,
+            payable(alice),
+            false,
+            address(0)
+        );
+        /** Check alice token balance */
+        uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 27 ether);
+
+        /** Check if nfts are transferred to the trade pair */
+        assertEq(nft.ownerOf(12), address(tradePair));
+        assertEq(nft.ownerOf(13), address(tradePair));
+        assertEq(nft.ownerOf(14), address(tradePair));
+
+        vm.stopPrank();
+
+        /** Non-owner is trying to update protocol recipient */
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        seacowsPairFactory.disableProtocolFee(tradePair, true);
         vm.stopPrank();
     }
 }
