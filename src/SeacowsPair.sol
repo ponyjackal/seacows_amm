@@ -58,8 +58,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     // Otherwise, assets will be sent to the set address. Not available for TRADE pools.
     address payable public assetRecipient;
 
-    // If true, protocol fee is enabled. otherwise it's disabled
-    bool public isProtocolFeeEnabled;
+    // If true, protocol fee is disabled. otherwise it's disabled
+    bool public isProtocolFeeDisabled;
 
     // LP total supply; only used in trade pair
     mapping(uint256 => uint256) public totalSupply;
@@ -624,9 +624,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     // -----------------------------------------
     /**
      * @dev enable or disable protocol fee for the pair
-     * @param _isProtocolFeeEnabled The boolean value to represent whether enable or dsiable protocol fee
+     * @param _isProtocolFeeDisabled The boolean value to represent whether enable or dsiable protocol fee
      */
-    function enableProtocolFee(bool _isProtocolFeeEnabled) external onlyFactory {
-        isProtocolFeeEnabled = _isProtocolFeeEnabled;
+    function disableProtocolFee(bool _isProtocolFeeDisabled) external onlyFactory {
+        isProtocolFeeDisabled = _isProtocolFeeDisabled;
     }
 }

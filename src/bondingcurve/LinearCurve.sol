@@ -54,7 +54,7 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
         uint128 delta = ISeacowsPair(msg.sender).delta();
         uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
-        bool isProtocolFeeEnabled = ISeacowsPair(msg.sender).isProtocolFeeEnabled();
+        bool isProtocolFeeDisabled = ISeacowsPair(msg.sender).isProtocolFeeDisabled();
 
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
@@ -89,7 +89,7 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         inputValue += inputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
         // if protocol fee is enabled
-        if (isProtocolFeeEnabled) {
+        if (!isProtocolFeeDisabled) {
             // Add the protocol fee to the required input amount
             inputValue += protocolFee;
         }
@@ -115,7 +115,7 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
         uint128 delta = ISeacowsPair(msg.sender).delta();
         uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
-        bool isProtocolFeeEnabled = ISeacowsPair(msg.sender).isProtocolFeeEnabled();
+        bool isProtocolFeeDisabled = ISeacowsPair(msg.sender).isProtocolFeeDisabled();
 
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {
@@ -153,7 +153,7 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         outputValue -= outputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
         // if protocol fee is enabled
-        if (isProtocolFeeEnabled) {
+        if (!isProtocolFeeDisabled) {
             // Subtract the protocol fee from the output amount to the seller
             outputValue -= protocolFee;
         }

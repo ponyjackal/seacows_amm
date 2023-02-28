@@ -61,8 +61,8 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 spotPrice = pair.spotPrice();
         assertEq(spotPrice, 100);
 
-        ERC20 token = pair.token();
-        assertEq(address(token), address(token));
+        ERC20 _token = pair.token();
+        assertEq(address(_token), address(token));
 
         SeacowsPair.PoolType poolType = pair.poolType();
         assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TRADE));

@@ -64,7 +64,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
     event CallTargetStatusUpdate(address target, bool isAllowed);
     event RouterStatusUpdate(SeacowsRouter router, bool isAllowed);
-    event ProtocolFeeEnabled(address pair, bool isEnabled);
+    event ProtocolFeeDisabled(address pair, bool isDisabled);
 
     constructor(
         address _weth,
@@ -357,13 +357,13 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     /**
         @notice Enable/disable a protocol fee in the pair
-        @param pair The pair contract
-        @param isEnabled True to enabke, false to disable protocol fee
+        @param _pair The pair contract
+        @param _isProtocolFeeDisabled True to disable, false to enable protocol fee
      */
-    function enableProtocolFee(SeacowsPair pair, bool isEnabled) external onlyOwner {
-        pair.enableProtocolFee(isEnabled);
+    function disableProtocolFee(SeacowsPair _pair, bool _isProtocolFeeDisabled) external onlyOwner {
+        _pair.disableProtocolFee(_isProtocolFeeDisabled);
 
-        emit ProtocolFeeEnabled(address(pair), isEnabled);
+        emit ProtocolFeeDisabled(address(_pair), _isProtocolFeeDisabled);
     }
 
     /**

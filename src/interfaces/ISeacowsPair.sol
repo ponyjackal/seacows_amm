@@ -27,7 +27,7 @@ interface ISeacowsPair {
 
     function fee() external view returns (uint96 fee);
 
-    function isProtocolFeeEnabled() external view returns (bool isProtocolFeeEnabled);
+    function isProtocolFeeDisabled() external view returns (bool isProtocolFeeDisabled);
 
     function poolType() external pure returns (SeacowsPair.PoolType _poolType);
 
@@ -38,8 +38,6 @@ interface ISeacowsPair {
     function getReserve() external view returns (uint256 nftReserve, uint256 tokenReserve);
 
     function withdrawERC20(address recipient, uint256 amount) external;
-
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;
 
     function changeSpotPrice(uint128 newSpotPrice) external;
 
