@@ -239,7 +239,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
     }
 
     function testEnableTradePairProtocolFeeBuy() public {
-        /** Enable protocol fee for the nft pair */
+        /** Enable protocol fee for the trade pair */
         seacowsPairFactory.disableProtocolFee(tradePair, false);
 
         /** Check protocol fee */
@@ -268,7 +268,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
     }
 
     function testDisableTradePairProtocolFeeBuy() public {
-        /** Disable protocol fee for the nft pair */
+        /** Disable protocol fee for the trade pair */
         seacowsPairFactory.disableProtocolFee(tradePair, true);
 
         /** Check protocol fee */
