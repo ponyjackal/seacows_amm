@@ -215,8 +215,6 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
 
     /** Mutative Functions */
 
-    /** Mutative Functions */
-
     /**
         @notice Sends token to the pair in exchange for any `numNFTs` NFTs
         @dev To compute the amount of token to send, call bondingCurve.getBuyInfo.
