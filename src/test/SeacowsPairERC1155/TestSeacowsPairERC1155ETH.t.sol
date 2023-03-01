@@ -116,7 +116,7 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         assertEq(spotPrice, 100);
         // trying to remove invalid LP token
         vm.expectRevert("Insufficient LP token");
-        seacowsPairFactory.removeLiquidityERC20ERC1155(ISeacowsPairERC1155ERC20(address(pair)), 100, false);
+        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, false);
 
         vm.stopPrank();
     }
