@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { WhenCreatePair } from "./base/WhenCreatePair.t.sol";
 
 import { ICurve } from "../bondingcurve/ICurve.sol";
-import { ISeacowsPairEnumerableERC20 } from "../interfaces/ISeacowsPairEnumerableERC20.sol";
+import { ISeacowsPairERC721ERC20 } from "../interfaces/ISeacowsPairERC721ERC20.sol";
 
 import { SeacowsRouter } from "../SeacowsRouter.sol";
 import { SeacowsPairFactory } from "../SeacowsPairFactory.sol";
@@ -100,7 +100,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(tokenPair)).swapNFTsForToken(
+        ISeacowsPairERC721ERC20(address(tokenPair)).swapNFTsForToken(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             25 ether,
@@ -143,7 +143,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(tokenPair)).swapNFTsForToken(
+        ISeacowsPairERC721ERC20(address(tokenPair)).swapNFTsForToken(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             25 ether,
@@ -181,7 +181,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         vm.startPrank(alice);
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(nftPair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721ERC20(address(nftPair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.632625 ether);
@@ -213,7 +213,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         nftIds[0] = 1;
         nftIds[1] = 3;
 
-        ISeacowsPairEnumerableERC20(address(nftPair)).swapTokenForSpecificNFTs(
+        ISeacowsPairERC721ERC20(address(nftPair)).swapTokenForSpecificNFTs(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             25 ether,
@@ -250,7 +250,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         vm.startPrank(alice);
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721ERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 22.1 ether);
@@ -279,7 +279,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         vm.startPrank(alice);
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721ERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 22 ether);
@@ -313,7 +313,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(tradePair)).swapNFTsForToken(
+        ISeacowsPairERC721ERC20(address(tradePair)).swapNFTsForToken(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             25 ether,
@@ -356,7 +356,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(tradePair)).swapNFTsForToken(
+        ISeacowsPairERC721ERC20(address(tradePair)).swapNFTsForToken(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             25 ether,
