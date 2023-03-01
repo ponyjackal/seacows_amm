@@ -24,6 +24,7 @@ interface ICurve {
     /**
         @notice Given the current state of the pair and the trade, computes how much the user
         should pay to purchase an NFT from the pair, the new spot price, and other values.
+        @param pair The pair address
         @param numItems The number of NFTs the user is buying from the pair
         @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
 
@@ -33,7 +34,7 @@ interface ICurve {
         @return inputValue The amount that the user should pay, in tokens
         @return protocolFee The amount of fee to send to the protocol, in tokens
      */
-    function getBuyInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+    function getBuyInfo(address pair, uint256 numItems, uint256 protocolFeeMultiplier)
         external
         view
         returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee);
@@ -41,6 +42,7 @@ interface ICurve {
     /**
         @notice Given the current state of the pair and the trade, computes how much the user
         should receive when selling NFTs to the pair, the new spot price, and other values.
+        @param pair The pair address
         @param numItems The number of NFTs the user is buying from the pair
         @param protocolFeeMultiplier Determines how much fee the protocol takes from this trade, 18 decimals
 
@@ -50,7 +52,7 @@ interface ICurve {
         @return outputValue The amount that the user should receive, in tokens
         @return protocolFee The amount of fee to send to the protocol, in tokens
      */
-    function getSellInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+    function getSellInfo(address pair, uint256 numItems, uint256 protocolFeeMultiplier)
         external
         view
         returns (CurveErrorCodes.Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee);

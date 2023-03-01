@@ -126,7 +126,11 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         uint128 currentDelta = delta;
         uint128 newDelta = delta;
 
-        (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(numOfNFTs, _factory.protocolFeeMultiplier());
+        (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
+            address(this),
+            numOfNFTs,
+            _factory.protocolFeeMultiplier()
+        );
 
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
@@ -178,7 +182,11 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         uint128 newDelta = delta;
         uint256 numOfNFTs = nftIds.length;
 
-        (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(numOfNFTs, _factory.protocolFeeMultiplier());
+        (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
+            address(this),
+            numOfNFTs,
+            _factory.protocolFeeMultiplier()
+        );
 
         _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
     }

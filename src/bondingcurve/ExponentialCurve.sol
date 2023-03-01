@@ -17,14 +17,13 @@ contract ExponentialCurve is ICurve, CurveErrorCodes {
     // minimum price to prevent numerical issues
     uint256 public constant MIN_PRICE = 1 gwei;
 
-    modifier onlyPair() {
+    function _isPair(address _pair) internal pure {
         require(
-            ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
-                ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20 ||
-                ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
+            ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
+                ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20 ||
+                ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
             "Not a seacows pair"
         );
-        _;
     }
 
     /**
@@ -44,18 +43,18 @@ contract ExponentialCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getBuyInfo}
      */
-    function getBuyInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+    function getBuyInfo(address pair, uint256 numItems, uint256 protocolFeeMultiplier)
         external
         view
         override
-        onlyPair
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee)
     {
+        _isPair(pair);
         // get pair properties
-        uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
-        uint128 delta = ISeacowsPair(msg.sender).delta();
-        uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
-        bool isProtocolFeeDisabled = ISeacowsPair(msg.sender).isProtocolFeeDisabled();
+        uint128 spotPrice = ISeacowsPair(pair).spotPrice();
+        uint128 delta = ISeacowsPair(pair).delta();
+        uint96 feeMultiplier = ISeacowsPair(pair).fee();
+        bool isProtocolFeeDisabled = ISeacowsPair(pair).isProtocolFeeDisabled();
 
         // NOTE: we assume delta is > 1, as checked by validateDelta()
         // We only calculate changes for buying 1 or more NFTs
@@ -113,18 +112,18 @@ contract ExponentialCurve is ICurve, CurveErrorCodes {
         This is to prevent the spot price from ever becoming 0, which would decouple the price
         from the bonding curve (since 0 * delta is still 0)
      */
-    function getSellInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+    function getSellInfo(address pair, uint256 numItems, uint256 protocolFeeMultiplier)
         external
         view
         override
-        onlyPair
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee)
     {
+        _isPair(pair);
         // get pair properties
-        uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
-        uint128 delta = ISeacowsPair(msg.sender).delta();
-        uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
-        bool isProtocolFeeDisabled = ISeacowsPair(msg.sender).isProtocolFeeDisabled();
+        uint128 spotPrice = ISeacowsPair(pair).spotPrice();
+        uint128 delta = ISeacowsPair(pair).delta();
+        uint96 feeMultiplier = ISeacowsPair(pair).fee();
+        bool isProtocolFeeDisabled = ISeacowsPair(pair).isProtocolFeeDisabled();
 
         // NOTE: we assume delta is > 1, as checked by validateDelta()
 

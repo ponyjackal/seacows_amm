@@ -81,7 +81,11 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
 
         uint256 numOfNFTs = nftIds.length;
 
-        (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(numOfNFTs, _factory.protocolFeeMultiplier());
+        (error, newSpotPrice, newDelta, inputAmount, protocolFee) = _bondingCurve.getBuyInfo(
+            address(this),
+            numOfNFTs,
+            _factory.protocolFeeMultiplier()
+        );
 
         // Revert if bonding curve had an error
         if (error != CurveErrorCodes.Error.OK) {
@@ -133,7 +137,11 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
         uint128 newDelta = delta;
         uint256 numOfNFTs = nftIds.length;
 
-        (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(numOfNFTs, _factory.protocolFeeMultiplier());
+        (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
+            address(this),
+            numOfNFTs,
+            _factory.protocolFeeMultiplier()
+        );
 
         _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
     }
@@ -150,7 +158,11 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
     {
         uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve().getBuyInfo(nftIds.length, factory().protocolFeeMultiplier());
+        (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve().getBuyInfo(
+            address(this),
+            nftIds.length,
+            factory().protocolFeeMultiplier()
+        );
         newSpotPrice = currentSpotPrice;
     }
 
@@ -164,7 +176,11 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
     {
         uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve().getSellInfo(nftIds.length, factory().protocolFeeMultiplier());
+        (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve().getSellInfo(
+            address(this),
+            nftIds.length,
+            factory().protocolFeeMultiplier()
+        );
         newSpotPrice = currentSpotPrice;
     }
 

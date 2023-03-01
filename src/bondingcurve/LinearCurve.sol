@@ -14,14 +14,13 @@ import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.s
 contract LinearCurve is ICurve, CurveErrorCodes {
     using FixedPointMathLib for uint256;
 
-    modifier onlyPair() {
+    function _isPair(address _pair) internal pure {
         require(
-            ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
-                ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20 ||
-                ISeacowsPair(msg.sender).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
+            ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
+                ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20 ||
+                ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
             "Not a seacows pair"
         );
-        _;
     }
 
     /**
@@ -43,18 +42,18 @@ contract LinearCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getBuyInfo}
      */
-    function getBuyInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+    function getBuyInfo(address pair, uint256 numItems, uint256 protocolFeeMultiplier)
         external
         view
         override
-        onlyPair
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 inputValue, uint256 protocolFee)
     {
+        _isPair(pair);
         // get pair properties
-        uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
-        uint128 delta = ISeacowsPair(msg.sender).delta();
-        uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
-        bool isProtocolFeeDisabled = ISeacowsPair(msg.sender).isProtocolFeeDisabled();
+        uint128 spotPrice = ISeacowsPair(pair).spotPrice();
+        uint128 delta = ISeacowsPair(pair).delta();
+        uint96 feeMultiplier = ISeacowsPair(pair).fee();
+        bool isProtocolFeeDisabled = ISeacowsPair(pair).isProtocolFeeDisabled();
 
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
@@ -104,18 +103,18 @@ contract LinearCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-getSellInfo}
      */
-    function getSellInfo(uint256 numItems, uint256 protocolFeeMultiplier)
+    function getSellInfo(address pair, uint256 numItems, uint256 protocolFeeMultiplier)
         external
         view
         override
-        onlyPair
         returns (Error error, uint128 newSpotPrice, uint128 newDelta, uint256 outputValue, uint256 protocolFee)
     {
+        _isPair(pair);
         // get pair properties
-        uint128 spotPrice = ISeacowsPair(msg.sender).spotPrice();
-        uint128 delta = ISeacowsPair(msg.sender).delta();
-        uint96 feeMultiplier = ISeacowsPair(msg.sender).fee();
-        bool isProtocolFeeDisabled = ISeacowsPair(msg.sender).isProtocolFeeDisabled();
+        uint128 spotPrice = ISeacowsPair(pair).spotPrice();
+        uint128 delta = ISeacowsPair(pair).delta();
+        uint96 feeMultiplier = ISeacowsPair(pair).fee();
+        bool isProtocolFeeDisabled = ISeacowsPair(pair).isProtocolFeeDisabled();
 
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {
