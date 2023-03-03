@@ -8,6 +8,7 @@ import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
+import "forge-std/console.sol";
 
 /**
     @title An NFT/Token pair where the NFT implements ERC721Enumerable, and the token is an ERC20
@@ -291,6 +292,8 @@ contract SeacowsPairEnumerableERC20 is SeacowsPair {
             numOfNFTs,
             _factory.protocolFeeMultiplier()
         );
+
+        console.log("outputAmount", outputAmount, minExpectedTokenOutput);
 
         _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
     }

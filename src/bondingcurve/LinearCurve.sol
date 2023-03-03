@@ -6,6 +6,7 @@ import { CurveErrorCodes } from "./CurveErrorCodes.sol";
 import { FixedPointMathLib } from "./FixedPointMathLib.sol";
 import { ISeacowsPair } from "../interfaces/ISeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import "forge-std/console.sol";
 
 /*
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -155,6 +156,10 @@ contract LinearCurve is ICurve, CurveErrorCodes {
 
         // Keep delta the same
         newDelta = delta;
+
+        console.log("spotprice", spotPrice, newSpotPrice);
+        uint256 minus = (numItems * (numItems - 1) * delta) / 2;
+        console.log("output value", numItems * spotPrice, minus);
 
         // If we reached here, no math errors
         error = Error.OK;
