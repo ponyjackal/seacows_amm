@@ -419,9 +419,9 @@ library SeacowsPairCloner {
     }
 
     /**
-     * @notice Checks if a contract is a clone of a SeacowsPairERC20.
+     * @notice Checks if a contract is a clone of a SeacowsPair.
      * @dev Only checks the runtime bytecode, does not check the extra data.
-     * @param implementation the SeacowsPairERC20 implementation contract
+     * @param implementation the SeacowsPair implementation contract
      * @param query the contract to check
      * @return result True if the contract is a clone, false otherwise
      */
