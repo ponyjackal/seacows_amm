@@ -23,8 +23,6 @@ import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
 import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
 import { SeacowsPairERC1155ERC20 } from "./SeacowsPairERC1155ERC20.sol";
-import { ChainlinkAggregator } from "./priceoracle/ChainlinkAggregator.sol";
-import { UniswapPriceOracle } from "./priceoracle/UniswapPriceOracle.sol";
 
 import { IWETH } from "./interfaces/IWETH.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
@@ -48,14 +46,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     address payable public override protocolFeeRecipient;
     address public weth;
 
-    // Price oracles
-    ChainlinkAggregator public immutable chainlinkAggregator;
-    UniswapPriceOracle public immutable uniswapPriceOracle;
-
     // Units are in base 1e18
     uint256 public override protocolFeeMultiplier;
-
-    address public override priceOracleRegistry;
 
     mapping(ICurve => bool) public bondingCurveAllowed;
     mapping(address => bool) public override callAllowed;
@@ -68,7 +60,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     event NewPair(address poolAddress);
     event TokenDeposit(address poolAddress);
     event NFTDeposit(address poolAddress);
-    event PriceOracleRegistryUpdate(address poolAddress);
     event ProtocolFeeRecipientUpdate(address recipientAddress);
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
@@ -81,10 +72,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         SeacowsPairMissingEnumerableERC20 _missingEnumerableERC20Template,
         SeacowsPairERC1155ERC20 _erc1155ERC20Template,
         address payable _protocolFeeRecipient,
-        uint256 _protocolFeeMultiplier,
-        address _priceOracleRegistry,
-        ChainlinkAggregator _chainlinkAggregator,
-        UniswapPriceOracle _uniswapPriceOracle
+        uint256 _protocolFeeMultiplier
     ) {
         weth = _weth;
         enumerableERC20Template = _enumerableERC20Template;
@@ -94,17 +82,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         require(_protocolFeeMultiplier <= MAX_PROTOCOL_FEE, "Fee too large");
         protocolFeeMultiplier = _protocolFeeMultiplier;
-        priceOracleRegistry = _priceOracleRegistry;
-        chainlinkAggregator = _chainlinkAggregator;
-        uniswapPriceOracle = _uniswapPriceOracle;
-    }
-
-    /**
-     * Modifiers
-     */
-    modifier onlyChainlinkAggregator() {
-        require(msg.sender == address(chainlinkAggregator), "Not a chainlink aggregator");
-        _;
     }
 
     /**
@@ -194,45 +171,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
-        @notice Creates a pair contract using price oracle
-        @param _nft The NFT contract of the collection the pair trades
-        @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
-        @param _assetRecipient The address that will receive the assets traders give during trades.
-                              If set to address(0), assets will be sent to the pool address.
-                              Not available to TRADE pools. 
-        @param _poolType TOKEN, NFT, or TRADE
-        @param _delta The delta value used by the bonding curve. The meaning of delta depends
-        on the specific curve.
-        @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
-        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
-        @return pair The new pair
-     */
-    function createPairETHWithPriceOracle(
-        IERC721 _nft,
-        ICurve _bondingCurve,
-        address payable _assetRecipient,
-        SeacowsPair.PoolType _poolType,
-        uint128 _delta,
-        uint96 _fee,
-        uint256[] calldata _initialNFTIDs
-    ) external payable returns (SeacowsPairERC20 pair) {
-        IWETH(weth).deposit{ value: msg.value }();
-        IWETH(weth).transfer(msg.sender, msg.value);
-        CreateERC20PairParamsWithPriceOracle memory params = CreateERC20PairParamsWithPriceOracle(
-            IERC20(weth),
-            _nft,
-            _bondingCurve,
-            _assetRecipient,
-            _poolType,
-            _delta,
-            _fee,
-            _initialNFTIDs,
-            uint256(msg.value)
-        );
-        pair = this.createPairERC20WithPriceOracle(params);
-    }
-
-    /**
         @notice Creates a pair contract using EIP-1167.
         @param _nft The NFT contract of the collection the pair trades
         @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
@@ -314,94 +252,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
-        @notice Creates a pair contract using EIP-1167.
-        @param _nft The NFT contract of the collection the pair trades
-        @param _bondingCurve The bonding curve for the pair to price NFTs, must be whitelisted
-        @param _assetRecipient The address that will receive the assets traders give during trades.
-                                If set to address(0), assets will be sent to the pool address.
-                                Not available to TRADE pools.
-        @param _poolType TOKEN, NFT, or TRADE
-        @param _delta The delta value used by the bonding curve. The meaning of delta depends
-        on the specific curve.
-        @param _fee The fee taken by the LP in each trade. Can only be non-zero if _poolType is Trade.
-        @param _initialNFTIDs The list of IDs of NFTs to transfer from the sender to the pair
-        @param _initialTokenBalance The initial token balance sent from the sender to the new pair
-        @return pair The new pair
-     */
-    struct CreateERC20PairParamsWithPriceOracle {
-        IERC20 token;
-        IERC721 nft;
-        ICurve bondingCurve;
-        address payable assetRecipient;
-        SeacowsPair.PoolType poolType;
-        uint128 delta;
-        uint96 fee;
-        uint256[] initialNFTIDs;
-        uint256 initialTokenBalance;
-    }
-
-    function createPairERC20WithPriceOracle(CreateERC20PairParamsWithPriceOracle calldata params) external returns (SeacowsPairERC20 pair) {
-        require(bondingCurveAllowed[params.bondingCurve], "Bonding curve not whitelisted");
-
-        // Check to see if the NFT supports Enumerable to determine which template to use
-        address template;
-        try IERC165(address(params.nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
-            template = isEnumerable ? address(enumerableERC20Template) : address(missingEnumerableERC20Template);
-        } catch {
-            template = address(missingEnumerableERC20Template);
-        }
-        address cloned = template.cloneERC20Pair(this, params.bondingCurve, address(params.nft), uint8(params.poolType), params.token);
-        pair = SeacowsPairERC20(payable(cloned));
-
-        // request floor price from chainlink
-        chainlinkAggregator.requestCryptoPriceERC20(
-            ISeacowsPairERC20(address(pair)),
-            params.token,
-            params.nft,
-            params.assetRecipient,
-            params.delta,
-            params.fee,
-            params.initialNFTIDs,
-            params.initialTokenBalance
-        );
-
-        emit NewPair(address(pair));
-    }
-
-    /**
-     * @dev callback from ChainlinkAggregator
-     */
-    function initializePairERC20FromOracle(
-        ISeacowsPairERC20 pair,
-        IERC20 _token,
-        IERC721 _nft,
-        address payable _assetRecipient,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] calldata _initialNFTIDs,
-        uint256 _initialTokenBalance
-    ) external override onlyChainlinkAggregator {
-        // get erc20 price in eth from uniswap price oracle
-        uint128 tokenPrice = (uniswapPriceOracle.getPrice(address(_token)) * _spotPrice) / 10**18;
-
-        pair.initialize(msg.sender, _assetRecipient, _delta, _fee, tokenPrice);
-
-        // transfer initial tokens to pair
-        _token.transferFrom(msg.sender, address(pair), _initialTokenBalance);
-
-        // transfer initial NFTs from sender to pair
-        uint256 numNFTs = _initialNFTIDs.length;
-        for (uint256 i; i < numNFTs; ) {
-            _nft.safeTransferFrom(msg.sender, address(pair), _initialNFTIDs[i]);
-
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    /**
         @notice Checks if an address is a SeacowsPair. Uses the fact that the pairs are EIP-1167 minimal proxies.
         @param potentialPair The address to check
         @param variant The pair variant (NFT is enumerable or not, pair uses ETH or ERC20)
@@ -452,16 +302,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(_protocolFeeRecipient != address(0), "0 address");
         protocolFeeRecipient = _protocolFeeRecipient;
         emit ProtocolFeeRecipientUpdate(_protocolFeeRecipient);
-    }
-
-    /**
-        @notice Changes the price oracle registry address. Only callable by the owner.
-        @param _priceOracleRegistry The new fee recipient
-     */
-    function changePriceOracleRegistry(address _priceOracleRegistry) external onlyOwner {
-        require(_priceOracleRegistry != address(0), "0 address");
-        priceOracleRegistry = _priceOracleRegistry;
-        emit PriceOracleRegistryUpdate(_priceOracleRegistry);
     }
 
     /**

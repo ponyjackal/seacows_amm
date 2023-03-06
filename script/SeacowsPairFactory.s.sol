@@ -9,8 +9,6 @@ import { ISeacowsPairFactoryLike } from "../src/interfaces/ISeacowsPairFactoryLi
 import { SeacowsPairEnumerableERC20 } from "../src/SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "../src/SeacowsPairMissingEnumerableERC20.sol";
 import { SeacowsPairERC1155ERC20 } from "../src/SeacowsPairERC1155ERC20.sol";
-import { UniswapPriceOracle } from "../src/priceoracle/UniswapPriceOracle.sol";
-import { ChainlinkAggregator } from "../src/priceoracle/ChainlinkAggregator.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract DeploySeacowsPairFactory is Script {
@@ -19,21 +17,10 @@ contract DeploySeacowsPairFactory is Script {
     SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
     SeacowsPairMissingEnumerableERC20 internal seacowsPairMissingEnumerableERC20;
     SeacowsPairERC1155ERC20 internal seacowsPairERC1155ERC20;
-    UniswapPriceOracle internal uniswapPriceOracle;
-    ChainlinkAggregator internal chainlinkAggregator;
 
     function run() public {
         HelperConfig helperConfig = new HelperConfig();
-        (
-            string memory lpUri,
-            address weth,
-            address payable protocolFeeRecipient,
-            uint256 protocolFeeMultiplier,
-            address seacowsCollectionRegistry,
-            address chainlinkToken,
-            address chainlinkOracle,
-            string memory chainlinkJobId
-        ) = helperConfig.activeNetworkConfig();
+        (string memory lpUri, address weth, address payable protocolFeeRecipient, uint256 protocolFeeMultiplier) = helperConfig.activeNetworkConfig();
 
         vm.startBroadcast();
 
@@ -46,17 +33,6 @@ contract DeploySeacowsPairFactory is Script {
         /** deploy SeacowsPairERC1155ERC20 */
         seacowsPairERC1155ERC20 = new SeacowsPairERC1155ERC20(lpUri);
 
-        /** deploy ChainlinkAggregator */
-        chainlinkAggregator = new ChainlinkAggregator(
-            ISeacowsPairFactoryLike(address(0)),
-            chainlinkToken,
-            chainlinkOracle,
-            chainlinkJobId
-        );
-
-        /** deploy UniswapPriceOracle */
-        uniswapPriceOracle = new UniswapPriceOracle();
-
         /** deploy SeacowsPairFactory */
         seacowsPairFactory = new SeacowsPairFactory(
             weth,
@@ -65,14 +41,8 @@ contract DeploySeacowsPairFactory is Script {
             // seacowsPairERC1155ETH,
             seacowsPairERC1155ERC20,
             protocolFeeRecipient,
-            protocolFeeMultiplier,
-            seacowsCollectionRegistry,
-            chainlinkAggregator,
-            uniswapPriceOracle
+            protocolFeeMultiplier
         );
-
-        /** update SeacowsPairFactory in ChainlinkAggregator*/
-        chainlinkAggregator.updateSeacowsPairFactory(ISeacowsPairFactoryLike(seacowsPairFactory));
 
         /** deploy SeacowsRouter */
         seacowsRouter = new SeacowsRouter(ISeacowsPairFactoryLike(seacowsPairFactory));

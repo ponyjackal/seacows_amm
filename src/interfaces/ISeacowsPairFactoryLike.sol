@@ -20,23 +20,9 @@ interface ISeacowsPairFactoryLike {
 
     function protocolFeeRecipient() external view returns (address payable);
 
-    function priceOracleRegistry() external view returns (address);
-
     function callAllowed(address target) external view returns (bool);
 
     function routerStatus(SeacowsRouter router) external view returns (bool allowed, bool wasEverAllowed);
 
     function isPair(address potentialPair, PairVariant variant) external view returns (bool);
-
-    function initializePairERC20FromOracle(
-        ISeacowsPairERC20 pair,
-        IERC20 _token,
-        IERC721 _nft,
-        address payable _assetRecipient,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] calldata _initialNFTIDs,
-        uint256 _initialTokenBalance
-    ) external;
 }
