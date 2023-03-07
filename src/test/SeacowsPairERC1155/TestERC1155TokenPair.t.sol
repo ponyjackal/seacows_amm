@@ -57,7 +57,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
     function testLinearPair() public {
         vm.startPrank(owner);
         // create a linear pair
-        SeacowsPair _linearPair = createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 1000, token, 0, 0.1 ether, 1 ether);
+        SeacowsPair _linearPair = createERC1155ERC20TokenPair(testSeacowsSFT, 1, linearCurve, payable(owner), 0, token, 100, 0.1 ether, 1 ether);
         linearPair = ISeacowsPairERC1155ERC20(address(_linearPair));
 
         address nft = linearPair.nft();
@@ -73,7 +73,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         assertEq(address(_token), address(token));
 
         SeacowsPair.PoolType poolType = linearPair.poolType();
-        assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.NFT));
+        assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TOKEN));
 
         uint256 lpBalance = linearPair.balanceOf(owner, 1);
         assertEq(lpBalance, 0);
@@ -87,7 +87,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
     function testExponentialPair() public {
         vm.startPrank(owner);
         // create a exponential pair
-        SeacowsPair _exponentialPair = createERC1155ETHNFTPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 1000, 0, 1.1 ether, 1 ether);
+        SeacowsPair _exponentialPair = createERC1155ETHTokenPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 0, 100, 1.1 ether, 1 ether);
         exponentialPair = ISeacowsPairERC1155ERC20(address(_exponentialPair));
 
         address nft = exponentialPair.nft();
@@ -103,7 +103,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         assertEq(address(_token), address(weth));
 
         SeacowsPair.PoolType poolType = exponentialPair.poolType();
-        assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.NFT));
+        assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TOKEN));
 
         uint256 lpBalance = exponentialPair.balanceOf(owner, 1);
         assertEq(lpBalance, 0);
@@ -116,10 +116,21 @@ contract TestERC1155TokenPair is WhenCreatePair {
     function testLinearPairWithInvalidParams() public {
         vm.startPrank(owner);
         vm.expectRevert("Invalid delta for curve");
-        createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 1000, token, 0, 0 ether, 1 ether);
+        createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 0, token, 100, 0 ether, 1 ether);
 
         vm.expectRevert("Invalid new spot price for curve");
-        createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 1000, token, 0, 0.1 ether, 0 ether);
+        createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 0, token, 100, 0.1 ether, 0 ether);
+
+        vm.stopPrank();
+    }
+
+    function testExponentialPairWithInvalidParams() public {
+        vm.startPrank(owner);
+        vm.expectRevert("Invalid delta for curve");
+        createERC1155ETHTokenPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 0, 100, 0.1 ether, 1 ether);
+
+        vm.expectRevert("Invalid new spot price for curve");
+        createERC1155ETHTokenPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 0, 100, 1.1 ether, 1 * 10**8);
 
         vm.stopPrank();
     }
