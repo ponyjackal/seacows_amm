@@ -164,23 +164,50 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         );
     }
 
-    function createERC1155ERC20Pair(
+    function createERC1155ERC20TradePair(
         IERC1155 _nft,
-        uint256 _tokenId,
-        ICurve _bondingCurve,
-        uint256 _amounts,
+        uint256 _nftId,
+        address payable _assetRecipient,
+        uint256 _nftAmount,
         IERC20 _token,
         uint256 _tokenAmount,
         uint96 _fee
-    ) public returns (SeacowsPairERC1155ERC20 pair) {
-        pair = seacowsPairFactory.createPairERC1155ERC20(_nft, _tokenId, _bondingCurve, _amounts, _token, _tokenAmount, _fee);
+    ) public returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ERC20PairParams memory params = SeacowsPairFactory.CreateERC1155ERC20PairParams(
+            _token,
+            _nft,
+            _nftId,
+            cpmmCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.TRADE,
+            0,
+            _fee,
+            0,
+            _nftAmount,
+            _tokenAmount
+        );
+        pair = seacowsPairFactory.createPairERC1155ERC20(params);
     }
 
-    function createERC1155ETHPair(IERC1155 _nft, uint256 _tokenId, ICurve _bondingCurve, uint256 _amounts, uint256 _ethAmount, uint96 _fee)
-        public
-        payable
-        returns (SeacowsPairERC1155ERC20 pair)
-    {
-        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(_nft, _tokenId, _bondingCurve, _amounts, _fee);
+    function createERC1155ETHTradePair(
+        IERC1155 _nft,
+        uint256 _nftId,
+        address payable _assetRecipient,
+        uint256 _nftAmount,
+        uint256 _ethAmount,
+        uint96 _fee
+    ) public payable returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ETHPairParams memory params = SeacowsPairFactory.CreateERC1155ETHPairParams(
+            _nft,
+            _nftId,
+            cpmmCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.TRADE,
+            0,
+            _fee,
+            0,
+            _nftAmount
+        );
+        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
     }
 }

@@ -9,7 +9,7 @@ import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
 import { ISeacowsPairERC1155ERC20 } from "../../interfaces/ISeacowsPairERC1155ERC20.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
@@ -18,7 +18,7 @@ import { IWETH } from "../../interfaces/IWETH.sol";
 /// https://book.getfoundry.sh/forge/writing-tests
 contract SeacowsPairERC1155ETHTest is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
-    SeacowsPair internal pair;
+    ISeacowsPairERC1155ERC20 internal pair;
 
     function setUp() public override(WhenCreatePair) {
         WhenCreatePair.setUp();
@@ -35,7 +35,8 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         // create a pair
         vm.startPrank(owner);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        pair = createERC1155ETHPair(testSeacowsSFT, 1, cpmmCurve, 1000, 100000, 10);
+        SeacowsPair _pair = createERC1155ETHTradePair(testSeacowsSFT, 1, payable(owner), 1000, 100000, 10);
+        pair = ISeacowsPairERC1155ERC20(address(_pair));
         vm.stopPrank();
 
         vm.startPrank(alice);

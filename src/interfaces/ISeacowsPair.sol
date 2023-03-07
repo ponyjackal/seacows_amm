@@ -54,4 +54,6 @@ interface ISeacowsPair {
     function mintLPToken(address recipient, uint256 amount) external;
 
     function burnLPToken(address recipient, uint256 amount) external;
+
+    function balanceOf(address account, uint256 id) external view returns (uint256);
 }
