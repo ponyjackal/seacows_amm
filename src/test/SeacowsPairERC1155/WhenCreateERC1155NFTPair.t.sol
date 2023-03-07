@@ -123,4 +123,15 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
 
         vm.stopPrank();
     }
+
+    function testExponentialPairWithInvalidParams() public {
+        vm.startPrank(owner);
+        vm.expectRevert("Invalid delta for curve");
+        createERC1155ETHNFTPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 1000, 0, 0 ether, 1 ether);
+
+        vm.expectRevert("Invalid new spot price for curve");
+        createERC1155ETHNFTPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 1000, 0, 1.1 ether, 0 ether);
+
+        vm.stopPrank();
+    }
 }
