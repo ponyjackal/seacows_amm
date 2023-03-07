@@ -202,4 +202,55 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         );
         pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
     }
+
+    function createERC1155ERC20NFTPair(
+        IERC1155 _nft,
+        uint256 _nftId,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        uint256 _nftAmount,
+        IERC20 _token,
+        uint256 _tokenAmount,
+        uint128 _delta,
+        uint128 _spotPrice
+    ) public returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ERC20PairParams memory params = SeacowsPairFactory.CreateERC1155ERC20PairParams(
+            _token,
+            _nft,
+            _nftId,
+            _bondingCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.NFT,
+            _delta,
+            0, // Must be 0 for NFT Pool
+            _spotPrice,
+            _nftAmount,
+            _tokenAmount
+        );
+        pair = seacowsPairFactory.createPairERC1155ERC20(params);
+    }
+
+    function createERC1155ETHNFTPair(
+        IERC1155 _nft,
+        uint256 _nftId,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        uint256 _nftAmount,
+        uint256 _ethAmount,
+        uint128 _delta,
+        uint128 _spotPrice
+    ) public payable returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ETHPairParams memory params = SeacowsPairFactory.CreateERC1155ETHPairParams(
+            _nft,
+            _nftId,
+            _bondingCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.NFT,
+            _delta,
+            0, // Must be 0 for NFT Pool
+            _spotPrice,
+            _nftAmount
+        );
+        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
+    }
 }
