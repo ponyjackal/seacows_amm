@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SeacowsRouter } from "../../SeacowsRouter.sol";
-import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
@@ -16,7 +16,7 @@ import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 /// https://book.getfoundry.sh/forge/writing-tests
 contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
-    SeacowsPairERC1155ERC20 internal pair;
+    SeacowsPair internal pair;
     TestERC20 internal token;
 
     function setUp() public override(WhenCreatePair) {
@@ -33,11 +33,14 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         token.mint(alice, 1e18);
         token.mint(bob, 1e18);
 
+        /** Approve Bonding Curve */
+        seacowsPairFactory.setBondingCurveAllowed(cpmmCurve, true);
+
         // create a pair
         vm.startPrank(owner);
         token.approve(address(seacowsPairFactory), 1000000);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        pair = createERC1155ERC20Pair(testSeacowsSFT, 1, 1000, token, 100000, 10);
+        pair = createERC1155ERC20Pair(testSeacowsSFT, 1, cpmmCurve, 1000, token, 100000, 10);
         vm.stopPrank();
 
         vm.startPrank(alice);

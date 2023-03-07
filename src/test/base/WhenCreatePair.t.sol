@@ -37,7 +37,7 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
+        SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
             _token,
             _nft,
             _bondingCurve,
@@ -83,7 +83,7 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
+        SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
             _token,
             _nft,
             _bondingCurve,
@@ -129,7 +129,7 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
+        SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
             _token,
             _nft,
             _bondingCurve,
@@ -164,18 +164,23 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         );
     }
 
-    function createERC1155ERC20Pair(IERC1155 _nft, uint256 _tokenId, uint256 _amounts, IERC20 _token, uint256 _tokenAmount, uint96 _fee)
-        public
-        returns (SeacowsPairERC1155ERC20 pair)
-    {
-        pair = seacowsPairFactory.createPairERC1155ERC20(_nft, _tokenId, cpmmCurve, _amounts, _token, _tokenAmount, _fee);
+    function createERC1155ERC20Pair(
+        IERC1155 _nft,
+        uint256 _tokenId,
+        ICurve _bondingCurve,
+        uint256 _amounts,
+        IERC20 _token,
+        uint256 _tokenAmount,
+        uint96 _fee
+    ) public returns (SeacowsPairERC1155ERC20 pair) {
+        pair = seacowsPairFactory.createPairERC1155ERC20(_nft, _tokenId, _bondingCurve, _amounts, _token, _tokenAmount, _fee);
     }
 
-    function createERC1155ETHPair(IERC1155 _nft, uint256 _tokenId, uint256 _amounts, uint256 _ethAmount, uint96 _fee)
+    function createERC1155ETHPair(IERC1155 _nft, uint256 _tokenId, ICurve _bondingCurve, uint256 _amounts, uint256 _ethAmount, uint96 _fee)
         public
         payable
         returns (SeacowsPairERC1155ERC20 pair)
     {
-        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(_nft, _tokenId, cpmmCurve, _amounts, _fee);
+        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(_nft, _tokenId, _bondingCurve, _amounts, _fee);
     }
 }

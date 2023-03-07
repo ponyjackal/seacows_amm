@@ -6,7 +6,7 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SeacowsRouter } from "../../SeacowsRouter.sol";
-import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
@@ -18,7 +18,7 @@ import { IWETH } from "../../interfaces/IWETH.sol";
 /// https://book.getfoundry.sh/forge/writing-tests
 contract SeacowsPairERC1155ETHTest is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
-    SeacowsPairERC1155ERC20 internal pair;
+    SeacowsPair internal pair;
 
     function setUp() public override(WhenCreatePair) {
         WhenCreatePair.setUp();
@@ -29,10 +29,13 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         testSeacowsSFT.safeMint(alice);
         testSeacowsSFT.safeMint(bob);
 
+        /** Approve Bonding Curve */
+        seacowsPairFactory.setBondingCurveAllowed(cpmmCurve, true);
+
         // create a pair
         vm.startPrank(owner);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        pair = createERC1155ETHPair(testSeacowsSFT, 1, 1000, 100000, 10);
+        pair = createERC1155ETHPair(testSeacowsSFT, 1, cpmmCurve, 1000, 100000, 10);
         vm.stopPrank();
 
         vm.startPrank(alice);
