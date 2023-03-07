@@ -29,10 +29,10 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         @notice Returns the ERC1155 token id associated with the pair
         @dev See SeacowsPairCloner for an explanation on how this works
      */
-    function tokenId() public pure returns (uint256 _tokenId) {
+    function nftId() public pure returns (uint256 _nftId) {
         uint256 paramsLength = _immutableParamsLength();
         assembly {
-            _tokenId := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 81)))
+            _nftId := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 81)))
         }
     }
 
@@ -53,7 +53,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
      */
     function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
-        nftReserve = IERC1155(nft()).balanceOf(address(this), tokenId());
+        nftReserve = IERC1155(nft()).balanceOf(address(this), nftId());
         // token balance
         tokenReserve = token().balanceOf(address(this));
     }
@@ -62,7 +62,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
 
     function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal {
         // Send NFTs to recipient
-        IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, tokenId(), numNFTs, "");
+        IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, nftId(), numNFTs, "");
     }
 
     /**
@@ -81,7 +81,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
     {
         {
             address _assetRecipient = getAssetRecipient();
-            uint256 _tokenId = tokenId();
+            uint256 _nftId = nftId();
             uint256 numNFTs = nftIds.length;
 
             if (isRouter) {
@@ -91,14 +91,14 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
                 require(routerAllowed, "Not router");
 
                 // Call router to pull NFTs
-                uint256 beforeBalance = IERC1155(_nft).balanceOf(_assetRecipient, _tokenId);
-                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _tokenId, numNFTs, "");
-                router.pairTransferNFTFromERC1155(IERC1155(_nft), _tokenId, routerCaller, _assetRecipient, numNFTs, pairVariant());
+                uint256 beforeBalance = IERC1155(_nft).balanceOf(_assetRecipient, _nftId);
+                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftId, numNFTs, "");
+                router.pairTransferNFTFromERC1155(IERC1155(_nft), _nftId, routerCaller, _assetRecipient, numNFTs, pairVariant());
 
-                require((IERC1155(_nft).balanceOf(_assetRecipient, _tokenId) - beforeBalance) == numNFTs, "NFTs not transferred");
+                require((IERC1155(_nft).balanceOf(_assetRecipient, _nftId) - beforeBalance) == numNFTs, "NFTs not transferred");
             } else {
                 // Pull NFTs directly from sender
-                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _tokenId, numNFTs, "");
+                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftId, numNFTs, "");
             }
         }
     }
@@ -195,7 +195,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
 
     function withdrawERC1155(address _recipient, uint256 _amount) external onlyWithdrawable {
         require(poolType() == PoolType.TRADE, "Invalid pool type");
-        IERC1155(nft()).safeTransferFrom(address(this), _recipient, tokenId(), _amount, "");
+        IERC1155(nft()).safeTransferFrom(address(this), _recipient, nftId(), _amount, "");
 
         emit NFTWithdrawal(_recipient, _amount);
     }

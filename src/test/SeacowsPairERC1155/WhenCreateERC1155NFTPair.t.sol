@@ -61,8 +61,8 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         address nft = linearPair.nft();
         assertEq(nft, address(testSeacowsSFT));
 
-        uint256 tokenId = linearPair.tokenId();
-        assertEq(tokenId, 1);
+        uint256 nftId = linearPair.nftId();
+        assertEq(nftId, 1);
 
         uint256 spotPrice = linearPair.spotPrice();
         assertEq(spotPrice, 100);
