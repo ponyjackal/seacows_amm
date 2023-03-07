@@ -35,7 +35,7 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         // create a pair
         vm.startPrank(owner);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        SeacowsPair _pair = createERC1155ETHTradePair(testSeacowsSFT, 1, payable(owner), 1000, 100000, 10);
+        SeacowsPair _pair = createERC1155ETHTradePair(testSeacowsSFT, 1, 1000, 100000, 10);
         pair = ISeacowsPairERC1155ERC20(address(_pair));
         vm.stopPrank();
 

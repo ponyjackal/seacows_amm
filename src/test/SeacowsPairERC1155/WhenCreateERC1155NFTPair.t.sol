@@ -42,7 +42,7 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         vm.startPrank(owner);
         token.approve(address(seacowsPairFactory), 1000000);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        SeacowsPair _linearPair = createERC1155ERC20TradePair(testSeacowsSFT, 1, payable(owner), 1000, token, 100000, 10);
+        SeacowsPair _linearPair = createERC1155ERC20TradePair(testSeacowsSFT, 1, 1000, token, 100000, 10);
         linearPair = ISeacowsPairERC1155ERC20(address(_linearPair));
         vm.stopPrank();
 
