@@ -5,8 +5,8 @@ import "forge-std/Test.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { ICurve } from "../bondingcurve/ICurve.sol";
-import { ISeacowsPairERC721ERC20 } from "../interfaces/ISeacowsPairERC721ERC20.sol";
+import { ICurve } from "../../bondingcurve/ICurve.sol";
+import { ISeacowsPairERC721ERC20 } from "../../interfaces/ISeacowsPairERC721ERC20.sol";
 
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 import { SeacowsRouter } from "../../SeacowsRouter.sol";
@@ -394,7 +394,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
         vm.startPrank(alice);
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721ERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 22.06 ether);
@@ -405,7 +405,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
         /** Alice buys NFTs from the nft pair without protocol fee */
         aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairEnumerableERC20(address(nftPair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721ERC20(address(nftPair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
         /** Check alice token balance */
         aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.589575 ether);
