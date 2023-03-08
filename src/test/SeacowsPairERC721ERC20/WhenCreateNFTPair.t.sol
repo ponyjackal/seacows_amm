@@ -132,4 +132,55 @@ contract WhenCreateNFTPair is WhenCreatePair {
 
         vm.stopPrank();
     }
+
+    function testChangeSpotPriceAndDelta() public {
+        /** Create ERC721Enumerable-ERC20 NFT Pair */
+        vm.startPrank(owner);
+        uint256[] memory nftEnumerableIds = new uint256[](1);
+        nftEnumerableIds[0] = 0;
+        erc721EnumerableERC20Pair = createNFTPair(token, nftEnumerable, linearCurve, payable(alice), 2.2 ether, 2 ether, nftEnumerableIds, 1 ether);
+
+        /** Create ERC721-ERC20 NFT Pair */
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 0;
+        token.approve(address(seacowsPairFactory), 1 ether);
+        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        erc721ERC20Pair = createNFTPair(token, nft, exponentialCurve, payable(alice), 2.2 ether, 2 ether, nftIds, 1 ether);
+
+        /** Change delta */
+        erc721EnumerableERC20Pair.changeDelta(0.1e18);
+        erc721ERC20Pair.changeDelta(1.1e18);
+
+        /** Change spot price */
+        erc721EnumerableERC20Pair.changeSpotPrice(0.1e18);
+        erc721ERC20Pair.changeSpotPrice(1.1e18);
+
+        /** Revert with invalid delta */
+        vm.expectRevert("Invalid delta for curve");
+        erc721EnumerableERC20Pair.changeDelta(0);
+        vm.expectRevert("Invalid delta for curve");
+        erc721ERC20Pair.changeDelta(0.1e18);
+
+        /** Revert with invalid spot price */
+        vm.expectRevert("Invalid new spot price for curve");
+        erc721EnumerableERC20Pair.changeSpotPrice(0);
+        vm.expectRevert("Invalid new spot price for curve");
+        erc721ERC20Pair.changeSpotPrice(0);
+        vm.stopPrank();
+
+        /** Non pair owner is tryig to change delta and spot price */
+        vm.startPrank(alice);
+        /** Change delta */
+        vm.expectRevert("Caller is not an admin");
+        erc721EnumerableERC20Pair.changeDelta(0.1e18);
+        vm.expectRevert("Caller is not an admin");
+        erc721ERC20Pair.changeDelta(1.1e18);
+
+        /** Change spot price */
+        vm.expectRevert("Caller is not an admin");
+        erc721EnumerableERC20Pair.changeSpotPrice(0.1e18);
+        vm.expectRevert("Caller is not an admin");
+        erc721ERC20Pair.changeSpotPrice(1.1e18);
+        vm.stopPrank();
+    }
 }
