@@ -38,7 +38,7 @@ contract BaseFactorySetup is Test {
         string memory chainlinkJobId = "";
 
         weth = address(new TestWETH());
-        protocolFeeRecipient = payable(address(0));
+        protocolFeeRecipient = payable(address(this));
         protocolFeeMultiplier = 5000000000000000;
 
         /** deploy SeacowsPairEnumerableERC20 */

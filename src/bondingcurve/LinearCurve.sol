@@ -26,17 +26,17 @@ contract LinearCurve is ICurve, CurveErrorCodes {
     /**
         @dev See {ICurve-validateDelta}
      */
-    function validateDelta(uint128 /*delta*/) external pure override returns (bool valid) {
+    function validateDelta(uint128 delta) external pure override returns (bool valid) {
         // For a linear curve, all values of delta are valid
-        return true;
+        return delta > 0;
     }
 
     /**
         @dev See {ICurve-validateSpotPrice}
      */
-    function validateSpotPrice(uint128 /* newSpotPrice */) external pure override returns (bool) {
+    function validateSpotPrice(uint128 newSpotPrice) external pure override returns (bool) {
         // For a linear curve, all values of spot price are valid
-        return true;
+        return newSpotPrice > 0;
     }
 
     /**
@@ -126,12 +126,8 @@ contract LinearCurve is ICurve, CurveErrorCodes {
 
         // If the current spot price is less than the total amount that the spot price should change by...
         if (spotPrice < totalPriceDecrease) {
-            // Then we set the new spot price to be 0. (Spot price is never negative)
-            newSpotPrice = 0;
-
-            // We calculate how many items we can sell into the linear curve until the spot price reaches 0, rounding up
-            uint256 numItemsTillZeroPrice = spotPrice / delta + 1;
-            numItems = numItemsTillZeroPrice;
+            // we revert this transaction
+            return (Error.SPOT_PRICE_OVERFLOW, 0, 0, 0, 0);
         }
         // Otherwise, the current spot price is greater than or equal to the total amount that the spot price changes
         // Thus we don't need to calculate the maximum number of items until we reach zero spot price, so we don't modify numItems
