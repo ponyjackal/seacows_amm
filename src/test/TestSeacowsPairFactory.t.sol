@@ -381,4 +381,22 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         seacowsPairFactory.disableProtocolFee(tradePair, true);
         vm.stopPrank();
     }
+
+    function testProtocolFeeRecipient() public {
+        /** Check protocol recipient */
+        address protocolRecipient = seacowsPairFactory.protocolFeeRecipient();
+        assertEq(protocolRecipient, address(this));
+
+        /** Factory owner updates protocol recipient */
+        seacowsPairFactory.changeProtocolFeeRecipient(payable(alice));
+        /** Check if protocol recipient is updated*/
+        address updatedProtocolRecipient = seacowsPairFactory.protocolFeeRecipient();
+        assertEq(updatedProtocolRecipient, alice);
+
+        /** Non-owner is trying to update protocol recipient */
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        seacowsPairFactory.changeProtocolFeeRecipient(payable(alice));
+        vm.stopPrank();
+    }
 }
