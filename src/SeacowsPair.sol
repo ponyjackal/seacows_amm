@@ -117,7 +117,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         delta = _delta;
         spotPrice = _spotPrice;
 
-        // // grant admin role to owner
+        // grant admin role to owner
         _grantRole(ADMIN_ROLE, owner());
     }
 

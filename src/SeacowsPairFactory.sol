@@ -240,7 +240,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @return pair The new pair
      */
     function createPairERC1155ERC20(CreateERC1155ERC20PairParams calldata params) external payable returns (SeacowsPair pair) {
-        pair = pair = _createPairERC1155ERC20(params.token, params.nft, params.nftId, params.bondingCurve, params.poolType, params.nftAmount);
+        pair = _createPairERC1155ERC20(params.token, params.nft, params.nftId, params.bondingCurve, params.poolType, params.nftAmount);
 
         if (params.poolType == SeacowsPair.PoolType.TRADE) {
             // For trade pairs, spot price should be based on the token and nft reserves
