@@ -19,22 +19,14 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 contract SeacowsPairERC1155ERC20 is SeacowsPair {
     using SafeERC20 for ERC20;
 
+    uint256[] public nftIds;
+    uint256 public nftAmount;
+
+    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
+
     constructor(string memory _uri) SeacowsPair(_uri) {}
 
-    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 113;
-
     /** View Functions */
-
-    /**
-        @notice Returns the ERC1155 token id associated with the pair
-        @dev See SeacowsPairCloner for an explanation on how this works
-     */
-    function nftId() public pure returns (uint256 _nftId) {
-        uint256 paramsLength = _immutableParamsLength();
-        assembly {
-            _nftId := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 81)))
-        }
-    }
 
     /**
         @notice Returns the SeacowsPair type
@@ -53,7 +45,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
      */
     function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
-        nftReserve = IERC1155(nft()).balanceOf(address(this), nftId());
+        nftReserve = nftAmount;
         // token balance
         tokenReserve = token().balanceOf(address(this));
     }
@@ -285,5 +277,15 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         _takeNFTsFromSender(nft(), nftIds, _factory, isRouter, routerCaller);
 
         emit SwapNFTInPair();
+    }
+
+    /**
+     * @dev set ERC1155 nft ids and total amount
+     * @param _nftIds ERC1155 ids
+     * @param _nftAmount total amount of nfts
+     */
+    function setNFTIds(uint256[] memory _nftIds, uint256 _nftAmount) external onlyFactory {
+        nftIds = _nftIds;
+        nftAmount = _nftAmount;
     }
 }

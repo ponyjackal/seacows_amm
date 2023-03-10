@@ -5,7 +5,9 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 import { SeacowsRouter } from "../SeacowsRouter.sol";
 
 interface ISeacowsPairERC1155ERC20 is ISeacowsPair {
-    function nftId() external pure returns (uint256 _nftId);
+    function nftAmount() external view returns (uint256 nftAmount);
+
+    function nftIds() external view returns (uint256[] memory nftIds);
 
     function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
         external
