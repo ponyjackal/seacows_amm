@@ -266,9 +266,9 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      */
     function isPair(address potentialPair, PairVariant variant) public view override returns (bool) {
         if (variant == PairVariant.ENUMERABLE_ERC20) {
-            return SeacowsPairCloner.isERC20PairClone(address(this), address(enumerableERC20Template), potentialPair);
+            return SeacowsPairCloner.isPairClone(address(this), address(enumerableERC20Template), potentialPair);
         } else if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
-            return SeacowsPairCloner.isERC20PairClone(address(this), address(missingEnumerableERC20Template), potentialPair);
+            return SeacowsPairCloner.isPairClone(address(this), address(missingEnumerableERC20Template), potentialPair);
         } else {
             // invalid input
             return false;
@@ -387,9 +387,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             template = address(missingEnumerableERC20Template);
         }
 
-        pair = SeacowsPair(
-            payable(template.cloneERC721ERC20Pair(this, params.bondingCurve, address(params.nft), uint8(params.poolType), params.token))
-        );
+        pair = SeacowsPair(payable(template.clonePair(this, params.bondingCurve, address(params.nft), uint8(params.poolType), params.token)));
 
         // mint LP tokens if trade pair
         if (params.poolType == SeacowsPair.PoolType.TRADE) {
@@ -403,7 +401,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     {
         address template = address(erc1155ERC20Template);
         // create a pair
-        pair = SeacowsPair(payable(template.cloneERC1155ERC20Pair(this, bondingCurve, address(nft), uint8(poolType), token, nftId)));
+        pair = SeacowsPair(payable(template.clonePair(this, bondingCurve, address(nft), uint8(poolType), token)));
 
         // mint LP tokens if trade pair
         if (poolType == SeacowsPair.PoolType.TRADE) {
