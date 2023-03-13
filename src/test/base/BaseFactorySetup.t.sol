@@ -6,10 +6,8 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { SeacowsPairCloner } from "../../lib/SeacowsPairCloner.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
 import { ISeacowsPairFactoryLike } from "../../interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPairEnumerableERC20 } from "../../SeacowsPairEnumerableERC20.sol";
-import { SeacowsPairMissingEnumerableERC20 } from "../../SeacowsPairMissingEnumerableERC20.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPairERC721 } from "../../SeacowsPairERC721.sol";
 import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
 import { LinearCurve } from "../../bondingcurve/LinearCurve.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
@@ -17,7 +15,7 @@ import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract BaseFactorySetup is Test {
-    using SeacowsPairCloner for SeacowsPairEnumerableERC20;
+    using SeacowsPairCloner for SeacowsPairERC721;
 
     // string internal ownerPrivateKey;
     // string internal spenderPrivateKey;
@@ -27,8 +25,7 @@ contract BaseFactorySetup is Test {
     uint256 internal protocolFeeMultiplier;
 
     SeacowsPairFactory internal seacowsPairFactory;
-    SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
-    SeacowsPairMissingEnumerableERC20 internal seacowsPairMissingEnumerableERC20;
+    SeacowsPairERC721 internal SeacowsPairERC721;
     SeacowsPairERC1155 internal seacowsPairERC1155;
 
     function setUp() public virtual {
@@ -41,23 +38,13 @@ contract BaseFactorySetup is Test {
         protocolFeeRecipient = payable(address(this));
         protocolFeeMultiplier = 5000000000000000;
 
-        /** deploy SeacowsPairEnumerableERC20 */
-        seacowsPairEnumerableERC20 = new SeacowsPairEnumerableERC20(lpUri);
-
-        /** deploy SeacowsPairMissingEnumerableERC20 */
-        seacowsPairMissingEnumerableERC20 = new SeacowsPairMissingEnumerableERC20(lpUri);
+        /** deploy SeacowsPairERC721 */
+        seacowsPairERC721 = new SeacowsPairERC721(lpUri);
 
         /** deploy SeacowsPairERC1155 */
         seacowsPairERC1155 = new SeacowsPairERC1155(lpUri);
 
         /** deploy SeacowsPairFactory */
-        seacowsPairFactory = new SeacowsPairFactory(
-            weth,
-            seacowsPairEnumerableERC20,
-            seacowsPairMissingEnumerableERC20,
-            seacowsPairERC1155,
-            protocolFeeRecipient,
-            protocolFeeMultiplier
-        );
+        seacowsPairFactory = new SeacowsPairFactory(weth, seacowsPairERC721, seacowsPairERC1155, protocolFeeRecipient, protocolFeeMultiplier);
     }
 }

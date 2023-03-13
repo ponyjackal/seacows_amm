@@ -6,7 +6,7 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 import { SeacowsRouter } from "../SeacowsRouter.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
-interface ISeacowsPairERC721ERC20 is ISeacowsPair {
+interface ISeacowsPairERC721 is ISeacowsPair {
     function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
         external
         payable

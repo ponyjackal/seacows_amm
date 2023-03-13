@@ -7,7 +7,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
-import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
+import { SeacowsPairERC721 } from "./SeacowsPairERC721.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
@@ -16,12 +16,12 @@ contract SeacowsRouter {
     using SafeERC20 for ERC20;
 
     struct PairSwapAny {
-        SeacowsPairEnumerableERC20 pair;
+        SeacowsPairERC721 pair;
         uint256 numItems;
     }
 
     struct PairSwapSpecific {
-        SeacowsPairEnumerableERC20 pair;
+        SeacowsPairERC721 pair;
         uint256[] nftIds;
         NFTDetail[] details;
     }

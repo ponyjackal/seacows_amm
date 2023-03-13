@@ -19,8 +19,7 @@ import { SeacowsPair } from "./SeacowsPair.sol";
 import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
-import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
-import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
+import { SeacowsPairERC721 } from "./SeacowsPairERC721.sol";
 import { SeacowsPairERC1155 } from "./SeacowsPairERC1155.sol";
 
 import { IWETH } from "./interfaces/IWETH.sol";
@@ -38,7 +37,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     uint256 internal constant MAX_PROTOCOL_FEE = 0.10e18; // 10%, must <= 1 - MAX_FEE
 
-    SeacowsPairMissingEnumerableERC20 public immutable missingEnumerableERC20Template;
+    SeacowsPairERC721 public immutable seacowsPairERC721;
     SeacowsPairERC1155 public immutable erc1155Template;
     address payable public override protocolFeeRecipient;
     address public weth;
@@ -105,16 +104,14 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     constructor(
         address _weth,
-        SeacowsPairEnumerableERC20 _enumerableERC20Template,
-        SeacowsPairMissingEnumerableERC20 _missingEnumerableERC20Template,
+        SeacowsPairERC721 _erc721Template,
         SeacowsPairERC1155 _erc1155Template,
         address payable _protocolFeeRecipient,
         uint256 _protocolFeeMultiplier
     ) {
         weth = _weth;
-        enumerableERC20Template = _enumerableERC20Template;
-        missingEnumerableERC20Template = _missingEnumerableERC20Template;
-        erc1155ERC20Template = _erc1155ERC20Template;
+        erc721Template = _erc721Template;
+        erc1155Template = _erc1155Template;
         protocolFeeRecipient = _protocolFeeRecipient;
 
         require(_protocolFeeMultiplier <= MAX_PROTOCOL_FEE, "Fee too large");

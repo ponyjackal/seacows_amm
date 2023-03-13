@@ -7,7 +7,7 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { ICurve } from "../../bondingcurve/ICurve.sol";
-import { ISeacowsPairERC721ERC20 } from "../../interfaces/ISeacowsPairERC721ERC20.sol";
+import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
 import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
@@ -202,7 +202,7 @@ contract WhenCreateTokenPair is WhenCreatePair {
         nftEnumerable.setApprovalForAll(address(erc721EnumerableERC20Pair), true);
 
         vm.expectRevert();
-        ISeacowsPairERC721ERC20(address(erc721EnumerableERC20Pair)).swapNFTsForToken(
+        ISeacowsPairERC721(address(erc721EnumerableERC20Pair)).swapNFTsForToken(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             0.1 ether,
