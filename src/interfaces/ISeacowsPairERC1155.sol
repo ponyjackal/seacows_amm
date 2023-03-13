@@ -24,4 +24,6 @@ interface ISeacowsPairERC1155 is ISeacowsPair {
     ) external returns (uint256 outputAmount);
 
     function withdrawERC1155(address _recipient, uint256 _amount) external;
+
+    function setNFTIds(uint256[] memory _nftIds, uint256 _nftAmount) external;
 }

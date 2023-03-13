@@ -25,7 +25,7 @@ contract BaseFactorySetup is Test {
     uint256 internal protocolFeeMultiplier;
 
     SeacowsPairFactory internal seacowsPairFactory;
-    SeacowsPairERC721 internal SeacowsPairERC721;
+    SeacowsPairERC721 internal seacowsPairERC721;
     SeacowsPairERC1155 internal seacowsPairERC1155;
 
     function setUp() public virtual {
