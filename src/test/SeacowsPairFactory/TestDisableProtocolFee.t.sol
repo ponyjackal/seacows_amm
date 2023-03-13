@@ -4,21 +4,21 @@ pragma solidity >=0.8.4;
 import "forge-std/Test.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { WhenCreatePair } from "./base/WhenCreatePair.t.sol";
 
-import { ICurve } from "../bondingcurve/ICurve.sol";
-import { ISeacowsPairERC721ERC20 } from "../interfaces/ISeacowsPairERC721ERC20.sol";
+import { ICurve } from "../../bondingcurve/ICurve.sol";
+import { ISeacowsPairERC721ERC20 } from "../../interfaces/ISeacowsPairERC721ERC20.sol";
 
-import { SeacowsRouter } from "../SeacowsRouter.sol";
-import { SeacowsPairFactory } from "../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../SeacowsPair.sol";
-import { TestWETH } from "../TestCollectionToken/TestWETH.sol";
-import { TestERC20 } from "../TestCollectionToken/TestERC20.sol";
-import { TestERC721 } from "../TestCollectionToken/TestERC721.sol";
+import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
+import { SeacowsRouter } from "../../SeacowsRouter.sol";
+import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
+import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
+import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
+import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract TestSeacowsPairFactory is WhenCreatePair {
+contract TestDisableProtocolFee is WhenCreatePair {
     SeacowsPair internal tradePair;
     SeacowsPair internal tokenPair;
     SeacowsPair internal nftPair;
@@ -239,7 +239,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
     }
 
     function testEnableTradePairProtocolFeeBuy() public {
-        /** Enable protocol fee for the nft pair */
+        /** Enable protocol fee for the trade pair */
         seacowsPairFactory.disableProtocolFee(tradePair, false);
 
         /** Check protocol fee */
@@ -268,7 +268,7 @@ contract TestSeacowsPairFactory is WhenCreatePair {
     }
 
     function testDisableTradePairProtocolFeeBuy() public {
-        /** Disable protocol fee for the nft pair */
+        /** Disable protocol fee for the trade pair */
         seacowsPairFactory.disableProtocolFee(tradePair, true);
 
         /** Check protocol fee */
@@ -380,6 +380,47 @@ contract TestSeacowsPairFactory is WhenCreatePair {
         vm.expectRevert("Ownable: caller is not the owner");
         seacowsPairFactory.disableProtocolFee(tradePair, true);
         vm.stopPrank();
+    }
+
+    function testChangeProtocolFeeMultiplier() public {
+        /** Change Protocol Fee */
+        seacowsPairFactory.changeProtocolFeeMultiplier(3000000000000000);
+
+        /** Check protocol fee */
+        uint256 protocolFeeMultiplier = seacowsPairFactory.protocolFeeMultiplier();
+        assertEq(protocolFeeMultiplier, 3000000000000000);
+
+        /** Alice buys NFTs from the trade pair with protocol fee */
+        vm.startPrank(alice);
+        uint256 aliceTokenBalance = token.balanceOf(alice);
+
+        ISeacowsPairERC721ERC20(address(tradePair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        /** Check alice token balance */
+        uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 22.06 ether);
+
+        /** Check if nfts are transferred to the alice */
+        assertEq(nft.balanceOf(alice), 12);
+
+        /** Alice buys NFTs from the nft pair without protocol fee */
+        aliceTokenBalance = token.balanceOf(alice);
+
+        ISeacowsPairERC721ERC20(address(nftPair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false, address(0));
+        /** Check alice token balance */
+        aliceTokenBalanceUpdated = token.balanceOf(alice);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.589575 ether);
+
+        vm.stopPrank();
+
+        /** Non-owner is trying to change protocol fee */
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        seacowsPairFactory.changeProtocolFeeMultiplier(3000000000000000);
+        vm.stopPrank();
+
+        /** Trying to set protocol fee greater than 10% */
+        vm.expectRevert("Fee too large");
+        seacowsPairFactory.changeProtocolFeeMultiplier(0.12e18);
     }
 
     function testProtocolFeeRecipient() public {
