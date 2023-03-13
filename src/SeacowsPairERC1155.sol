@@ -52,45 +52,60 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
     /** Internal Functions */
 
-    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal {
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256[] memory _nftIds, uint256[] memory _amounts) internal {
+        require(_nftIds.length == _amounts.length, "Invalid amounts");
+
         // Send NFTs to recipient
-        IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, nftId(), numNFTs, "");
+        for (uint256 i; i < _nftIds.length; ) {
+            IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, _nftIds[i], _amounts[i], "");
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
         @notice Takes NFTs from the caller and sends them into the pair's asset recipient
         @dev This is used by the SeacowsPair's swapNFTForToken function.
         @param _nft The NFT collection to take from
-        @param nftIds The specific NFT IDs to take, we just need the length of IDs, no need the values in it
+        @param _nftIds The specific NFT IDs to take, we just need the length of IDs, no need the values in it
+        @param _amounts The amount for each ID
         @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
         ETH pairs.
         @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
         ETH pairs.
      */
-    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
-        internal
-        override
-    {
-        {
-            address _assetRecipient = getAssetRecipient();
-            uint256 _nftId = nftId();
-            uint256 numNFTs = nftIds.length;
+    function _takeNFTsFromSender(
+        address _nft,
+        uint256[] memory _nftIds,
+        uint256[] memory _amounts,
+        ISeacowsPairFactoryLike _factory,
+        bool isRouter,
+        address routerCaller
+    ) internal override {
+        require(_nftIds.length == _amounts.length, "Invalid amounts");
 
-            if (isRouter) {
-                // Verify if router is allowed
-                SeacowsRouter router = SeacowsRouter(payable(msg.sender));
-                (bool routerAllowed, ) = _factory.routerStatus(router);
-                require(routerAllowed, "Not router");
+        address _assetRecipient = getAssetRecipient();
 
-                // Call router to pull NFTs
-                uint256 beforeBalance = IERC1155(_nft).balanceOf(_assetRecipient, _nftId);
-                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftId, numNFTs, "");
-                router.pairTransferNFTFromERC1155(IERC1155(_nft), _nftId, routerCaller, _assetRecipient, numNFTs, pairVariant());
+        if (isRouter) {
+            // Verify if router is allowed
+            SeacowsRouter router = SeacowsRouter(payable(msg.sender));
+            (bool routerAllowed, ) = _factory.routerStatus(router);
+            require(routerAllowed, "Not router");
 
-                require((IERC1155(_nft).balanceOf(_assetRecipient, _nftId) - beforeBalance) == numNFTs, "NFTs not transferred");
-            } else {
-                // Pull NFTs directly from sender
-                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftId, numNFTs, "");
+            // Call router to pull NFTs
+            // uint256 beforeBalance = IERC1155(_nft).balanceOf(_assetRecipient, _nftId);
+            // IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftId, numNFTs, "");
+            // router.pairTransferNFTFromERC1155(IERC1155(_nft), _nftId, routerCaller, _assetRecipient, numNFTs, pairVariant());
+
+            // require((IERC1155(_nft).balanceOf(_assetRecipient, _nftId) - beforeBalance) == numNFTs, "NFTs not transferred");
+        } else {
+            // Pull NFTs directly from sender
+            for (uint256 i; i < _nftIds.length; ) {
+                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftIds[i], _amounts[i], "");
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
@@ -150,7 +165,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
     /**
         @notice Calculates the amount needed to be sent by the pair for a sell and adjusts spot price or delta if necessary
-        @param nftIds The nftIds to buy from the pair
+        @param _nftIds The nftIds to buy from the pair
         @param details The details of NFTs to buy from the pair
         @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
         amount is less than this value, the transaction will be reverted.
@@ -159,7 +174,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         @return outputAmount The amount of tokens total tokens receive
      */
     function _calculateSellInfoAndUpdatePoolParams(
-        uint256[] memory nftIds,
+        uint256[] memory _nftIds,
         SeacowsRouter.NFTDetail[] memory details,
         uint256 minExpectedTokenOutput,
         ICurve _bondingCurve,
@@ -172,7 +187,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
         uint128 newDelta = delta;
-        uint256 numOfNFTs = nftIds.length;
+        uint256 numOfNFTs = _nftIds.length;
 
         (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
             address(this),
@@ -185,11 +200,20 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
     /** Mutative Functions */
 
-    function withdrawERC1155(address _recipient, uint256 _amount) external onlyWithdrawable {
+    function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
         require(poolType() == PoolType.TRADE, "Invalid pool type");
-        IERC1155(nft()).safeTransferFrom(address(this), _recipient, nftId(), _amount, "");
+        require(_nftIds.length == _amounts.length, "Invalid amounts");
 
-        emit NFTWithdrawal(_recipient, _amount);
+        uint256 totalAmount;
+        for (uint256 i; i < _nftIds.length; ) {
+            IERC1155(nft()).safeTransferFrom(address(this), _recipient, _nftIds[i], _amounts[i], "");
+            totalAmount += _amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
+
+        emit NFTWithdrawal(_recipient, totalAmount);
     }
 
     /**

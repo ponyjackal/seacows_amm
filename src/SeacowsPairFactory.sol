@@ -37,7 +37,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     uint256 internal constant MAX_PROTOCOL_FEE = 0.10e18; // 10%, must <= 1 - MAX_FEE
 
-    SeacowsPairERC721 public immutable seacowsPairERC721;
+    SeacowsPairERC721 public immutable erc721Template;
     SeacowsPairERC1155 public immutable erc1155Template;
     address payable public override protocolFeeRecipient;
     address public weth;
@@ -255,10 +255,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @return True if the address is the specified pair variant, false otherwise
      */
     function isPair(address potentialPair, PairVariant variant) public view override returns (bool) {
-        if (variant == PairVariant.ENUMERABLE_ERC20) {
-            return SeacowsPairCloner.isPairClone(address(this), address(enumerableERC20Template), potentialPair);
-        } else if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
-            return SeacowsPairCloner.isPairClone(address(this), address(missingEnumerableERC20Template), potentialPair);
+        if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
+            return SeacowsPairCloner.isPairClone(address(this), address(erc721Template), potentialPair);
         } else {
             // invalid input
             return false;
@@ -369,13 +367,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function _createPairERC721ERC20(CreateERC721ERC20PairParams memory params) internal returns (SeacowsPair pair) {
         require(params.poolType != SeacowsPair.PoolType.TOKEN || params.initialTokenBalance > params.spotPrice, "Insufficient initial token amount");
 
-        // Check to see if the NFT supports Enumerable to determine which template to use
-        address template;
-        try IERC165(address(params.nft)).supportsInterface(INTERFACE_ID_ERC721_ENUMERABLE) returns (bool isEnumerable) {
-            template = isEnumerable ? address(enumerableERC20Template) : address(missingEnumerableERC20Template);
-        } catch {
-            template = address(missingEnumerableERC20Template);
-        }
+        address template = address(erc721Template);
 
         pair = SeacowsPair(payable(template.clonePair(this, params.bondingCurve, address(params.nft), uint8(params.poolType), params.token)));
 
@@ -395,7 +387,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     ) internal returns (SeacowsPair pair) {
         require(nftIds.length == nftAmounts.length, "Invalid nft ids and amounts");
 
-        address template = address(erc1155ERC20Template);
+        address template = address(erc1155Template);
         // create a pair
         pair = SeacowsPair(payable(template.clonePair(this, bondingCurve, address(nft), uint8(poolType), token)));
 
@@ -403,7 +395,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         for (uint256 i; i < nftAmounts.length; ) {
             totalAmount += nftAmounts[i];
             // transfer nfts to the pair
-            params.nft.safeTransferFrom(msg.sender, address(pair), nftIds[i], params.nftAmounts[i], "");
+            nft.safeTransferFrom(msg.sender, address(pair), nftIds[i], nftAmounts[i], "");
 
             unchecked {
                 ++i;
