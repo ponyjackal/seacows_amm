@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import { ISeacowsPair } from "./ISeacowsPair.sol";
 import { SeacowsRouter } from "../SeacowsRouter.sol";
 
-interface ISeacowsPairERC1155ERC20 is ISeacowsPair {
+interface ISeacowsPairERC1155 is ISeacowsPair {
     function nftAmount() external view returns (uint256 nftAmount);
 
     function nftIds() external view returns (uint256[] memory nftIds);

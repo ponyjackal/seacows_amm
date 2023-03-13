@@ -8,15 +8,15 @@ import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
-import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
-import { ISeacowsPairERC1155ERC20 } from "../../interfaces/ISeacowsPairERC1155ERC20.sol";
+import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
+import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
+contract SeacowsPairERC1155Test is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
-    ISeacowsPairERC1155ERC20 internal pair;
+    ISeacowsPairERC1155 internal pair;
     TestERC20 internal token;
 
     function setUp() public override(WhenCreatePair) {
@@ -41,7 +41,7 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         token.approve(address(seacowsPairFactory), 1000000);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
         SeacowsPair _pair = createERC1155ERC20TradePair(testSeacowsSFT, 1, 1000, token, 100000, 10);
-        pair = ISeacowsPairERC1155ERC20(address(_pair));
+        pair = ISeacowsPairERC1155(address(_pair));
         vm.stopPrank();
 
         vm.startPrank(alice);
@@ -78,7 +78,7 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
     function test_add_liquidity() public {
         vm.startPrank(alice);
 
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, 10000);
         // check LP token balance
         uint256 lpBalance = pair.balanceOf(alice, 1);
         assertEq(lpBalance, 100);
@@ -89,15 +89,15 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
         assertEq(sftBalance, 1100);
         // check spot price
-        uint256 spotPrice = ISeacowsPairERC1155ERC20(address(pair)).spotPrice();
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
         assertEq(spotPrice, 100);
 
         // revert cases
         vm.expectRevert("Invalid token amount based on spot price");
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, 100);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, 100);
 
         vm.expectRevert("Invalid NFT amount");
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 0, 10000);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 0, 10000);
 
         vm.stopPrank();
     }
@@ -105,9 +105,9 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
     function test_remove_liquidity() public {
         vm.startPrank(alice);
 
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, 10000);
 
-        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 10, false);
+        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 10, false);
 
         // check pair erc20 token balance
         uint256 tokenBalance = token.balanceOf(address(pair));
@@ -119,11 +119,11 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 lpBalance = pair.balanceOf(alice, 1);
         assertEq(lpBalance, 90);
         // check spot price
-        uint256 spotPrice = ISeacowsPairERC1155ERC20(address(pair)).spotPrice();
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
         assertEq(spotPrice, 100);
         // trying to remove invalid LP token
         vm.expectRevert("Insufficient LP token");
-        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, false);
+        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, false);
 
         vm.stopPrank();
     }

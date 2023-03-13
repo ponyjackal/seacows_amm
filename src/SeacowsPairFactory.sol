@@ -21,12 +21,12 @@ import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
 import { SeacowsPairEnumerableERC20 } from "./SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "./SeacowsPairMissingEnumerableERC20.sol";
-import { SeacowsPairERC1155ERC20 } from "./SeacowsPairERC1155ERC20.sol";
+import { SeacowsPairERC1155 } from "./SeacowsPairERC1155.sol";
 
 import { IWETH } from "./interfaces/IWETH.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPair } from "./interfaces/ISeacowsPair.sol";
-import { ISeacowsPairERC1155ERC20 } from "./interfaces/ISeacowsPairERC1155ERC20.sol";
+import { ISeacowsPairERC1155 } from "./interfaces/ISeacowsPairERC1155.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
@@ -38,10 +38,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     uint256 internal constant MAX_PROTOCOL_FEE = 0.10e18; // 10%, must <= 1 - MAX_FEE
 
-    SeacowsPairEnumerableERC20 public immutable enumerableERC20Template;
     SeacowsPairMissingEnumerableERC20 public immutable missingEnumerableERC20Template;
-    // SeacowsPairERC1155ETH public immutable erc1155ETHTemplate;
-    SeacowsPairERC1155ERC20 public immutable erc1155ERC20Template;
+    SeacowsPairERC1155 public immutable erc1155Template;
     address payable public override protocolFeeRecipient;
     address public weth;
 
@@ -109,7 +107,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         address _weth,
         SeacowsPairEnumerableERC20 _enumerableERC20Template,
         SeacowsPairMissingEnumerableERC20 _missingEnumerableERC20Template,
-        SeacowsPairERC1155ERC20 _erc1155ERC20Template,
+        SeacowsPairERC1155 _erc1155Template,
         address payable _protocolFeeRecipient,
         uint256 _protocolFeeMultiplier
     ) {
@@ -194,7 +192,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         if (params.poolType == SeacowsPair.PoolType.TRADE) {
             // For trade pairs, spot price should be based on the token and nft reserves
-            uint128 initSpotPrice = (uint128)(msg.value / ISeacowsPairERC1155ERC20(address(pair)).nftAmount());
+            uint128 initSpotPrice = (uint128)(msg.value / ISeacowsPairERC1155(address(pair)).nftAmount());
             _initializePairERC1155ERC20(pair, params.assetRecipient, params.delta, params.fee, initSpotPrice);
         } else {
             _initializePairERC1155ERC20(pair, params.assetRecipient, params.delta, params.fee, params.spotPrice);
@@ -421,7 +419,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             pair.mintLPToken(msg.sender, totalAmount);
         }
 
-        ISeacowsPairERC1155ERC20(address(pair)).setNFTIds(nftIds, totalAmount);
+        ISeacowsPairERC1155(address(pair)).setNFTIds(nftIds, totalAmount);
     }
 
     function _initializePairERC1155ERC20(SeacowsPair _pair, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice)
@@ -515,7 +513,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @param _amount ERC20 token amount
      * @param _tokenAmount ERC20 token amount
      */
-    function addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20 _pair, uint256 _amount, uint256 _tokenAmount) external {
+    function addLiquidityERC1155ERC20(ISeacowsPairERC1155 _pair, uint256 _amount, uint256 _tokenAmount) external {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
         require(_amount > 0, "Invalid NFT amount");
@@ -563,7 +561,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev add ETH liquidity into ERC1155 trading pair
      * @param _amount NFT amount
      */
-    function addLiquidityETHERC1155(ISeacowsPairERC1155ERC20 _pair, uint256 _amount) external payable {
+    function addLiquidityETHERC1155(ISeacowsPairERC1155 _pair, uint256 _amount) external payable {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
         require(_amount > 0, "Invalid NFT amount");
@@ -619,7 +617,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev remove ERC20 liquidity from ERC1155 trading pair
      * @param _amount lp token amount to remove
      */
-    function removeLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20 _pair, uint256 _amount, bool _toEth) public {
+    function removeLiquidityERC1155ERC20(ISeacowsPairERC1155 _pair, uint256 _amount, bool _toEth) public {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
         require(_amount > 0, "Invalid amount");
@@ -654,7 +652,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @dev remove ETH liquidity from ERC1155 trading pair
      * @param _amount lp token amount to remove
      */
-    function removeLiquidityETHERC1155(ISeacowsPairERC1155ERC20 _pair, uint256 _amount) external {
+    function removeLiquidityETHERC1155(ISeacowsPairERC1155 _pair, uint256 _amount) external {
         removeLiquidityERC1155ERC20(_pair, _amount, true);
     }
 }

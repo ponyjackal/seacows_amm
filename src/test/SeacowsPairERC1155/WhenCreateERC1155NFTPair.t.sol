@@ -8,16 +8,16 @@ import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
-import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
-import { ISeacowsPairERC1155ERC20 } from "../../interfaces/ISeacowsPairERC1155ERC20.sol";
+import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
+import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
+contract SeacowsPairERC1155Test is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
-    ISeacowsPairERC1155ERC20 internal linearPair;
-    ISeacowsPairERC1155ERC20 internal exponentialPair;
+    ISeacowsPairERC1155 internal linearPair;
+    ISeacowsPairERC1155 internal exponentialPair;
     TestERC20 internal token;
 
     function setUp() public override(WhenCreatePair) {
@@ -58,7 +58,7 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         vm.startPrank(owner);
         // create a linear pair
         SeacowsPair _linearPair = createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 1000, token, 0, 0.1 ether, 1 ether);
-        linearPair = ISeacowsPairERC1155ERC20(address(_linearPair));
+        linearPair = ISeacowsPairERC1155(address(_linearPair));
 
         address nft = linearPair.nft();
         assertEq(nft, address(testSeacowsSFT));
@@ -88,7 +88,7 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         vm.startPrank(owner);
         // create a exponential pair
         SeacowsPair _exponentialPair = createERC1155ETHNFTPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 1000, 0, 1.1 ether, 1 ether);
-        exponentialPair = ISeacowsPairERC1155ERC20(address(_exponentialPair));
+        exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
 
         address nft = exponentialPair.nft();
         assertEq(nft, address(testSeacowsSFT));

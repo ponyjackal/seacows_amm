@@ -10,7 +10,7 @@ import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
-contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
+contract SeacowsPairERC721 is SeacowsPair {
     using EnumerableSet for EnumerableSet.UintSet;
 
     // Used for internal ID tracking

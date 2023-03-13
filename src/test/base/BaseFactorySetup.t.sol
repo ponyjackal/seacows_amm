@@ -10,7 +10,7 @@ import { SeacowsPairEnumerableERC20 } from "../../SeacowsPairEnumerableERC20.sol
 import { SeacowsPairMissingEnumerableERC20 } from "../../SeacowsPairMissingEnumerableERC20.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
+import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
 import { LinearCurve } from "../../bondingcurve/LinearCurve.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 
@@ -29,7 +29,7 @@ contract BaseFactorySetup is Test {
     SeacowsPairFactory internal seacowsPairFactory;
     SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
     SeacowsPairMissingEnumerableERC20 internal seacowsPairMissingEnumerableERC20;
-    SeacowsPairERC1155ERC20 internal seacowsPairERC1155ERC20;
+    SeacowsPairERC1155 internal seacowsPairERC1155;
 
     function setUp() public virtual {
         string memory lpUri = "";
@@ -47,15 +47,15 @@ contract BaseFactorySetup is Test {
         /** deploy SeacowsPairMissingEnumerableERC20 */
         seacowsPairMissingEnumerableERC20 = new SeacowsPairMissingEnumerableERC20(lpUri);
 
-        /** deploy SeacowsPairERC1155ERC20 */
-        seacowsPairERC1155ERC20 = new SeacowsPairERC1155ERC20(lpUri);
+        /** deploy SeacowsPairERC1155 */
+        seacowsPairERC1155 = new SeacowsPairERC1155(lpUri);
 
         /** deploy SeacowsPairFactory */
         seacowsPairFactory = new SeacowsPairFactory(
             weth,
             seacowsPairEnumerableERC20,
             seacowsPairMissingEnumerableERC20,
-            seacowsPairERC1155ERC20,
+            seacowsPairERC1155,
             protocolFeeRecipient,
             protocolFeeMultiplier
         );

@@ -16,7 +16,7 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
     @title An NFT/Token pair for an NFT that implements ERC721Enumerable
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
-contract SeacowsPairERC1155ERC20 is SeacowsPair {
+contract SeacowsPairERC1155 is SeacowsPair {
     using SafeERC20 for ERC20;
 
     uint256[] public nftIds;

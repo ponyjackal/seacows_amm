@@ -8,7 +8,7 @@ import { SeacowsPairFactory } from "../src/SeacowsPairFactory.sol";
 import { ISeacowsPairFactoryLike } from "../src/interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsPairEnumerableERC20 } from "../src/SeacowsPairEnumerableERC20.sol";
 import { SeacowsPairMissingEnumerableERC20 } from "../src/SeacowsPairMissingEnumerableERC20.sol";
-import { SeacowsPairERC1155ERC20 } from "../src/SeacowsPairERC1155ERC20.sol";
+import { SeacowsPairERC1155 } from "../src/SeacowsPairERC1155.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract DeploySeacowsPairFactory is Script {
@@ -16,7 +16,7 @@ contract DeploySeacowsPairFactory is Script {
     SeacowsPairFactory internal seacowsPairFactory;
     SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
     SeacowsPairMissingEnumerableERC20 internal seacowsPairMissingEnumerableERC20;
-    SeacowsPairERC1155ERC20 internal seacowsPairERC1155ERC20;
+    SeacowsPairERC1155 internal seacowsPairERC1155;
 
     function run() public {
         HelperConfig helperConfig = new HelperConfig();
@@ -30,8 +30,8 @@ contract DeploySeacowsPairFactory is Script {
         /** deploy SeacowsPairMissingEnumerableERC20 */
         seacowsPairMissingEnumerableERC20 = new SeacowsPairMissingEnumerableERC20(lpUri);
 
-        /** deploy SeacowsPairERC1155ERC20 */
-        seacowsPairERC1155ERC20 = new SeacowsPairERC1155ERC20(lpUri);
+        /** deploy SeacowsPairERC1155 */
+        seacowsPairERC1155 = new SeacowsPairERC1155(lpUri);
 
         /** deploy SeacowsPairFactory */
         seacowsPairFactory = new SeacowsPairFactory(
@@ -39,7 +39,7 @@ contract DeploySeacowsPairFactory is Script {
             seacowsPairEnumerableERC20,
             seacowsPairMissingEnumerableERC20,
             // seacowsPairERC1155ETH,
-            seacowsPairERC1155ERC20,
+            seacowsPairERC1155,
             protocolFeeRecipient,
             protocolFeeMultiplier
         );
