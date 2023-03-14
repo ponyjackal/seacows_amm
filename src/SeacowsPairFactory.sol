@@ -680,7 +680,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @param _nftIDs NFT ids to withdraw
      */
     function removeLiquidityERC721ETH(SeacowsPair _pair, uint256 _amount, uint256[] calldata _nftIDs) external {
-        removeLiquidityERC20(_pair, _amount, _nftIDs, true);
+        removeLiquidityERC721ERC20(_pair, _amount, _nftIDs, true);
     }
 
     /**
