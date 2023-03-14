@@ -78,7 +78,7 @@ contract SeacowsPairERC1155Test is WhenCreatePair {
         address nft = linearPair.nft();
         assertEq(nft, address(testSeacowsSFT));
 
-        uint256[] memory _nftIds = linearPair.nftIds();
+        uint256[] memory _nftIds = linearPair.getNFTIds();
         assertEq(_nftIds[0], 1);
 
         uint256 spotPrice = linearPair.spotPrice();
@@ -122,7 +122,7 @@ contract SeacowsPairERC1155Test is WhenCreatePair {
         address nft = exponentialPair.nft();
         assertEq(nft, address(testSeacowsSFT));
 
-        uint256[] memory _nftIds = exponentialPair.nftIds();
+        uint256[] memory _nftIds = exponentialPair.getNFTIds();
         assertEq(_nftIds[0], 1);
 
         uint256 spotPrice = exponentialPair.spotPrice();

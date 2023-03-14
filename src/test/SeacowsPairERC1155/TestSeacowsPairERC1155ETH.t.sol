@@ -60,7 +60,7 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         address nft = pair.nft();
         assertEq(nft, address(testSeacowsSFT));
 
-        uint256[] memory nftIds = pair.nftIds();
+        uint256[] memory nftIds = pair.getNFTIds();
         assertEq(nftIds[0], 1);
 
         ERC20 token = pair.token();

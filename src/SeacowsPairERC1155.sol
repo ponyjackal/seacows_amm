@@ -41,6 +41,13 @@ contract SeacowsPairERC1155 is SeacowsPair {
     }
 
     /**
+        @notice Returns the ERC1155 ids
+     */
+    function getNFTIds() public view returns (uint256[] memory) {
+        return nftIds;
+    }
+
+    /**
      * @notice get reserves in the pool, only available for trade pair
      */
     function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
