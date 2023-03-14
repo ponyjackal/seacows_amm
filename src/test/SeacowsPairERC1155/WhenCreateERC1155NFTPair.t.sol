@@ -57,14 +57,29 @@ contract SeacowsPairERC1155Test is WhenCreatePair {
     function testLinearPair() public {
         vm.startPrank(owner);
         // create a linear pair
-        SeacowsPair _linearPair = createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 1000, token, 0, 0.1 ether, 1 ether);
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
+        SeacowsPair _linearPair = createERC1155ERC20NFTPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            linearCurve,
+            payable(owner),
+            token,
+            0,
+            0.1 ether,
+            1 ether
+        );
         linearPair = ISeacowsPairERC1155(address(_linearPair));
 
         address nft = linearPair.nft();
         assertEq(nft, address(testSeacowsSFT));
 
-        uint256 nftId = linearPair.nftId();
-        assertEq(nftId, 1);
+        uint256[] memory _nftIds = linearPair.nftIds();
+        assertEq(_nftIds[0], 1);
 
         uint256 spotPrice = linearPair.spotPrice();
         assertEq(spotPrice, 1 ether);
@@ -87,14 +102,28 @@ contract SeacowsPairERC1155Test is WhenCreatePair {
     function testExponentialPair() public {
         vm.startPrank(owner);
         // create a exponential pair
-        SeacowsPair _exponentialPair = createERC1155ETHNFTPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 1000, 0, 1.1 ether, 1 ether);
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
+        SeacowsPair _exponentialPair = createERC1155ETHNFTPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            exponentialCurve,
+            payable(owner),
+            0,
+            1.1 ether,
+            1 ether
+        );
         exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
 
         address nft = exponentialPair.nft();
         assertEq(nft, address(testSeacowsSFT));
 
-        uint256 nftId = exponentialPair.nftId();
-        assertEq(nftId, 1);
+        uint256[] memory _nftIds = exponentialPair.nftIds();
+        assertEq(_nftIds[0], 1);
 
         uint256 spotPrice = exponentialPair.spotPrice();
         assertEq(spotPrice, 1 ether);
@@ -114,23 +143,33 @@ contract SeacowsPairERC1155Test is WhenCreatePair {
     }
 
     function testLinearPairWithInvalidParams() public {
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
         vm.startPrank(owner);
         vm.expectRevert("Invalid delta for curve");
-        createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 1000, token, 0, 0 ether, 1 ether);
+        createERC1155ERC20NFTPair(testSeacowsSFT, nftIds, nftAmounts, linearCurve, payable(owner), token, 0, 0 ether, 1 ether);
 
         vm.expectRevert("Invalid new spot price for curve");
-        createERC1155ERC20NFTPair(testSeacowsSFT, 1, linearCurve, payable(owner), 1000, token, 0, 0.1 ether, 0 ether);
+        createERC1155ERC20NFTPair(testSeacowsSFT, nftIds, nftAmounts, linearCurve, payable(owner), token, 0, 0.1 ether, 0 ether);
 
         vm.stopPrank();
     }
 
     function testExponentialPairWithInvalidParams() public {
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
         vm.startPrank(owner);
         vm.expectRevert("Invalid delta for curve");
-        createERC1155ETHNFTPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 1000, 0, 0 ether, 1 ether);
+        createERC1155ETHNFTPair(testSeacowsSFT, nftIds, nftAmounts, exponentialCurve, payable(owner), 0, 0 ether, 1 ether);
 
         vm.expectRevert("Invalid new spot price for curve");
-        createERC1155ETHNFTPair(testSeacowsSFT, 1, exponentialCurve, payable(owner), 1000, 0, 1.1 ether, 0 ether);
+        createERC1155ETHNFTPair(testSeacowsSFT, nftIds, nftAmounts, exponentialCurve, payable(owner), 0, 1.1 ether, 0 ether);
 
         vm.stopPrank();
     }
