@@ -408,7 +408,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
             pair.mintLPToken(msg.sender, totalAmount);
         }
 
-        ISeacowsPairERC1155(address(pair)).setNFTIds(nftIds, totalAmount);
+        ISeacowsPairERC1155(address(pair)).setNFTIds(nftIds);
+        ISeacowsPairERC1155(address(pair)).addNFTAmount(totalAmount);
     }
 
     function _initializePairERC1155ERC20(SeacowsPair _pair, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice)
@@ -471,10 +472,11 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     /**
      * @dev add ERC20 liquidity into trading pair
+     * @param _pair ERC721ERC20 pair
      * @param _nftIDs NFT ids
      * @param _amount ERC20 token amount
      */
-    function addLiquidityERC20(SeacowsPair _pair, uint256[] calldata _nftIDs, uint256 _amount) public {
+    function addLiquidityERC721ERC20(SeacowsPair _pair, uint256[] calldata _nftIDs, uint256 _amount) public {
         uint256 numNFTs = _nftIDs.length;
 
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
@@ -499,6 +501,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     /**
      * @dev add ERC20 liquidity into ERC1155 trading pair
+     * @param _pair ERC1155ERC20 pair
      * @param _nftIds ERC1155 NFT ids
      * @param _amounts ERC1155 token amount for each Id
      * @param _tokenAmount ERC20 token amount
@@ -525,13 +528,17 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // mint LP tokens
         _pair.mintLPToken(msg.sender, nftAmount);
+
+        // increase the nft amount in the pair
+        _pair.addNFTAmount(nftAmount);
     }
 
     /**
      * @dev add ETH liquidity into trading pair
+     * @param _pair ERC721ERC20 pair
      * @param _nftIDs NFT ids
      */
-    function addLiquidityETH(SeacowsPair _pair, uint256[] calldata _nftIDs) external payable {
+    function addLiquidityERC721ETH(SeacowsPair _pair, uint256[] calldata _nftIDs) external payable {
         uint256 numNFTs = _nftIDs.length;
 
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
@@ -557,10 +564,11 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     /**
      * @dev add ETH liquidity into ERC1155 trading pair
+     * @param _pair ERC1155ERC20 pair
      * @param _nftIds ERC1155 NFT ids
      * @param _amounts ERC1155 token amount for each Id
      */
-    function addLiquidityETHERC1155(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts) external payable {
+    function addLiquidityERC1155ETH(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts) external payable {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
 
@@ -583,14 +591,18 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // mint LP tokens
         _pair.mintLPToken(msg.sender, nftAmount);
+
+        // increase the nft amount in the pair
+        _pair.addNFTAmount(nftAmount);
     }
 
     /**
      * @dev remove ERC20 liquidity from trading pair
+     * @param _pair ERC721ERC20 pair
      * @param _amount lp token amount to remove
      * @param _nftIDs NFT ids to withdraw
      */
-    function removeLiquidityERC20(SeacowsPair _pair, uint256 _amount, uint256[] calldata _nftIDs, bool _toEth) public {
+    function removeLiquidityERC721ERC20(SeacowsPair _pair, uint256 _amount, uint256[] calldata _nftIDs, bool _toEth) public {
         uint256 numNFTs = _nftIDs.length;
 
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
@@ -622,18 +634,31 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
     /**
      * @dev remove ERC20 liquidity from ERC1155 trading pair
-     * @param _amount lp token amount to remove
+     * @param _pair ERC1155ERC20 pair
+     * @param _nftIds ERC1155 NFT ids
+     * @param _amounts ERC1155 token amount for each Id
      */
-    function removeLiquidityERC1155ERC20(ISeacowsPairERC1155 _pair, uint256 _amount, bool _toEth) public {
+    function removeLiquidityERC1155ERC20(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts, bool _toEth) public {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
-        require(_amount > 0, "Invalid amount");
+
+        uint256 nftAmount;
+        for (uint256 i; i < _nftIds.length; ) {
+            nftAmount += _amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
+
+        require(nftAmount > 0, "Invalid liquidity amount");
 
         // burn LP token; we check if the user has engouh LP token in the function below
-        _pair.burnLPToken(msg.sender, _amount);
+        _pair.burnLPToken(msg.sender, nftAmount);
+
+        // TODO handle fractional cases
 
         // transfer tokens to the user
-        uint256 tokenAmount = _amount * _pair.spotPrice();
+        uint256 tokenAmount = nftAmount * _pair.spotPrice();
         if (address(_pair.token()) == weth && _toEth) {
             _pair.withdrawERC20(address(this), tokenAmount);
             IWETH(weth).withdraw(tokenAmount);
@@ -643,7 +668,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         // transfer NFTs from sender to pair
-        _pair.withdrawERC1155(msg.sender, _amount);
+        _pair.withdrawERC1155(msg.sender, nftAmount);
+
+        // remove the nft amount in the pair
+        _pair.removeNFTAmount(nftAmount);
     }
 
     /**
@@ -651,15 +679,17 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @param _amount lp token amount to remove
      * @param _nftIDs NFT ids to withdraw
      */
-    function removeLiquidityETH(SeacowsPair _pair, uint256 _amount, uint256[] calldata _nftIDs) external {
+    function removeLiquidityERC721ETH(SeacowsPair _pair, uint256 _amount, uint256[] calldata _nftIDs) external {
         removeLiquidityERC20(_pair, _amount, _nftIDs, true);
     }
 
     /**
      * @dev remove ETH liquidity from ERC1155 trading pair
-     * @param _amount lp token amount to remove
+     * @param _pair ERC1155ERC20 pair
+     * @param _nftIds ERC1155 NFT ids
+     * @param _amounts ERC1155 token amount for each Id
      */
-    function removeLiquidityETHERC1155(ISeacowsPairERC1155 _pair, uint256 _amount) external {
-        removeLiquidityERC1155ERC20(_pair, _amount, true);
+    function removeLiquidityERC1155ETH(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts) external {
+        removeLiquidityERC1155ERC20(_pair, _nftIds, _amounts, true);
     }
 }

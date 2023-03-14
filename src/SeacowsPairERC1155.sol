@@ -328,12 +328,26 @@ contract SeacowsPairERC1155 is SeacowsPair {
     }
 
     /**
-     * @dev set ERC1155 nft ids and total amount
+     * @dev set ERC1155 nft ids
      * @param _nftIds ERC1155 ids
+     */
+    function setNFTIds(uint256[] memory _nftIds) external onlyFactory {
+        nftIds = _nftIds;
+    }
+
+    /**
+     * @dev Add new NFTs to the pool
      * @param _nftAmount total amount of nfts
      */
-    function setNFTIds(uint256[] memory _nftIds, uint256 _nftAmount) external onlyFactory {
-        nftIds = _nftIds;
-        nftAmount = _nftAmount;
+    function addNFTAmount(uint256 _nftAmount) external onlyFactory {
+        nftAmount += _nftAmount;
+    }
+
+    /**
+     * @dev Remove NFTs from the pool
+     * @param _nftAmount total amount of nfts
+     */
+    function removeNFTAmount(uint256 _nftAmount) external onlyFactory {
+        nftAmount -= _nftAmount;
     }
 }

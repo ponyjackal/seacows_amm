@@ -78,39 +78,39 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         vm.stopPrank();
     }
 
-    // function test_add_liquidity() public {
-    //     vm.startPrank(alice);
+    function test_add_liquidity() public {
+        vm.startPrank(alice);
 
-    //     seacowsPairFactory.addLiquidityETHERC1155{ value: 10000 }(ISeacowsPairERC1155(address(pair)), 100);
-    //     // check LP token balance
-    //     uint256 lpBalance = pair.balanceOf(alice, 1);
-    //     assertEq(lpBalance, 100);
-    //     // check pair weth balance
-    //     uint256 tokenBalance = IERC20(weth).balanceOf(address(pair));
-    //     assertEq(tokenBalance, 110000);
-    //     // check pair erc1155 balance
-    //     uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
-    //     assertEq(sftBalance, 1100);
-    //     // check spot price
-    //     uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
-    //     assertEq(spotPrice, 100);
+        seacowsPairFactory.addLiquidityERC1155ETH{ value: 10000 }(ISeacowsPairERC1155(address(pair)), 100);
+        // check LP token balance
+        uint256 lpBalance = pair.balanceOf(alice, 1);
+        assertEq(lpBalance, 100);
+        // check pair weth balance
+        uint256 tokenBalance = IERC20(weth).balanceOf(address(pair));
+        assertEq(tokenBalance, 110000);
+        // check pair erc1155 balance
+        uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
+        assertEq(sftBalance, 1100);
+        // check spot price
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+        assertEq(spotPrice, 100);
 
-    //     // revert cases
-    //     vm.expectRevert("Invalid eth amount based on spot price");
-    //     seacowsPairFactory.addLiquidityETHERC1155{ value: 100 }(ISeacowsPairERC1155(address(pair)), 100);
+        // revert cases
+        vm.expectRevert("Invalid eth amount based on spot price");
+        seacowsPairFactory.addLiquidityERC1155ETH{ value: 100 }(ISeacowsPairERC1155(address(pair)), 100);
 
-    //     vm.expectRevert("Invalid NFT amount");
-    //     seacowsPairFactory.addLiquidityETHERC1155{ value: 10000 }(ISeacowsPairERC1155(address(pair)), 0);
+        vm.expectRevert("Invalid NFT amount");
+        seacowsPairFactory.addLiquidityERC1155ETH{ value: 10000 }(ISeacowsPairERC1155(address(pair)), 0);
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 
     // function test_remove_liquidity() public {
     //     vm.startPrank(alice);
 
-    //     seacowsPairFactory.addLiquidityETHERC1155{ value: 10000 }(ISeacowsPairERC1155(address(pair)), 100);
+    //     seacowsPairFactory.addLiquidityERC1155ETH{ value: 10000 }(ISeacowsPairERC1155(address(pair)), 100);
 
-    //     seacowsPairFactory.removeLiquidityETHERC1155(ISeacowsPairERC1155(address(pair)), 10);
+    //     seacowsPairFactory.removeLiquidityERC1155ETH(ISeacowsPairERC1155(address(pair)), 10);
 
     //     // check pair weth token balance
     //     uint256 tokenBalance = IERC20(weth).balanceOf(address(pair));
