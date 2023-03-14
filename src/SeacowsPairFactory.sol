@@ -568,6 +568,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         uint256 nftAmount;
         for (uint256 i; i < _nftIds.length; ) {
+            // check if nft id is valid in this pair
+            require(_pair.isValidNFTID(_nftIds[i]), "Invalid nft id");
             // transfer NFTs from sender to pair
             IERC1155(_pair.nft()).safeTransferFrom(msg.sender, address(_pair), _nftIds[i], _amounts[i], "");
             nftAmount += _amounts[i];
@@ -635,6 +637,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         uint256 nftAmount;
         for (uint256 i; i < _nftIds.length; ) {
+            // check if nft id is valid in this pair
+            require(_pair.isValidNFTID(_nftIds[i]), "Invalid nft id");
             nftAmount += _amounts[i];
             unchecked {
                 ++i;
