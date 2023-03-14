@@ -19,8 +19,7 @@ contract ExponentialCurve is ICurve, CurveErrorCodes {
 
     function _isPair(address _pair) internal pure {
         require(
-            ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
-                ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20 ||
+            ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC721_ERC20 ||
                 ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
             "Not a seacows pair"
         );

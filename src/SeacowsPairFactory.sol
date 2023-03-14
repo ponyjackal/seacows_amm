@@ -255,7 +255,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         @return True if the address is the specified pair variant, false otherwise
      */
     function isPair(address potentialPair, PairVariant variant) public view override returns (bool) {
-        if (variant == PairVariant.MISSING_ENUMERABLE_ERC20) {
+        if (variant == PairVariant.ERC721_ERC20) {
             return SeacowsPairCloner.isPairClone(address(this), address(erc721Template), potentialPair);
         } else {
             // invalid input
@@ -433,7 +433,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
-        if (isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
+        if (isPair(recipient, PairVariant.ERC721_ERC20)) {
             require(address(ISeacowsPair(recipient).owner()) == msg.sender, "Not a pair owner");
             emit NFTDeposit(recipient);
         }
@@ -445,7 +445,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      */
     function depositERC20(ERC20 token, address recipient, uint256 amount) external {
         token.safeTransferFrom(msg.sender, recipient, amount);
-        if (isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
+        if (isPair(recipient, PairVariant.ERC721_ERC20)) {
             require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
             if (token == SeacowsPair(recipient).token()) {
                 emit TokenDeposit(recipient);
@@ -460,7 +460,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function depositETH(address recipient) external payable {
         IWETH(weth).deposit{ value: msg.value }();
         IWETH(weth).transfer(recipient, msg.value);
-        if (isPair(recipient, PairVariant.ENUMERABLE_ERC20) || isPair(recipient, PairVariant.MISSING_ENUMERABLE_ERC20)) {
+        if (isPair(recipient, PairVariant.ERC721_ERC20)) {
             require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
             if (address(weth) == address(SeacowsPair(recipient).token())) {
                 emit TokenDeposit(recipient);
@@ -507,30 +507,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @param _tokenAmount ERC20 token amount
      */
     function addLiquidityERC1155ERC20(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts, uint256 _tokenAmount) external {
-        require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
-        require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
-
-        uint256 nftAmount;
-        for (uint256 i; i < _nftIds.length; ) {
-            // transfer NFTs from sender to pair
-            IERC1155(_pair.nft()).safeTransferFrom(msg.sender, address(_pair), _nftIds[i], _amounts[i], "");
-            nftAmount += _amounts[i];
-            unchecked {
-                ++i;
-            }
-        }
-
-        require(nftAmount > 0, "Invalid NFT amount");
-        require(nftAmount * _pair.spotPrice() == _tokenAmount, "Invalid token amount based on spot price");
-
-        // transfer tokens to pair
-        _pair.token().transferFrom(msg.sender, address(_pair), _tokenAmount);
-
-        // mint LP tokens
-        _pair.mintLPToken(msg.sender, nftAmount);
-
-        // increase the nft amount in the pair
-        _pair.addNFTAmount(nftAmount);
+        _addLiquidityERC1155(_pair, _nftIds, _amounts, _tokenAmount);
     }
 
     /**
@@ -569,9 +546,23 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
      * @param _amounts ERC1155 token amount for each Id
      */
     function addLiquidityERC1155ETH(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts) external payable {
+        IWETH(weth).deposit{ value: msg.value }();
+
+        _addLiquidityERC1155(_pair, _nftIds, _amounts, msg.value);
+    }
+
+    /**
+     * @dev add ERC20 liquidity into ERC1155 trading pair
+     * @param _pair ERC1155ERC20 pair
+     * @param _nftIds ERC1155 NFT ids
+     * @param _amounts ERC1155 token amount for each Id
+     * @param _tokenAmount ERC20 token amount
+     */
+    function _addLiquidityERC1155(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts, uint256 _tokenAmount) internal {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
 
+        require(_nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid nft amounts");
         uint256 nftAmount;
         for (uint256 i; i < _nftIds.length; ) {
             // transfer NFTs from sender to pair
@@ -583,11 +574,10 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         require(nftAmount > 0, "Invalid NFT amount");
-        require(nftAmount * _pair.spotPrice() == msg.value, "Invalid eth amount based on spot price");
+        require(nftAmount * _pair.spotPrice() == _tokenAmount, "Invalid eth amount based on spot price");
 
-        IWETH(weth).deposit{ value: msg.value }();
-        // transfer weth to pair
-        IWETH(weth).transfer(address(_pair), msg.value);
+        // transfer tokens to pair
+        _pair.token().transferFrom(msg.sender, address(_pair), _tokenAmount);
 
         // mint LP tokens
         _pair.mintLPToken(msg.sender, nftAmount);

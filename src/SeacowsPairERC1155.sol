@@ -48,6 +48,26 @@ contract SeacowsPairERC1155 is SeacowsPair {
     }
 
     /**
+        @dev check if nft id is valid or not
+        @param _id ERC1155 token id
+     */
+    function isValidNFTID(uint256 _id) public view returns (bool) {
+        if (nftIds.length == 0) return true;
+
+        for (uint256 i; i < nftIds.length; ) {
+            if (_id == nftIds[i]) {
+                return true;
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @notice get reserves in the pool, only available for trade pair
      */
     function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {

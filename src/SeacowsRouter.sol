@@ -732,11 +732,7 @@ contract SeacowsRouter {
         require(factory.isPair(msg.sender, variant), "Not pair");
 
         // verify caller is an ERC20 pair
-        require(
-            variant == ISeacowsPairFactoryLike.PairVariant.ENUMERABLE_ERC20 ||
-                variant == ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20,
-            "Not ERC20 pair"
-        );
+        require(variant == ISeacowsPairFactoryLike.PairVariant.ERC721_ERC20, "Not ERC20 pair");
 
         // transfer tokens to pair
         token.safeTransferFrom(from, to, amount);

@@ -250,7 +250,7 @@ contract SeacowsPairERC721 is SeacowsPair {
     }
 
     function pairVariant() public pure override returns (ISeacowsPairFactoryLike.PairVariant) {
-        return ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20;
+        return ISeacowsPairFactoryLike.PairVariant.ERC721_ERC20;
     }
 
     // @dev see SeacowsPairCloner for params length calculation
