@@ -641,6 +641,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function removeLiquidityERC1155ERC20(ISeacowsPairERC1155 _pair, uint256[] memory _nftIds, uint256[] memory _amounts, bool _toEth) public {
         require(_pair.poolType() == SeacowsPair.PoolType.TRADE, "Not a trade pair");
         require(_pair.pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20, "Not a ERC1155/ERC20 trade pair");
+        require(_nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid amounts");
 
         uint256 nftAmount;
         for (uint256 i; i < _nftIds.length; ) {
@@ -668,7 +669,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         // transfer NFTs from sender to pair
-        _pair.withdrawERC1155(msg.sender, nftAmount);
+        _pair.withdrawERC1155(msg.sender, _nftIds, _amounts);
 
         // remove the nft amount in the pair
         _pair.removeNFTAmount(nftAmount);

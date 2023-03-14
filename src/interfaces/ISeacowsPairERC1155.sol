@@ -23,7 +23,7 @@ interface ISeacowsPairERC1155 is ISeacowsPair {
         address routerCaller
     ) external returns (uint256 outputAmount);
 
-    function withdrawERC1155(address _recipient, uint256 _amount) external;
+    function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external;
 
     function setNFTIds(uint256[] memory _nftIds) external;
 

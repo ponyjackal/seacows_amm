@@ -121,7 +121,12 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
 
         seacowsPairFactory.addLiquidityERC1155ETH{ value: 10000 }(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts);
 
-        seacowsPairFactory.removeLiquidityERC1155ETH(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts);
+        uint256[] memory newNFTIds = new uint256[](1);
+        newNFTIds[0] = 1;
+        uint256[] memory newNFTAmounts = new uint256[](1);
+        newNFTAmounts[0] = 10;
+
+        seacowsPairFactory.removeLiquidityERC1155ETH(ISeacowsPairERC1155(address(pair)), newNFTIds, newNFTAmounts);
 
         // check pair weth token balance
         uint256 tokenBalance = IERC20(weth).balanceOf(address(pair));
