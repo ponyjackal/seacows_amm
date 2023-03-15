@@ -291,6 +291,9 @@ contract SeacowsPairERC1155 is SeacowsPair {
         _sendNFTsToRecipient(_nft, nftRecipient, _nftIds, _amounts);
         _refundTokenToSender(inputAmount);
 
+        // decrease total nft balance
+        nftAmount -= totalAmount;
+
         emit SwapNFTOutPair();
     }
 
@@ -345,6 +348,9 @@ contract SeacowsPairERC1155 is SeacowsPair {
         _payProtocolFeeFromPair(_factory, protocolFee);
 
         _takeNFTsFromSender(nft(), _nftIds, _amounts, _factory, isRouter, routerCaller);
+
+        // increase total nft balance
+        nftAmount += totalAmount;
 
         emit SwapNFTInPair();
     }
