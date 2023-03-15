@@ -6,17 +6,15 @@ import { HelperConfig } from "./HelperConfig.sol";
 import { SeacowsRouter } from "../src/SeacowsRouter.sol";
 import { SeacowsPairFactory } from "../src/SeacowsPairFactory.sol";
 import { ISeacowsPairFactoryLike } from "../src/interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPairEnumerableERC20 } from "../src/SeacowsPairEnumerableERC20.sol";
-import { SeacowsPairMissingEnumerableERC20 } from "../src/SeacowsPairMissingEnumerableERC20.sol";
-import { SeacowsPairERC1155ERC20 } from "../src/SeacowsPairERC1155ERC20.sol";
+import { SeacowsPairERC721 } from "../src/SeacowsPairERC721.sol";
+import { SeacowsPairERC1155 } from "../src/SeacowsPairERC1155.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract DeploySeacowsPairFactory is Script {
     SeacowsRouter internal seacowsRouter;
     SeacowsPairFactory internal seacowsPairFactory;
-    SeacowsPairEnumerableERC20 internal seacowsPairEnumerableERC20;
-    SeacowsPairMissingEnumerableERC20 internal seacowsPairMissingEnumerableERC20;
-    SeacowsPairERC1155ERC20 internal seacowsPairERC1155ERC20;
+    SeacowsPairERC721 internal seacowsPairERC721;
+    SeacowsPairERC1155 internal seacowsPairERC1155;
 
     function run() public {
         HelperConfig helperConfig = new HelperConfig();
@@ -24,25 +22,14 @@ contract DeploySeacowsPairFactory is Script {
 
         vm.startBroadcast();
 
-        /** deploy SeacowsPairEnumerableERC20 */
-        seacowsPairEnumerableERC20 = new SeacowsPairEnumerableERC20(lpUri);
+        /** deploy SeacowsPairERC721 */
+        seacowsPairERC721 = new SeacowsPairERC721(lpUri);
 
-        /** deploy SeacowsPairMissingEnumerableERC20 */
-        seacowsPairMissingEnumerableERC20 = new SeacowsPairMissingEnumerableERC20(lpUri);
-
-        /** deploy SeacowsPairERC1155ERC20 */
-        seacowsPairERC1155ERC20 = new SeacowsPairERC1155ERC20(lpUri);
+        /** deploy SeacowsPairERC1155 */
+        seacowsPairERC1155 = new SeacowsPairERC1155(lpUri);
 
         /** deploy SeacowsPairFactory */
-        seacowsPairFactory = new SeacowsPairFactory(
-            weth,
-            seacowsPairEnumerableERC20,
-            seacowsPairMissingEnumerableERC20,
-            // seacowsPairERC1155ETH,
-            seacowsPairERC1155ERC20,
-            protocolFeeRecipient,
-            protocolFeeMultiplier
-        );
+        seacowsPairFactory = new SeacowsPairFactory(weth, seacowsPairERC721, seacowsPairERC1155, protocolFeeRecipient, protocolFeeMultiplier);
 
         /** deploy SeacowsRouter */
         seacowsRouter = new SeacowsRouter(ISeacowsPairFactoryLike(seacowsPairFactory));

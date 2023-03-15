@@ -7,9 +7,7 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
@@ -37,7 +35,7 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
+        SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
             _token,
             _nft,
             _bondingCurve,
@@ -83,7 +81,7 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
+        SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
             _token,
             _nft,
             _bondingCurve,
@@ -129,7 +127,7 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         uint256[] memory _initialNFTIDs,
         uint256 _initialTokenBalance
     ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC20PairParams memory params = SeacowsPairFactory.CreateERC20PairParams(
+        SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
             _token,
             _nft,
             _bondingCurve,
@@ -164,18 +162,148 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         );
     }
 
-    function createERC1155ERC20Pair(IERC1155 _nft, uint256 _tokenId, uint256 _amounts, IERC20 _token, uint256 _tokenAmount, uint96 _fee)
-        public
-        returns (SeacowsPairERC1155ERC20 pair)
-    {
-        pair = seacowsPairFactory.createPairERC1155ERC20(_nft, _tokenId, cpmmCurve, _amounts, _token, _tokenAmount, _fee);
+    function createERC1155ERC20TradePair(
+        IERC1155 _nft,
+        uint256[] memory _nftIds,
+        uint256[] memory _nftAmounts,
+        IERC20 _token,
+        uint256 _tokenAmount,
+        uint96 _fee
+    ) public returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ERC20PairParams memory params = SeacowsPairFactory.CreateERC1155ERC20PairParams(
+            _token,
+            _nft,
+            cpmmCurve,
+            payable(address(0)),
+            SeacowsPair.PoolType.TRADE,
+            0,
+            _fee,
+            0,
+            _tokenAmount,
+            _nftIds,
+            _nftAmounts
+        );
+        pair = seacowsPairFactory.createPairERC1155ERC20(params);
     }
 
-    function createERC1155ETHPair(IERC1155 _nft, uint256 _tokenId, uint256 _amounts, uint256 _ethAmount, uint96 _fee)
+    function createERC1155ETHTradePair(IERC1155 _nft, uint256[] memory _nftIds, uint256[] memory _nftAmounts, uint256 _ethAmount, uint96 _fee)
         public
         payable
-        returns (SeacowsPairERC1155ERC20 pair)
+        returns (SeacowsPair pair)
     {
-        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(_nft, _tokenId, cpmmCurve, _amounts, _fee);
+        SeacowsPairFactory.CreateERC1155ETHPairParams memory params = SeacowsPairFactory.CreateERC1155ETHPairParams(
+            _nft,
+            cpmmCurve,
+            payable(address(0)),
+            SeacowsPair.PoolType.TRADE,
+            0,
+            _fee,
+            0,
+            _nftIds,
+            _nftAmounts
+        );
+        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
+    }
+
+    function createERC1155ERC20NFTPair(
+        IERC1155 _nft,
+        uint256[] memory _nftIds,
+        uint256[] memory _nftAmounts,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        IERC20 _token,
+        uint256 _tokenAmount,
+        uint128 _delta,
+        uint128 _spotPrice
+    ) public returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ERC20PairParams memory params = SeacowsPairFactory.CreateERC1155ERC20PairParams(
+            _token,
+            _nft,
+            _bondingCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.NFT,
+            _delta,
+            0, // Must be 0 for NFT Pool
+            _spotPrice,
+            _tokenAmount,
+            _nftIds,
+            _nftAmounts
+        );
+        pair = seacowsPairFactory.createPairERC1155ERC20(params);
+    }
+
+    function createERC1155ETHNFTPair(
+        IERC1155 _nft,
+        uint256[] memory _nftIds,
+        uint256[] memory _nftAmounts,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        uint256 _ethAmount,
+        uint128 _delta,
+        uint128 _spotPrice
+    ) public payable returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ETHPairParams memory params = SeacowsPairFactory.CreateERC1155ETHPairParams(
+            _nft,
+            _bondingCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.NFT,
+            _delta,
+            0, // Must be 0 for NFT Pool
+            _spotPrice,
+            _nftIds,
+            _nftAmounts
+        );
+        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
+    }
+
+    function createERC1155ERC20TokenPair(
+        IERC1155 _nft,
+        uint256[] memory _nftIds,
+        uint256[] memory _nftAmounts,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        IERC20 _token,
+        uint256 _tokenAmount,
+        uint128 _delta,
+        uint128 _spotPrice
+    ) public returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ERC20PairParams memory params = SeacowsPairFactory.CreateERC1155ERC20PairParams(
+            _token,
+            _nft,
+            _bondingCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.TOKEN,
+            _delta,
+            0, // Must be 0 for Token Pool
+            _spotPrice,
+            _tokenAmount,
+            _nftIds,
+            _nftAmounts
+        );
+        pair = seacowsPairFactory.createPairERC1155ERC20(params);
+    }
+
+    function createERC1155ETHTokenPair(
+        IERC1155 _nft,
+        uint256[] memory _nftIds,
+        uint256[] memory _nftAmounts,
+        ICurve _bondingCurve,
+        address payable _assetRecipient,
+        uint256 _ethAmount,
+        uint128 _delta,
+        uint128 _spotPrice
+    ) public payable returns (SeacowsPair pair) {
+        SeacowsPairFactory.CreateERC1155ETHPairParams memory params = SeacowsPairFactory.CreateERC1155ETHPairParams(
+            _nft,
+            _bondingCurve,
+            _assetRecipient,
+            SeacowsPair.PoolType.TOKEN,
+            _delta,
+            0, // Must be 0 for TOKEN Pool
+            _spotPrice,
+            _nftIds,
+            _nftAmounts
+        );
+        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
     }
 }

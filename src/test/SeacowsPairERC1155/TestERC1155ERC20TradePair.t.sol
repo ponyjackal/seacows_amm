@@ -5,18 +5,18 @@ import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SeacowsRouter } from "../../SeacowsRouter.sol";
-import { SeacowsPairERC1155ERC20 } from "../../SeacowsPairERC1155ERC20.sol";
+import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
-import { ISeacowsPairERC1155ERC20 } from "../../interfaces/ISeacowsPairERC1155ERC20.sol";
+import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
+import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
+contract TestERC1155ERC20TradePair is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
-    SeacowsPairERC1155ERC20 internal pair;
+    ISeacowsPairERC1155 internal pair;
     TestERC20 internal token;
 
     function setUp() public override(WhenCreatePair) {
@@ -33,11 +33,21 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         token.mint(alice, 1e18);
         token.mint(bob, 1e18);
 
+        /** Approve Bonding Curve */
+        seacowsPairFactory.setBondingCurveAllowed(cpmmCurve, true);
+
         // create a pair
         vm.startPrank(owner);
         token.approve(address(seacowsPairFactory), 1000000);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
-        pair = createERC1155ERC20Pair(testSeacowsSFT, 1, 1000, token, 100000, 10);
+
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
+        SeacowsPair _pair = createERC1155ERC20TradePair(testSeacowsSFT, nftIds, nftAmounts, token, 100000, 10);
+        pair = ISeacowsPairERC1155(address(_pair));
         vm.stopPrank();
 
         vm.startPrank(alice);
@@ -55,8 +65,8 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         address nft = pair.nft();
         assertEq(nft, address(testSeacowsSFT));
 
-        uint256 tokenId = pair.tokenId();
-        assertEq(tokenId, 1);
+        uint256[] memory nftId = pair.getNFTIds();
+        assertEq(nftId[0], 1);
 
         uint256 spotPrice = pair.spotPrice();
         assertEq(spotPrice, 100);
@@ -72,9 +82,14 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
     }
 
     function test_add_liquidity() public {
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
+
         vm.startPrank(alice);
 
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 10000);
         // check LP token balance
         uint256 lpBalance = pair.balanceOf(alice, 1);
         assertEq(lpBalance, 100);
@@ -85,25 +100,34 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
         assertEq(sftBalance, 1100);
         // check spot price
-        uint256 spotPrice = ISeacowsPairERC1155ERC20(address(pair)).spotPrice();
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
         assertEq(spotPrice, 100);
 
         // revert cases
         vm.expectRevert("Invalid token amount based on spot price");
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, 100);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 100);
 
         vm.expectRevert("Invalid NFT amount");
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 0, 10000);
+        nftAmounts[0] = 0;
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 10000);
 
         vm.stopPrank();
     }
 
     function test_remove_liquidity() public {
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
+
         vm.startPrank(alice);
 
-        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, 10000);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 10000);
 
-        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 10, false);
+        uint256[] memory newNFTAmounts = new uint256[](1);
+        newNFTAmounts[0] = 10;
+
+        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, newNFTAmounts, false);
 
         // check pair erc20 token balance
         uint256 tokenBalance = token.balanceOf(address(pair));
@@ -115,11 +139,11 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 lpBalance = pair.balanceOf(alice, 1);
         assertEq(lpBalance, 90);
         // check spot price
-        uint256 spotPrice = ISeacowsPairERC1155ERC20(address(pair)).spotPrice();
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
         assertEq(spotPrice, 100);
         // trying to remove invalid LP token
         vm.expectRevert("Insufficient LP token");
-        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155ERC20(address(pair)), 100, false);
+        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, false);
 
         vm.stopPrank();
     }
@@ -132,7 +156,11 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 tokenBeforeBalance = token.balanceOf(alice);
         uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
         // swap tokens for any nfts
-        pair.swapTokenForAnyNFTs(100, 10150, alice, false, address(0));
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
+        pair.swapTokenForNFTs(nftIds, nftAmounts, 10150, alice, false, address(0));
         // check balances after swap
         uint256 tokenAfterBalance = token.balanceOf(alice);
         uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
@@ -142,11 +170,13 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
 
         // trying to swap with insufficient amount of tokens
         vm.expectRevert("In too many tokens");
-        pair.swapTokenForAnyNFTs(100, 10150, alice, false, address(0));
+        pair.swapTokenForNFTs(nftIds, nftAmounts, 10150, alice, false, address(0));
 
         // trying to swap with invalid nft amount
         vm.expectRevert("Invalid nft amount");
-        pair.swapTokenForAnyNFTs(0, 10150, alice, false, address(0));
+        uint256[] memory invalidNftAmounts = new uint256[](1);
+        invalidNftAmounts[0] = 0;
+        pair.swapTokenForNFTs(nftIds, invalidNftAmounts, 10150, alice, false, address(0));
 
         vm.stopPrank();
     }
@@ -159,7 +189,11 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         uint256 tokenBeforeBalance = token.balanceOf(alice);
         uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
         // swap tokens for any nfts
-        uint256 outputAmount = pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
+        uint256 outputAmount = pair.swapNFTsForToken(nftIds, nftAmounts, 9950, payable(alice), false, address(0));
         // check balances after swap
         uint256 tokenAfterBalance = token.balanceOf(alice);
         uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
@@ -169,11 +203,13 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
 
         // expect too much output tokens
         vm.expectRevert("Out too little tokens");
-        pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
+        pair.swapNFTsForToken(nftIds, nftAmounts, 9950, payable(alice), false, address(0));
 
         // trying to swap with invalid nft amount
         vm.expectRevert("Must ask for > 0 NFTs");
-        pair.swapNFTsForToken(new uint256[](0), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
+        uint256[] memory invalidNftAmounts = new uint256[](1);
+        invalidNftAmounts[0] = 0;
+        pair.swapNFTsForToken(nftIds, invalidNftAmounts, 9950, payable(alice), false, address(0));
 
         vm.stopPrank();
     }

@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
-import { ISeacowsPairERC721ERC20 } from "../../interfaces/ISeacowsPairERC721ERC20.sol";
+import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
 import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
@@ -93,7 +93,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = IWETH(weth).balanceOf(alice);
         uint256 tokenBalanceOwner = IWETH(weth).balanceOf(owner);
 
-        ISeacowsPairERC721ERC20(address(erc721ETHPair)).swapTokenForSpecificNFTs(
+        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             15 ether,
@@ -128,7 +128,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalanceOwner = token.balanceOf(owner);
 
-        ISeacowsPairERC721ERC20(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(
+        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             15 ether,
@@ -161,7 +161,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         nftETHIds[1] = 2;
 
         vm.expectRevert();
-        ISeacowsPairERC721ERC20(address(erc721ETHPair)).swapTokenForSpecificNFTs(
+        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(
             nftETHIds,
             new SeacowsRouter.NFTDetail[](0),
             15 ether,
@@ -175,7 +175,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         nftIds[1] = 2;
 
         vm.expectRevert("In too many tokens");
-        ISeacowsPairERC721ERC20(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(
+        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(
             nftIds,
             new SeacowsRouter.NFTDetail[](0),
             10 ether,

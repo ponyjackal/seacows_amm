@@ -16,25 +16,17 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
     @title An NFT/Token pair for an NFT that implements ERC721Enumerable
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
-contract SeacowsPairERC1155ERC20 is SeacowsPair {
+contract SeacowsPairERC1155 is SeacowsPair {
     using SafeERC20 for ERC20;
+
+    uint256[] public nftIds;
+    uint256 public nftAmount;
+
+    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
 
     constructor(string memory _uri) SeacowsPair(_uri) {}
 
-    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 113;
-
     /** View Functions */
-
-    /**
-        @notice Returns the ERC1155 token id associated with the pair
-        @dev See SeacowsPairCloner for an explanation on how this works
-     */
-    function tokenId() public pure returns (uint256 _tokenId) {
-        uint256 paramsLength = _immutableParamsLength();
-        assembly {
-            _tokenId := shr(0x60, calldataload(add(sub(calldatasize(), paramsLength), 81)))
-        }
-    }
 
     /**
         @notice Returns the SeacowsPair type
@@ -49,56 +41,98 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
     }
 
     /**
+        @notice Returns the ERC1155 ids
+     */
+    function getNFTIds() public view returns (uint256[] memory) {
+        return nftIds;
+    }
+
+    /**
+        @dev check if nft id is valid or not
+        @param _id ERC1155 token id
+     */
+    function isValidNFTID(uint256 _id) public view returns (bool) {
+        if (nftIds.length == 0) return true;
+
+        for (uint256 i; i < nftIds.length; ) {
+            if (_id == nftIds[i]) {
+                return true;
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @notice get reserves in the pool, only available for trade pair
      */
     function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
-        nftReserve = IERC1155(nft()).balanceOf(address(this), tokenId());
+        nftReserve = nftAmount;
         // token balance
         tokenReserve = token().balanceOf(address(this));
     }
 
     /** Internal Functions */
 
-    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal {
+    function _sendNFTsToRecipient(address _nft, address nftRecipient, uint256[] memory _nftIds, uint256[] memory _amounts) internal {
+        require(_nftIds.length == _amounts.length, "Invalid amounts");
+
         // Send NFTs to recipient
-        IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, tokenId(), numNFTs, "");
+        for (uint256 i; i < _nftIds.length; ) {
+            IERC1155(_nft).safeTransferFrom(address(this), nftRecipient, _nftIds[i], _amounts[i], "");
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
         @notice Takes NFTs from the caller and sends them into the pair's asset recipient
         @dev This is used by the SeacowsPair's swapNFTForToken function.
         @param _nft The NFT collection to take from
-        @param nftIds The specific NFT IDs to take, we just need the length of IDs, no need the values in it
+        @param _nftIds The specific NFT IDs to take, we just need the length of IDs, no need the values in it
+        @param _amounts The amount for each ID
         @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
         ETH pairs.
         @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
         ETH pairs.
      */
-    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
-        internal
-        override
-    {
-        {
-            address _assetRecipient = getAssetRecipient();
-            uint256 _tokenId = tokenId();
-            uint256 numNFTs = nftIds.length;
+    function _takeNFTsFromSender(
+        address _nft,
+        uint256[] memory _nftIds,
+        uint256[] memory _amounts,
+        ISeacowsPairFactoryLike _factory,
+        bool isRouter,
+        address routerCaller
+    ) internal {
+        require(_nftIds.length == _amounts.length, "Invalid amounts");
 
-            if (isRouter) {
-                // Verify if router is allowed
-                SeacowsRouter router = SeacowsRouter(payable(msg.sender));
-                (bool routerAllowed, ) = _factory.routerStatus(router);
-                require(routerAllowed, "Not router");
+        address _assetRecipient = getAssetRecipient();
 
-                // Call router to pull NFTs
-                uint256 beforeBalance = IERC1155(_nft).balanceOf(_assetRecipient, _tokenId);
-                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _tokenId, numNFTs, "");
-                router.pairTransferNFTFromERC1155(IERC1155(_nft), _tokenId, routerCaller, _assetRecipient, numNFTs, pairVariant());
+        if (isRouter) {
+            // Verify if router is allowed
+            SeacowsRouter router = SeacowsRouter(payable(msg.sender));
+            (bool routerAllowed, ) = _factory.routerStatus(router);
+            require(routerAllowed, "Not router");
 
-                require((IERC1155(_nft).balanceOf(_assetRecipient, _tokenId) - beforeBalance) == numNFTs, "NFTs not transferred");
-            } else {
-                // Pull NFTs directly from sender
-                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _tokenId, numNFTs, "");
+            // Call router to pull NFTs
+            // uint256 beforeBalance = IERC1155(_nft).balanceOf(_assetRecipient, _nftId);
+            // IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftId, numNFTs, "");
+            // router.pairTransferNFTFromERC1155(IERC1155(_nft), _nftId, routerCaller, _assetRecipient, numNFTs, pairVariant());
+
+            // require((IERC1155(_nft).balanceOf(_assetRecipient, _nftId) - beforeBalance) == numNFTs, "NFTs not transferred");
+        } else {
+            // Pull NFTs directly from sender
+            for (uint256 i; i < _nftIds.length; ) {
+                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftIds[i], _amounts[i], "");
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
@@ -158,8 +192,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
 
     /**
         @notice Calculates the amount needed to be sent by the pair for a sell and adjusts spot price or delta if necessary
-        @param nftIds The nftIds to buy from the pair
-        @param details The details of NFTs to buy from the pair
+        @param numOfNFTs The number of nfts
         @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
         amount is less than this value, the transaction will be reverted.
         @param protocolFee The percentage of protocol fee to be taken, as a percentage
@@ -167,8 +200,7 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         @return outputAmount The amount of tokens total tokens receive
      */
     function _calculateSellInfoAndUpdatePoolParams(
-        uint256[] memory nftIds,
-        SeacowsRouter.NFTDetail[] memory details,
+        uint256 numOfNFTs,
         uint256 minExpectedTokenOutput,
         ICurve _bondingCurve,
         ISeacowsPairFactoryLike _factory
@@ -180,7 +212,6 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         // uint128 newSpotPriceOriginal;
         uint128 currentDelta = delta;
         uint128 newDelta = delta;
-        uint256 numOfNFTs = nftIds.length;
 
         (error, newSpotPrice, newDelta, outputAmount, protocolFee) = _bondingCurve.getSellInfo(
             address(this),
@@ -193,18 +224,28 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
 
     /** Mutative Functions */
 
-    function withdrawERC1155(address _recipient, uint256 _amount) external onlyWithdrawable {
+    function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
         require(poolType() == PoolType.TRADE, "Invalid pool type");
-        IERC1155(nft()).safeTransferFrom(address(this), _recipient, tokenId(), _amount, "");
+        require(_nftIds.length == _amounts.length, "Invalid amounts");
 
-        emit NFTWithdrawal(_recipient, _amount);
+        uint256 totalAmount;
+        for (uint256 i; i < _nftIds.length; ) {
+            IERC1155(nft()).safeTransferFrom(address(this), _recipient, _nftIds[i], _amounts[i], "");
+            totalAmount += _amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
+
+        emit NFTWithdrawal(_recipient, totalAmount);
     }
 
     /**
-        @notice Sends token to the pair in exchange for any `numNFTs` NFTs
+        @notice Sends token to the pair in exchange for NFTs
         @dev To compute the amount of token to send, call bondingCurve.getBuyInfo.
         This swap function is meant for users who are ID agnostic
-        @param numNFTs The number of NFTs to purchase
+        @param _nftIds The ERC1155 NFT Ids
+        @param _amounts The amount of NFTs for each ID
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
@@ -214,30 +255,44 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         ETH pairs.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
-        external
-        payable
-        virtual
-        nonReentrant
-        returns (uint256 inputAmount)
-    {
+    function swapTokenForNFTs(
+        uint256[] memory _nftIds,
+        uint256[] memory _amounts,
+        uint256 maxExpectedTokenInput,
+        address nftRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external nonReentrant returns (uint256 inputAmount) {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
         address _nft = nft();
 
+        uint256 totalAmount;
+        for (uint256 i; i < _amounts.length; ) {
+            totalAmount += _amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
+
         // Input validation
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require(numNFTs > 0, "Invalid nft amount");
+            require(_nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid nft ids");
+            require(totalAmount > 0, "Invalid nft amount");
         }
+
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(numNFTs, maxExpectedTokenInput, _bondingCurve, _factory);
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(totalAmount, maxExpectedTokenInput, _bondingCurve, _factory);
         _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
-        _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
+        _sendNFTsToRecipient(_nft, nftRecipient, _nftIds, _amounts);
         _refundTokenToSender(inputAmount);
+
+        // decrease total nft balance
+        nftAmount -= totalAmount;
 
         emit SwapNFTOutPair();
     }
@@ -245,7 +300,8 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
     /**
         @notice Sends a set of NFTs to the pair in exchange for token
         @dev To compute the amount of token to that will be received, call bondingCurve.getSellInfo.
-        @param nftIds The list of IDs of the NFTs to sell to the pair
+        @param _nftIds The ERC1155 NFT Ids
+        @param _amounts The amount of NFTs for each ID
         @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
         amount is less than this value, the transaction will be reverted.
         @param tokenRecipient The recipient of the token output
@@ -256,34 +312,70 @@ contract SeacowsPairERC1155ERC20 is SeacowsPair {
         @return outputAmount The amount of token received
      */
     function swapNFTsForToken(
-        uint256[] calldata nftIds,
-        SeacowsRouter.NFTDetail[] calldata details,
+        uint256[] memory _nftIds,
+        uint256[] memory _amounts,
         uint256 minExpectedTokenOutput,
         address payable tokenRecipient,
         bool isRouter,
         address routerCaller
-    ) external virtual nonReentrant returns (uint256 outputAmount) {
+    ) external nonReentrant returns (uint256 outputAmount) {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
+
+        uint256 totalAmount;
+        for (uint256 i; i < _amounts.length; ) {
+            totalAmount += _amounts[i];
+            unchecked {
+                ++i;
+            }
+        }
 
         // Input validation
         {
             PoolType _poolType = poolType();
             require(_poolType == PoolType.TOKEN || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require(nftIds.length > 0, "Must ask for > 0 NFTs");
+            require(nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid amounts");
+            require(totalAmount > 0, "Must ask for > 0 NFTs");
         }
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(nftIds, details, minExpectedTokenOutput, _bondingCurve, _factory);
+        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(totalAmount, minExpectedTokenOutput, _bondingCurve, _factory);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
         _payProtocolFeeFromPair(_factory, protocolFee);
 
-        _takeNFTsFromSender(nft(), nftIds, _factory, isRouter, routerCaller);
+        _takeNFTsFromSender(nft(), _nftIds, _amounts, _factory, isRouter, routerCaller);
+
+        // increase total nft balance
+        nftAmount += totalAmount;
 
         emit SwapNFTInPair();
+    }
+
+    /**
+     * @dev set ERC1155 nft ids
+     * @param _nftIds ERC1155 ids
+     */
+    function setNFTIds(uint256[] memory _nftIds) external onlyFactory {
+        nftIds = _nftIds;
+    }
+
+    /**
+     * @dev Add new NFTs to the pool
+     * @param _nftAmount total amount of nfts
+     */
+    function addNFTAmount(uint256 _nftAmount) external onlyFactory {
+        nftAmount += _nftAmount;
+    }
+
+    /**
+     * @dev Remove NFTs from the pool
+     * @param _nftAmount total amount of nfts
+     */
+    function removeNFTAmount(uint256 _nftAmount) external onlyFactory {
+        nftAmount -= _nftAmount;
     }
 }

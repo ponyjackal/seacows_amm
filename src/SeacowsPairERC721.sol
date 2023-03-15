@@ -10,7 +10,7 @@ import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
-contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
+contract SeacowsPairERC721 is SeacowsPair {
     using EnumerableSet for EnumerableSet.UintSet;
 
     // Used for internal ID tracking
@@ -146,6 +146,58 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
         _updateSpotPrice(error, outputAmount, minExpectedTokenOutput, currentDelta, newDelta, currentSpotPrice, newSpotPrice);
     }
 
+    /**
+        @notice Takes NFTs from the caller and sends them into the pair's asset recipient
+        @dev This is used by the SeacowsPair's swapNFTForToken function. 
+        @param _nft The NFT collection to take from
+        @param nftIds The specific NFT IDs to take
+        @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
+        ETH pairs.
+        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
+        ETH pairs.
+     */
+    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, ISeacowsPairFactoryLike _factory, bool isRouter, address routerCaller)
+        internal
+    {
+        {
+            address _assetRecipient = getAssetRecipient();
+            uint256 numNFTs = nftIds.length;
+
+            if (isRouter) {
+                // Verify if router is allowed
+                SeacowsRouter router = SeacowsRouter(payable(msg.sender));
+                (bool routerAllowed, ) = _factory.routerStatus(router);
+                require(routerAllowed, "Not router");
+
+                // Call router to pull NFTs
+                // If more than 1 NFT is being transfered, we can do a balance check instead of an ownership check, as pools are indifferent between NFTs from the same collection
+                if (numNFTs > 1) {
+                    uint256 beforeBalance = IERC721(_nft).balanceOf(_assetRecipient);
+                    for (uint256 i = 0; i < numNFTs; ) {
+                        router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[i], pairVariant());
+
+                        unchecked {
+                            ++i;
+                        }
+                    }
+                    require((IERC721(_nft).balanceOf(_assetRecipient) - beforeBalance) == numNFTs, "NFTs not transferred");
+                } else {
+                    router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[0], pairVariant());
+                    require(IERC721(_nft).ownerOf(nftIds[0]) == _assetRecipient, "NFT not transferred");
+                }
+            } else {
+                // Pull NFTs directly from sender
+                for (uint256 i; i < numNFTs; ) {
+                    IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
+
+                    unchecked {
+                        ++i;
+                    }
+                }
+            }
+        }
+    }
+
     /** View Functions */
 
     /**
@@ -198,7 +250,7 @@ contract SeacowsPairMissingEnumerableERC20 is SeacowsPair {
     }
 
     function pairVariant() public pure override returns (ISeacowsPairFactoryLike.PairVariant) {
-        return ISeacowsPairFactoryLike.PairVariant.MISSING_ENUMERABLE_ERC20;
+        return ISeacowsPairFactoryLike.PairVariant.ERC721_ERC20;
     }
 
     // @dev see SeacowsPairCloner for params length calculation
