@@ -262,25 +262,26 @@ contract SeacowsPairERC1155 is SeacowsPair {
         address nftRecipient,
         bool isRouter,
         address routerCaller
-    ) external payable nonReentrant returns (uint256 inputAmount) {
+    ) external nonReentrant returns (uint256 inputAmount) {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
         address _nft = nft();
 
-        // Input validation
-        {
-            PoolType _poolType = poolType();
-            require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
-            require(_nftIds.length == _amounts.length, "Invalid amounts");
-        }
-
         uint256 totalAmount;
-        for (uint256 i; i < _nftIds.length; ) {
+        for (uint256 i; i < _amounts.length; ) {
             totalAmount += _amounts[i];
             unchecked {
                 ++i;
             }
+        }
+
+        // Input validation
+        {
+            PoolType _poolType = poolType();
+            require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
+            require(_nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid nft ids");
+            require(totalAmount > 0, "Invalid nft amount");
         }
 
         // Call bonding curve for pricing information
@@ -327,7 +328,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         }
 
         uint256 totalAmount;
-        for (uint256 i; i < _nftIds.length; ) {
+        for (uint256 i; i < _amounts.length; ) {
             totalAmount += _amounts[i];
             unchecked {
                 ++i;

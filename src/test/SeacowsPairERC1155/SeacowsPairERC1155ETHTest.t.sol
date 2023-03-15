@@ -147,34 +147,40 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         vm.stopPrank();
     }
 
-    // function test_swap_any_nfts() public {
-    //     vm.startPrank(alice);
-    //     // deposit eth for weth
-    //     IWETH(weth).deposit{ value: 1000000 ether }();
-    //     // approve weth tokens to the pair
-    //     IERC20(weth).approve(address(pair), 1000000);
-    //     // nft and token balance before swap
-    //     uint256 tokenBeforeBalance = IERC20(weth).balanceOf(alice);
-    //     uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
-    //     // swap tokens for any nfts
-    //     pair.swapTokenForAnyNFTs(100, 10150, alice, false, address(0));
-    //     // check balances after swap
-    //     uint256 tokenAfterBalance = IERC20(weth).balanceOf(alice);
-    //     uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
+    function test_swap_any_nfts() public {
+        vm.startPrank(alice);
+        // deposit eth for weth
+        IWETH(weth).deposit{ value: 1000000 ether }();
+        // approve weth tokens to the pair
+        IERC20(weth).approve(address(pair), 1000000);
+        // nft and token balance before swap
+        uint256 tokenBeforeBalance = IERC20(weth).balanceOf(alice);
+        uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
+        // swap tokens for any nfts
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
+        pair.swapTokenForNFTs(nftIds, nftAmounts, 10150, alice, false, address(0));
+        // check balances after swap
+        uint256 tokenAfterBalance = IERC20(weth).balanceOf(alice);
+        uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
 
-    //     assertEq(tokenAfterBalance, tokenBeforeBalance - 10050);
-    //     assertEq(sftAfterBalance, sftBeforeBalance + 100);
+        assertEq(tokenAfterBalance, tokenBeforeBalance - 10050);
+        assertEq(sftAfterBalance, sftBeforeBalance + 100);
 
-    //     // trying to swap with insufficient amount of tokens
-    //     vm.expectRevert("In too many tokens");
-    //     pair.swapTokenForAnyNFTs(100, 10150, alice, false, address(0));
+        // trying to swap with insufficient amount of tokens
+        vm.expectRevert("In too many tokens");
+        pair.swapTokenForNFTs(nftIds, nftAmounts, 10150, alice, false, address(0));
 
-    //     // trying to swap with invalid nft amount
-    //     vm.expectRevert("Invalid nft amount");
-    //     pair.swapTokenForAnyNFTs(0, 10150, alice, false, address(0));
+        // trying to swap with invalid nft amount
+        vm.expectRevert("Invalid nft amount");
+        uint256[] memory invalidNftAmounts = new uint256[](1);
+        invalidNftAmounts[0] = 0;
+        pair.swapTokenForNFTs(nftIds, invalidNftAmounts, 10150, alice, false, address(0));
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 
     // function test_swap_tokens() public {
     //     vm.startPrank(alice);
