@@ -81,58 +81,72 @@ contract SeacowsPairERC1155ERC20Test is WhenCreatePair {
         assertEq(lpBalance, 1000);
     }
 
-    // function test_add_liquidity() public {
-    //     vm.startPrank(alice);
+    function test_add_liquidity() public {
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
 
-    //     seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, 10000);
-    //     // check LP token balance
-    //     uint256 lpBalance = pair.balanceOf(alice, 1);
-    //     assertEq(lpBalance, 100);
-    //     // check pair erc20 token balance
-    //     uint256 tokenBalance = token.balanceOf(address(pair));
-    //     assertEq(tokenBalance, 110000);
-    //     // check pair erc1155 balance
-    //     uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
-    //     assertEq(sftBalance, 1100);
-    //     // check spot price
-    //     uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
-    //     assertEq(spotPrice, 100);
+        vm.startPrank(alice);
 
-    //     // revert cases
-    //     vm.expectRevert("Invalid token amount based on spot price");
-    //     seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, 100);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 10000);
+        // check LP token balance
+        uint256 lpBalance = pair.balanceOf(alice, 1);
+        assertEq(lpBalance, 100);
+        // check pair erc20 token balance
+        uint256 tokenBalance = token.balanceOf(address(pair));
+        assertEq(tokenBalance, 110000);
+        // check pair erc1155 balance
+        uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
+        assertEq(sftBalance, 1100);
+        // check spot price
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+        assertEq(spotPrice, 100);
 
-    //     vm.expectRevert("Invalid NFT amount");
-    //     seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 0, 10000);
+        // revert cases
+        vm.expectRevert("Invalid token amount based on spot price");
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 100);
 
-    //     vm.stopPrank();
-    // }
+        vm.expectRevert("Invalid NFT amount");
+        nftAmounts[0] = 0;
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 10000);
 
-    // function test_remove_liquidity() public {
-    //     vm.startPrank(alice);
+        vm.stopPrank();
+    }
 
-    //     seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, 10000);
+    function test_remove_liquidity() public {
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
 
-    //     seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 10, false);
+        vm.startPrank(alice);
 
-    //     // check pair erc20 token balance
-    //     uint256 tokenBalance = token.balanceOf(address(pair));
-    //     assertEq(tokenBalance, 109000);
-    //     // check pair erc1155 balance
-    //     uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
-    //     assertEq(sftBalance, 1090);
-    //     // check LP token balance
-    //     uint256 lpBalance = pair.balanceOf(alice, 1);
-    //     assertEq(lpBalance, 90);
-    //     // check spot price
-    //     uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
-    //     assertEq(spotPrice, 100);
-    //     // trying to remove invalid LP token
-    //     vm.expectRevert("Insufficient LP token");
-    //     seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), 100, false);
+        seacowsPairFactory.addLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, 10000);
 
-    //     vm.stopPrank();
-    // }
+        uint256[] memory newNFTAmounts = new uint256[](1);
+        newNFTAmounts[0] = 10;
+
+        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, newNFTAmounts, false);
+
+        // check pair erc20 token balance
+        uint256 tokenBalance = token.balanceOf(address(pair));
+        assertEq(tokenBalance, 109000);
+        // check pair erc1155 balance
+        uint256 sftBalance = testSeacowsSFT.balanceOf(address(pair), 1);
+        assertEq(sftBalance, 1090);
+        // check LP token balance
+        uint256 lpBalance = pair.balanceOf(alice, 1);
+        assertEq(lpBalance, 90);
+        // check spot price
+        uint256 spotPrice = ISeacowsPairERC1155(address(pair)).spotPrice();
+        assertEq(spotPrice, 100);
+        // trying to remove invalid LP token
+        vm.expectRevert("Insufficient LP token");
+        seacowsPairFactory.removeLiquidityERC1155ERC20(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts, false);
+
+        vm.stopPrank();
+    }
 
     // function test_swap_any_nfts() public {
     //     vm.startPrank(alice);

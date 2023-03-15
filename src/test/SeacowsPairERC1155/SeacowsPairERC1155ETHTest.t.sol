@@ -101,7 +101,7 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         assertEq(spotPrice, 100);
 
         // revert cases
-        vm.expectRevert("Invalid eth amount based on spot price");
+        vm.expectRevert("Invalid token amount based on spot price");
         seacowsPairFactory.addLiquidityERC1155ETH{ value: 100 }(ISeacowsPairERC1155(address(pair)), nftIds, nftAmounts);
 
         vm.expectRevert("Invalid NFT amount");

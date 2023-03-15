@@ -579,7 +579,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         require(nftAmount > 0, "Invalid NFT amount");
-        require(nftAmount * _pair.spotPrice() == _tokenAmount, "Invalid eth amount based on spot price");
+        require(nftAmount * _pair.spotPrice() == _tokenAmount, "Invalid token amount based on spot price");
 
         // mint LP tokens
         _pair.mintLPToken(msg.sender, nftAmount);
