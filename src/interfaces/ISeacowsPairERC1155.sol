@@ -21,8 +21,8 @@ interface ISeacowsPairERC1155 is ISeacowsPair {
     ) external returns (uint256 inputAmount);
 
     function swapNFTsForToken(
-        uint256[] calldata nftIds,
-        SeacowsRouter.NFTDetail[] calldata details,
+        uint256[] memory _nftIds,
+        uint256[] memory _amounts,
         uint256 minExpectedTokenOutput,
         address payable tokenRecipient,
         bool isRouter,

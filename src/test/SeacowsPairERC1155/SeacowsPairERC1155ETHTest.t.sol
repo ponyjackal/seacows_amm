@@ -182,30 +182,36 @@ contract SeacowsPairERC1155ETHTest is WhenCreatePair {
         vm.stopPrank();
     }
 
-    // function test_swap_tokens() public {
-    //     vm.startPrank(alice);
-    //     // approve erc1155 tokens to the pair
-    //     testSeacowsSFT.setApprovalForAll(address(pair), true);
-    //     // nft and token balance before swap
-    //     uint256 tokenBeforeBalance = IERC20(weth).balanceOf(alice);
-    //     uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
-    //     // swap tokens for any nfts
-    //     uint256 outputAmount = pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
-    //     // check balances after swap
-    //     uint256 tokenAfterBalance = IERC20(weth).balanceOf(alice);
-    //     uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
+    function test_swap_tokens() public {
+        vm.startPrank(alice);
+        // approve erc1155 tokens to the pair
+        testSeacowsSFT.setApprovalForAll(address(pair), true);
+        // nft and token balance before swap
+        uint256 tokenBeforeBalance = IERC20(weth).balanceOf(alice);
+        uint256 sftBeforeBalance = testSeacowsSFT.balanceOf(alice, 1);
+        // swap tokens for any nfts
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 100;
+        uint256 outputAmount = pair.swapNFTsForToken(nftIds, nftAmounts, 9950, payable(alice), false, address(0));
+        // check balances after swap
+        uint256 tokenAfterBalance = IERC20(weth).balanceOf(alice);
+        uint256 sftAfterBalance = testSeacowsSFT.balanceOf(alice, 1);
 
-    //     assertEq(tokenAfterBalance, tokenBeforeBalance + 9950);
-    //     assertEq(sftAfterBalance, sftBeforeBalance - 100);
+        assertEq(tokenAfterBalance, tokenBeforeBalance + 9950);
+        assertEq(sftAfterBalance, sftBeforeBalance - 100);
 
-    //     // expect too much output tokens
-    //     vm.expectRevert("Out too little tokens");
-    //     pair.swapNFTsForToken(new uint256[](100), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
+        // expect too much output tokens
+        vm.expectRevert("Out too little tokens");
+        pair.swapNFTsForToken(nftIds, nftAmounts, 9950, payable(alice), false, address(0));
 
-    //     // trying to swap with invalid nft amount
-    //     vm.expectRevert("Must ask for > 0 NFTs");
-    //     pair.swapNFTsForToken(new uint256[](0), new SeacowsRouter.NFTDetail[](0), 9950, payable(alice), false, address(0));
+        // trying to swap with invalid nft amount
+        vm.expectRevert("Must ask for > 0 NFTs");
+        uint256[] memory invalidNftAmounts = new uint256[](1);
+        invalidNftAmounts[0] = 0;
+        pair.swapNFTsForToken(nftIds, invalidNftAmounts, 9950, payable(alice), false, address(0));
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 }
