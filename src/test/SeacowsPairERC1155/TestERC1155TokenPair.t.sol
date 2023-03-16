@@ -31,26 +31,26 @@ contract TestERC1155TokenPair is WhenCreatePair {
         testSeacowsSFT.safeMint(bob);
 
         token = new TestERC20();
-        token.mint(owner, 1e18);
-        token.mint(alice, 1e18);
-        token.mint(bob, 1e18);
+        token.mint(owner, 10000 ether);
+        token.mint(alice, 10000 ether);
+        token.mint(bob, 10000 ether);
 
         /** Approve Bonding Curve */
         seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
         seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
 
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1000000);
+        token.approve(address(seacowsPairFactory), 1000000 ether);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        token.approve(address(seacowsPairFactory), 1000000);
+        token.approve(address(seacowsPairFactory), 1000000 ether);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        token.approve(address(seacowsPairFactory), 1000000);
+        token.approve(address(seacowsPairFactory), 1000000 ether);
         testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
         vm.stopPrank();
     }
@@ -373,6 +373,51 @@ contract TestERC1155TokenPair is WhenCreatePair {
         vm.startPrank(alice);
         vm.expectRevert("Caller should be an owner");
         _exponentialPair.withdrawERC20(alice, 100 ether);
+        vm.stopPrank();
+    }
+
+    function testAddLiquidityExponentialPair() public {
+        vm.startPrank(owner);
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+        nftIds[2] = 6;
+
+        uint256[] memory nftAmounts = new uint256[](3);
+        // create a exponential pair
+        SeacowsPair _exponentialPair = createERC1155ERC20TokenPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            exponentialCurve,
+            payable(owner),
+            token,
+            100 ether,
+            1.01 ether,
+            20 ether
+        );
+        exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
+
+        /** owner deposits token to erc721-erc20 token pair */
+        seacowsPairFactory.depositERC20(token, address(_exponentialPair), 120 ether);
+        /** check token balance */
+        uint256 tokenBalance = token.balanceOf(address(_exponentialPair));
+        assertEq(tokenBalance, 220 ether);
+        /** check bonding curve */
+        ICurve curve = _exponentialPair.bondingCurve();
+        assertEq(address(curve), address(exponentialCurve));
+        /** check delta */
+        uint128 delta = _exponentialPair.delta();
+        assertEq(delta, 1.01 ether);
+        /** check spot price */
+        uint128 spotPrice = _exponentialPair.spotPrice();
+        assertEq(spotPrice, 20 ether);
+        vm.stopPrank();
+
+        /** alice is trying to deposit tokens */
+        vm.startPrank(alice);
+        vm.expectRevert("Not a pair owner");
+        seacowsPairFactory.depositERC20(token, address(_exponentialPair), 100 ether);
         vm.stopPrank();
     }
 }

@@ -416,11 +416,11 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
      */
     function depositERC20(ERC20 token, address recipient, uint256 amount) external {
         token.safeTransferFrom(msg.sender, recipient, amount);
-        if (isPair(recipient, PairVariant.ERC721_ERC20)) {
-            require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
-            if (token == SeacowsPair(recipient).token()) {
-                emit TokenDeposit(recipient);
-            }
+
+        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.TOKEN, "Not a token pair");
+        require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
+        if (token == SeacowsPair(recipient).token()) {
+            emit TokenDeposit(recipient);
         }
     }
 
