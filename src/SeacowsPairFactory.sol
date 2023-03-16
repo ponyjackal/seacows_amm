@@ -431,11 +431,12 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     function depositETH(address recipient) external payable {
         IWETH(weth).deposit{ value: msg.value }();
         IWETH(weth).transfer(recipient, msg.value);
-        if (isPair(recipient, PairVariant.ERC721_ERC20)) {
-            require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
-            if (address(weth) == address(SeacowsPair(recipient).token())) {
-                emit TokenDeposit(recipient);
-            }
+
+        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.TOKEN, "Not a token pair");
+        require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
+
+        if (address(weth) == address(SeacowsPair(recipient).token())) {
+            emit TokenDeposit(recipient);
         }
     }
 

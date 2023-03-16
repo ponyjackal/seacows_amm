@@ -10,6 +10,8 @@ import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
 import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
+import { ICurve } from "../../bondingcurve/ICurve.sol";
+import { IWETH } from "../../interfaces/IWETH.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
@@ -256,6 +258,121 @@ contract TestERC1155TokenPair is WhenCreatePair {
         vm.expectRevert("Caller is not an admin");
         _exponentialPair.changeDelta(1.1 ether);
 
+        vm.stopPrank();
+    }
+
+    function testRemoveLiquidityLinearPair() public {
+        vm.startPrank(owner);
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+        nftIds[2] = 6;
+
+        uint256[] memory nftAmounts = new uint256[](3);
+        // create a linear pair
+        SeacowsPair _linearPair = createERC1155ETHTokenPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            linearCurve,
+            payable(owner),
+            14 ether,
+            0.1 ether,
+            5 ether
+        );
+        linearPair = ISeacowsPairERC1155(address(_linearPair));
+
+        /** owner withdraws WETH from erc721-weth pair */
+        _linearPair.withdrawERC20(owner, 4 ether);
+        /** check ETH balance */
+        uint256 wethBalance = IWETH(weth).balanceOf(address(_linearPair));
+        assertEq(wethBalance, 10 ether);
+        /** check bonding curve */
+        ICurve curve = _linearPair.bondingCurve();
+        assertEq(address(curve), address(linearCurve));
+        /** check delta */
+        uint128 delta = _linearPair.delta();
+        assertEq(delta, 0.1 ether);
+        /** check spot price */
+        uint128 spotPrice = _linearPair.spotPrice();
+        assertEq(spotPrice, 5 ether);
+
+        /** owner is trying to withdraw to zero address */
+        vm.expectRevert("Invalid address");
+        _linearPair.withdrawERC20(address(0), 5 ether);
+
+        /** owner is trying to withdraw zero amount */
+        vm.expectRevert("Invalid amount");
+        _linearPair.withdrawERC20(owner, 0 ether);
+
+        /** owner is trying to withdraw too much amount */
+        vm.expectRevert();
+        _linearPair.withdrawERC20(owner, 100 ether);
+
+        vm.stopPrank();
+
+        /** alice is trying to withdraw WETH */
+        vm.startPrank(alice);
+        vm.expectRevert("Caller should be an owner");
+        _linearPair.withdrawERC20(alice, 4 ether);
+        vm.stopPrank();
+    }
+
+    function testRemoveLiquidityExponentialPair() public {
+        vm.startPrank(owner);
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+        nftIds[2] = 6;
+
+        uint256[] memory nftAmounts = new uint256[](3);
+        // create a exponential pair
+        SeacowsPair _exponentialPair = createERC1155ERC20TokenPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            exponentialCurve,
+            payable(owner),
+            token,
+            100 ether,
+            1.01 ether,
+            20 ether
+        );
+        exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
+
+        /** owner withdraws tokens from erc721-erc20 token pair */
+        _exponentialPair.withdrawERC20(owner, 50 ether);
+        /** check token balance */
+        uint256 tokenBalance = token.balanceOf(address(_exponentialPair));
+        assertEq(tokenBalance, 50 ether);
+        /** check bonding curve */
+        ICurve curve = _exponentialPair.bondingCurve();
+        assertEq(address(curve), address(exponentialCurve));
+        /** check delta */
+        uint128 delta = _exponentialPair.delta();
+        assertEq(delta, 1.01 ether);
+        /** check spot price */
+        uint128 spotPrice = _exponentialPair.spotPrice();
+        assertEq(spotPrice, 20 ether);
+
+        /** owner is trying to withdraw to zero address */
+        vm.expectRevert("Invalid address");
+        _exponentialPair.withdrawERC20(address(0), 100 ether);
+
+        /** owner is trying to withdraw zero amount */
+        vm.expectRevert("Invalid amount");
+        _exponentialPair.withdrawERC20(owner, 0 ether);
+
+        /** owner is trying to withdraw too much amount */
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        _exponentialPair.withdrawERC20(owner, 100 ether);
+
+        vm.stopPrank();
+
+        /** alice is trying to withdraw tokens */
+        vm.startPrank(alice);
+        vm.expectRevert("Caller should be an owner");
+        _exponentialPair.withdrawERC20(alice, 100 ether);
         vm.stopPrank();
     }
 }
