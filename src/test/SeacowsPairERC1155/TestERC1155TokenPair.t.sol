@@ -477,4 +477,62 @@ contract TestERC1155TokenPair is WhenCreatePair {
         _linearPair.withdrawERC20(alice, 4 ether);
         vm.stopPrank();
     }
+
+    function testRemoveLiquidityExponentialPair() public {
+        vm.startPrank(owner);
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+        nftIds[2] = 6;
+
+        uint256[] memory nftAmounts = new uint256[](3);
+        // create a exponential pair
+        SeacowsPair _exponentialPair = createERC1155ERC20TokenPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            exponentialCurve,
+            payable(owner),
+            token,
+            100 ether,
+            1.01 ether,
+            20 ether
+        );
+        exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
+
+        /** owner withdraws tokens from erc721-erc20 token pair */
+        _exponentialPair.withdrawERC20(owner, 50 ether);
+        /** check token balance */
+        uint256 tokenBalance = token.balanceOf(address(_exponentialPair));
+        assertEq(tokenBalance, 50 ether);
+        /** check bonding curve */
+        ICurve curve = _exponentialPair.bondingCurve();
+        assertEq(address(curve), address(exponentialCurve));
+        /** check delta */
+        uint128 delta = _exponentialPair.delta();
+        assertEq(delta, 1.01 ether);
+        /** check spot price */
+        uint128 spotPrice = _exponentialPair.spotPrice();
+        assertEq(spotPrice, 20 ether);
+
+        /** owner is trying to withdraw to zero address */
+        vm.expectRevert("Invalid address");
+        _exponentialPair.withdrawERC20(address(0), 100 ether);
+
+        /** owner is trying to withdraw zero amount */
+        vm.expectRevert("Invalid amount");
+        _exponentialPair.withdrawERC20(owner, 0 ether);
+
+        /** owner is trying to withdraw too much amount */
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        _exponentialPair.withdrawERC20(owner, 100 ether);
+
+        vm.stopPrank();
+
+        /** alice is trying to withdraw tokens */
+        vm.startPrank(alice);
+        vm.expectRevert("Caller should be an owner");
+        _exponentialPair.withdrawERC20(alice, 100 ether);
+        vm.stopPrank();
+    }
 }
