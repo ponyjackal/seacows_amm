@@ -10,7 +10,6 @@ import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
-import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
@@ -85,11 +84,8 @@ contract WhenSellNFTs is WhenCreatePair {
 
         ISeacowsPairERC721(address(linearPair)).swapNFTsForToken(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             9 ether,
-            payable(alice),
-            false,
-            address(0)
+            payable(alice)
         );
 
         /** Check nft owners */
@@ -121,11 +117,8 @@ contract WhenSellNFTs is WhenCreatePair {
 
         ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             9 ether,
-            payable(alice),
-            false,
-            address(0)
+            payable(alice)
         );
 
         /** Check nft owners */
@@ -159,21 +152,15 @@ contract WhenSellNFTs is WhenCreatePair {
         vm.expectRevert("ERC20: transfer amount exceeds balance");
         ISeacowsPairERC721(address(linearPair)).swapNFTsForToken(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             9 ether,
-            payable(alice),
-            false,
-            address(0)
+            payable(alice)
         );
 
         vm.expectRevert("Out too little tokens");
         ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             100 ether,
-            payable(alice),
-            false,
-            address(0)
+            payable(alice)
         );
 
         vm.stopPrank();
@@ -191,11 +178,8 @@ contract WhenSellNFTs is WhenCreatePair {
         vm.expectRevert();
         ISeacowsPairERC721(address(linearPairS3)).swapNFTsForToken(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             1 ether,
-            payable(alice),
-            false,
-            address(0)
+            payable(alice)
         );
         vm.stopPrank();
     }
@@ -211,11 +195,8 @@ contract WhenSellNFTs is WhenCreatePair {
         vm.expectRevert("ERC721: caller is not token owner or approved");
         ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             9 ether,
-            payable(alice),
-            false,
-            address(0)
+            payable(alice)
         );
 
         vm.stopPrank();

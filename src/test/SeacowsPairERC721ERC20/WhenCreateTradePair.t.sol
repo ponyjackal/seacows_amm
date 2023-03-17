@@ -78,7 +78,7 @@ contract WhenCreateTradePair is WhenCreatePair {
         assertEq(IERC20(weth).balanceOf(address(pair)), 1 ether);
         assertEq(nftEnumerable.ownerOf(1), address(pair));
         // check LP token balance: 1
-        assertEq(pair.balanceOf(owner, pair.LP_TOKEN()), 1);
+        assertEq(seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(pair))), 1);
         vm.stopPrank();
     }
 
@@ -102,7 +102,7 @@ contract WhenCreateTradePair is WhenCreatePair {
         assertEq(IERC20(weth).balanceOf(address(pair)), 1 ether);
         assertEq(nft.ownerOf(1), address(pair));
         // check LP token balance: 1
-        assertEq(pair.balanceOf(owner, pair.LP_TOKEN()), 1);
+        assertEq(seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(pair))), 1);
         vm.stopPrank();
     }
 
@@ -118,7 +118,7 @@ contract WhenCreateTradePair is WhenCreatePair {
         assertEq(token.balanceOf(address(erc721EnumerableERC20TradePair)), 1 ether);
         assertEq(nftEnumerable.ownerOf(0), address(erc721EnumerableERC20TradePair));
         // check LP token balance: 1
-        assertEq(erc721EnumerableERC20TradePair.balanceOf(owner, erc721EnumerableERC20TradePair.LP_TOKEN()), 1);
+        assertEq(seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(erc721EnumerableERC20TradePair))), 1);
     }
 
     function testERC721ERC20TradePair() public {
@@ -134,7 +134,7 @@ contract WhenCreateTradePair is WhenCreatePair {
         assertEq(nft.ownerOf(0), address(erc721ERC20TradePair));
 
         // check LP token balance: 1
-        assertEq(erc721ERC20TradePair.balanceOf(owner, erc721ERC20TradePair.LP_TOKEN()), 1);
+        assertEq(seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(erc721ERC20TradePair))), 1);
     }
 
     function testCreateAnotherERC721EnumerableERC20TradePair() public {
@@ -156,7 +156,7 @@ contract WhenCreateTradePair is WhenCreatePair {
         assertEq(token.balanceOf(address(pair)), 10 ether);
         assertEq(nftEnumerable.ownerOf(1), address(pair));
         // check LP token balance: 1
-        assertEq(pair.balanceOf(owner, pair.LP_TOKEN()), 1);
+        assertEq(seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(pair))), 1);
         vm.stopPrank();
     }
 }

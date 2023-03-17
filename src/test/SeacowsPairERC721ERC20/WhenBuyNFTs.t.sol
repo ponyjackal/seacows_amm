@@ -10,7 +10,6 @@ import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
-import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
@@ -95,11 +94,8 @@ contract WhenBuyNFTs is WhenCreatePair {
 
         ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             15 ether,
-            address(alice),
-            false,
-            address(0)
+            address(alice)
         );
         /** Check nft owners */
         assertEq(nft.ownerOf(1), alice);
@@ -130,11 +126,8 @@ contract WhenBuyNFTs is WhenCreatePair {
 
         ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             15 ether,
-            address(alice),
-            false,
-            address(0)
+            address(alice)
         );
         /** Check nft owners */
         assertEq(nft.ownerOf(3), alice);
@@ -163,11 +156,8 @@ contract WhenBuyNFTs is WhenCreatePair {
         vm.expectRevert();
         ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(
             nftETHIds,
-            new SeacowsRouter.NFTDetail[](0),
             15 ether,
-            address(alice),
-            false,
-            address(0)
+            address(alice)
         );
 
         uint256[] memory nftIds = new uint256[](2);
@@ -177,11 +167,8 @@ contract WhenBuyNFTs is WhenCreatePair {
         vm.expectRevert("In too many tokens");
         ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(
             nftIds,
-            new SeacowsRouter.NFTDetail[](0),
             10 ether,
-            address(alice),
-            false,
-            address(0)
+            address(alice)
         );
 
         vm.stopPrank();

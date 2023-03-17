@@ -16,7 +16,6 @@ import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { SeacowsPair } from "./SeacowsPair.sol";
-import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
 import { SeacowsPairERC721 } from "./SeacowsPairERC721.sol";
@@ -26,9 +25,10 @@ import { IWETH } from "./interfaces/IWETH.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPair } from "./interfaces/ISeacowsPair.sol";
 import { ISeacowsPairERC1155 } from "./interfaces/ISeacowsPairERC1155.sol";
+import { SeacowsPositionManager } from "./SeacowsPositionManager.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
-contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
+contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFactoryLike {
     using SeacowsPairCloner for address;
     using SafeTransferLib for address payable;
     using SafeERC20 for ERC20;
@@ -51,7 +51,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         bool allowed;
         bool wasEverAllowed;
     }
-    mapping(SeacowsRouter => RouterStatus) public override routerStatus;
+    // mapping(SeacowsRouter => RouterStatus) public override routerStatus;
 
     struct CreateERC721ERC20PairParams {
         IERC20 token;
@@ -99,7 +99,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
     event CallTargetStatusUpdate(address target, bool isAllowed);
-    event RouterStatusUpdate(SeacowsRouter router, bool isAllowed);
+    // event RouterStatusUpdate(SeacowsRouter router, bool isAllowed);
     event ProtocolFeeDisabled(address pair, bool isDisabled);
 
     constructor(
@@ -320,37 +320,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
-        @notice Sets the whitelist status of a contract to be called arbitrarily by a pair.
-        Only callable by the owner.
-        @param target The target contract
-        @param isAllowed True to whitelist, false to remove from whitelist
-     */
-    function setCallAllowed(address payable target, bool isAllowed) external onlyOwner {
-        // ensure target is not / was not ever a router
-        if (isAllowed) {
-            require(!routerStatus[SeacowsRouter(target)].wasEverAllowed, "Can't call router");
-        }
-
-        callAllowed[target] = isAllowed;
-        emit CallTargetStatusUpdate(target, isAllowed);
-    }
-
-    /**
-        @notice Updates the router whitelist. Only callable by the owner.
-        @param _router The router
-        @param isAllowed True to whitelist, false to remove from whitelist
-     */
-    function setRouterAllowed(SeacowsRouter _router, bool isAllowed) external onlyOwner {
-        // ensure target is not arbitrarily callable by pairs
-        if (isAllowed) {
-            require(!callAllowed[address(_router)], "Can't call router");
-        }
-        routerStatus[_router] = RouterStatus({ allowed: isAllowed, wasEverAllowed: true });
-
-        emit RouterStatusUpdate(_router, isAllowed);
-    }
-
-    /**
         @notice Enable/disable a protocol fee in the pair
         @param _pair The pair contract
         @param _isProtocolFeeDisabled True to disable, false to enable protocol fee
@@ -373,7 +342,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
 
         // mint LP tokens if trade pair
         if (params.poolType == SeacowsPair.PoolType.TRADE) {
-            pair.mintLPToken(msg.sender, params.initialNFTIDs.length);
+            uint256 id = _createNewPositionToken(address(pair));
+            _mint(msg.sender, id, params.initialNFTIDs.length, "");
         }
     }
 
@@ -405,7 +375,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         // mint LP tokens if trade pair
         if (poolType == SeacowsPair.PoolType.TRADE) {
             // mint LP tokens
-            pair.mintLPToken(msg.sender, totalAmount);
+            uint256 id = _createNewPositionToken(address(pair));
+            _mint(msg.sender, id, totalAmount, "");
         }
 
         ISeacowsPairERC1155(address(pair)).setNFTIds(nftIds);
@@ -496,7 +467,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         // mint LP tokens
-        _pair.mintLPToken(msg.sender, numNFTs);
+        require(pairTokenIds[address(_pair)] != 0, "Pair is not a SeacowsPosition");
+        _mint(msg.sender, pairTokenIds[address(_pair)], numNFTs, "");
     }
 
     /**
@@ -538,7 +510,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         }
 
         // mint LP tokens
-        _pair.mintLPToken(msg.sender, numNFTs);
+        require(pairTokenIds[address(_pair)] != 0, "Pair is not a SeacowsPosition");
+        _mint(msg.sender, pairTokenIds[address(_pair)], numNFTs, "");
     }
 
     /**
@@ -582,7 +555,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(nftAmount * _pair.spotPrice() == _tokenAmount, "Invalid token amount based on spot price");
 
         // mint LP tokens
-        _pair.mintLPToken(msg.sender, nftAmount);
+        require(pairTokenIds[address(_pair)] != 0, "Pair is not a SeacowsPosition");
+        _mint(msg.sender, pairTokenIds[address(_pair)], nftAmount, "");
 
         // increase the nft amount in the pair
         _pair.addNFTAmount(nftAmount);
@@ -602,7 +576,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(_amount == numNFTs, "Invalid NFT amount");
 
         // burn LP token; we check if the user has engouh LP token in the function below
-        _pair.burnLPToken(msg.sender, _amount);
+        require(pairTokenIds[address(_pair)] != 0, "Pair is not a SeacowsPosition");
+        _burn(msg.sender, pairTokenIds[address(_pair)], _amount);
 
         // transfer tokens to the recipient
         uint256 tokenAmount = _amount * _pair.spotPrice();
@@ -648,7 +623,8 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         require(nftAmount > 0, "Invalid liquidity amount");
 
         // burn LP token; we check if the user has engouh LP token in the function below
-        _pair.burnLPToken(msg.sender, nftAmount);
+        require(pairTokenIds[address(_pair)] != 0, "Pair is not a SeacowsPosition");
+        _burn(msg.sender, pairTokenIds[address(_pair)], nftAmount);
 
         // TODO handle fractional cases
 

@@ -51,9 +51,5 @@ interface ISeacowsPair {
 
     function multicall(bytes[] calldata calls, bool revertOnFail) external;
 
-    function mintLPToken(address recipient, uint256 amount) external;
-
-    function burnLPToken(address recipient, uint256 amount) external;
-
     function balanceOf(address account, uint256 id) external view returns (uint256);
 }

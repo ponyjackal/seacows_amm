@@ -8,7 +8,6 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsPair } from "./SeacowsPair.sol";
-import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
@@ -23,8 +22,6 @@ contract SeacowsPairERC1155 is SeacowsPair {
     uint256 public nftAmount;
 
     uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
-
-    constructor(string memory _uri) SeacowsPair(_uri) {}
 
     /** View Functions */
 
@@ -97,42 +94,21 @@ contract SeacowsPairERC1155 is SeacowsPair {
         @param _nft The NFT collection to take from
         @param _nftIds The specific NFT IDs to take, we just need the length of IDs, no need the values in it
         @param _amounts The amount for each ID
-        @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
-        ETH pairs.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
-        ETH pairs.
      */
     function _takeNFTsFromSender(
         address _nft,
         uint256[] memory _nftIds,
         uint256[] memory _amounts,
-        ISeacowsPairFactoryLike _factory,
-        bool isRouter,
-        address routerCaller
+        ISeacowsPairFactoryLike _factory
     ) internal {
         require(_nftIds.length == _amounts.length, "Invalid amounts");
 
         address _assetRecipient = getAssetRecipient();
-
-        if (isRouter) {
-            // Verify if router is allowed
-            SeacowsRouter router = SeacowsRouter(payable(msg.sender));
-            (bool routerAllowed, ) = _factory.routerStatus(router);
-            require(routerAllowed, "Not router");
-
-            // Call router to pull NFTs
-            // uint256 beforeBalance = IERC1155(_nft).balanceOf(_assetRecipient, _nftId);
-            // IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftId, numNFTs, "");
-            // router.pairTransferNFTFromERC1155(IERC1155(_nft), _nftId, routerCaller, _assetRecipient, numNFTs, pairVariant());
-
-            // require((IERC1155(_nft).balanceOf(_assetRecipient, _nftId) - beforeBalance) == numNFTs, "NFTs not transferred");
-        } else {
-            // Pull NFTs directly from sender
-            for (uint256 i; i < _nftIds.length; ) {
-                IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftIds[i], _amounts[i], "");
-                unchecked {
-                    ++i;
-                }
+        // Pull NFTs directly from sender
+        for (uint256 i; i < _nftIds.length; ) {
+            IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftIds[i], _amounts[i], "");
+            unchecked {
+                ++i;
             }
         }
     }
@@ -249,19 +225,13 @@ contract SeacowsPairERC1155 is SeacowsPair {
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
-        @param isRouter True if calling from Router, false otherwise. Not used for
-        ETH pairs.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
-        ETH pairs.
         @return inputAmount The amount of token used for purchase
      */
     function swapTokenForNFTs(
         uint256[] memory _nftIds,
         uint256[] memory _amounts,
         uint256 maxExpectedTokenInput,
-        address nftRecipient,
-        bool isRouter,
-        address routerCaller
+        address nftRecipient
     ) external nonReentrant returns (uint256 inputAmount) {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
@@ -287,7 +257,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(totalAmount, maxExpectedTokenInput, _bondingCurve, _factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, isRouter, routerCaller, _factory, protocolFee);
+        _pullTokenInputAndPayProtocolFee(inputAmount, _factory, protocolFee);
         _sendNFTsToRecipient(_nft, nftRecipient, _nftIds, _amounts);
         _refundTokenToSender(inputAmount);
 
@@ -305,19 +275,13 @@ contract SeacowsPairERC1155 is SeacowsPair {
         @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
         amount is less than this value, the transaction will be reverted.
         @param tokenRecipient The recipient of the token output
-        @param isRouter True if calling from SeacowsRouter, false otherwise. Not used for
-        ETH pairs.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address. Not used for
-        ETH pairs.
         @return outputAmount The amount of token received
      */
     function swapNFTsForToken(
         uint256[] memory _nftIds,
         uint256[] memory _amounts,
         uint256 minExpectedTokenOutput,
-        address payable tokenRecipient,
-        bool isRouter,
-        address routerCaller
+        address payable tokenRecipient
     ) external nonReentrant returns (uint256 outputAmount) {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
@@ -347,7 +311,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         _payProtocolFeeFromPair(_factory, protocolFee);
 
-        _takeNFTsFromSender(nft(), _nftIds, _amounts, _factory, isRouter, routerCaller);
+        _takeNFTsFromSender(nft(), _nftIds, _amounts, _factory);
 
         // increase total nft balance
         nftAmount += totalAmount;

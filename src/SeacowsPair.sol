@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+// import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
@@ -13,7 +13,6 @@ import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC11
 import { OwnableWithTransferCallback } from "./lib/OwnableWithTransferCallback.sol";
 import { ReentrancyGuard } from "./lib/ReentrancyGuard.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
-import { SeacowsRouter } from "./SeacowsRouter.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegistry.sol";
@@ -21,7 +20,7 @@ import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegist
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 /// @notice This implements the core swap logic from NFT to TOKEN
-abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, AccessControl, ERC1155, ERC1155Holder {
+abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, AccessControl, ERC1155Holder {
     using SafeERC20 for ERC20;
 
     enum PoolType {
@@ -32,9 +31,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
     // 90%, must <= 1 - MAX_PROTOCOL_FEE (set in PairFactory)
     uint256 internal constant MAX_FEE = 0.90e18;
-
-    // LP Token IDs; only used in trade pair
-    uint256 public constant LP_TOKEN = 1;
 
     // Create a new role identifier for the minter role
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -78,7 +74,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     // Parameterized Errors
     error BondingCurveError(CurveErrorCodes.Error error);
 
-    constructor(string memory _uri) ERC1155(_uri) {}
+    constructor() {}
 
     /**
       @notice Called during pair creation to set initial parameters
@@ -295,15 +291,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
         @notice Pulls the token input of a trade from the trader and pays the protocol fee.
         @param inputAmount The amount of tokens to be sent
-        @param isRouter Whether or not the caller is SeacowsRouter
-        @param routerCaller If called from SeacowsRouter, store the original caller
         @param _factory The SeacowsPairFactory which stores SeacowsRouter allowlist info
         @param protocolFee The protocol fee to be paid
      */
     function _pullTokenInputAndPayProtocolFee(
         uint256 inputAmount,
-        bool isRouter,
-        address routerCaller,
         ISeacowsPairFactoryLike _factory,
         uint256 protocolFee
     ) internal {
@@ -312,35 +304,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         ERC20 _token = token();
         address _assetRecipient = getAssetRecipient();
 
-        if (isRouter) {
-            // Verify if router is allowed
-            SeacowsRouter router = SeacowsRouter(payable(msg.sender));
+        // Transfer tokens directly
+        _token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
 
-            // Locally scoped to avoid stack too deep
-            {
-                (bool routerAllowed, ) = _factory.routerStatus(router);
-                require(routerAllowed, "Not router");
-            }
-
-            // Cache state and then call router to transfer tokens from user
-            uint256 beforeBalance = _token.balanceOf(_assetRecipient);
-            router.pairTransferERC20From(_token, routerCaller, _assetRecipient, inputAmount - protocolFee, pairVariant());
-
-            // Verify token transfer (protect pair against malicious router)
-            require(_token.balanceOf(_assetRecipient) - beforeBalance == inputAmount - protocolFee, "ERC20 not transferred in");
-
-            router.pairTransferERC20From(_token, routerCaller, address(_factory), protocolFee, pairVariant());
-
-            // Note: no check for factory balance's because router is assumed to be set by factory owner
-            // so there is no incentive to *not* pay protocol fee
-        } else {
-            // Transfer tokens directly
-            _token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
-
-            // Take protocol fee (if it exists)
-            if (protocolFee > 0) {
-                _token.transferFrom(msg.sender, address(_factory), protocolFee);
-            }
+        // Take protocol fee (if it exists)
+        if (protocolFee > 0) {
+            _token.transferFrom(msg.sender, address(_factory), protocolFee);
         }
     }
 
@@ -504,66 +473,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, ERC1155Receiver, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver, AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
-    }
-
-    // -----------------------------------------
-    // Liquidity Pool functions
-    // -----------------------------------------
-
-    /**
-     * note only used trade pair
-     * @dev mint LP token to LP provider
-     * @param recipient LP token recipient address
-     * @param amount LP token amount to mint
-     */
-    function mintLPToken(address recipient, uint256 amount) external onlyFactory {
-        require(recipient != address(0), "Invalid recipient");
-        require(amount > 0, "Invliad amount");
-        // mint LP to the user
-        _mint(recipient, LP_TOKEN, amount, "");
-    }
-
-    /**
-     * note only used trade pair
-     * @dev burn LP token from LP provider
-     * @param recipient LP token recipient address
-     * @param amount LP token amount to mint
-     */
-    function burnLPToken(address recipient, uint256 amount) external onlyFactory {
-        require(recipient != address(0), "Invalid recipient");
-        require(balanceOf(recipient, LP_TOKEN) >= amount, "Insufficient LP token");
-        require(amount > 0, "Invalid amount");
-        // burn LP from the user
-        _burn(recipient, LP_TOKEN, amount);
-    }
-
-    // -----------------------------------------
-    // Overriden functions
-    // -----------------------------------------
-    /**
-     * note only used trade pair
-     * @dev we override _mint function to track totalSupply
-     */
-    function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal virtual override onlyTrade {
-        totalSupply[id] += amount;
-        super._mint(to, id, amount, data);
-
-        // TODO grant admin role if user provides a decent amount
-        _grantRole(ADMIN_ROLE, to);
-    }
-
-    /**
-     * note only used trade pair
-     * @dev we override _mint function to track totalSupply
-     */
-    function _burn(address from, uint256 id, uint256 amount) internal virtual override onlyTrade {
-        totalSupply[id] -= amount;
-        super._burn(from, id, amount);
-
-        // TODO revoke admin role if user's LP balance is not enough
-        // _revokeRole(ADMIN_ROLE, from);
     }
 
     // -----------------------------------------

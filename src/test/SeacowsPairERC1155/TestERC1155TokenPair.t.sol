@@ -4,7 +4,6 @@ pragma solidity >=0.8.4;
 import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { SeacowsRouter } from "../../SeacowsRouter.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
@@ -88,7 +87,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         SeacowsPair.PoolType poolType = linearPair.poolType();
         assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TOKEN));
 
-        uint256 lpBalance = linearPair.balanceOf(owner, 1);
+        uint256 lpBalance = seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(linearPair)));
         assertEq(lpBalance, 0);
 
         assertEq(linearPair.delta(), 0.1 ether);
@@ -130,7 +129,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         SeacowsPair.PoolType poolType = exponentialPair.poolType();
         assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TOKEN));
 
-        uint256 lpBalance = exponentialPair.balanceOf(owner, 1);
+        uint256 lpBalance = seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(exponentialPair)));
         assertEq(lpBalance, 0);
 
         assertEq(exponentialPair.delta(), 1.1 ether);

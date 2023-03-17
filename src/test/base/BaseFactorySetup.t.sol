@@ -29,20 +29,15 @@ contract BaseFactorySetup is Test {
     SeacowsPairERC1155 internal seacowsPairERC1155;
 
     function setUp() public virtual {
-        string memory lpUri = "";
-        address chainlinkToken = address(0);
-        address chainlinkOracle = address(0);
-        string memory chainlinkJobId = "";
-
         weth = address(new TestWETH());
         protocolFeeRecipient = payable(address(this));
         protocolFeeMultiplier = 5000000000000000;
 
         /** deploy SeacowsPairERC721 */
-        seacowsPairERC721 = new SeacowsPairERC721(lpUri);
+        seacowsPairERC721 = new SeacowsPairERC721();
 
         /** deploy SeacowsPairERC1155 */
-        seacowsPairERC1155 = new SeacowsPairERC1155(lpUri);
+        seacowsPairERC1155 = new SeacowsPairERC1155();
 
         /** deploy SeacowsPairFactory */
         seacowsPairFactory = new SeacowsPairFactory(weth, seacowsPairERC721, seacowsPairERC1155, protocolFeeRecipient, protocolFeeMultiplier);

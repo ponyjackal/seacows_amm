@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 import { ISeacowsPair } from "./ISeacowsPair.sol";
-import { SeacowsRouter } from "../SeacowsRouter.sol";
 
 interface ISeacowsPairERC1155 is ISeacowsPair {
     function nftAmount() external view returns (uint256 nftAmount);
@@ -15,18 +14,14 @@ interface ISeacowsPairERC1155 is ISeacowsPair {
         uint256[] memory _nftIds,
         uint256[] memory _amounts,
         uint256 maxExpectedTokenInput,
-        address nftRecipient,
-        bool isRouter,
-        address routerCaller
+        address nftRecipient
     ) external returns (uint256 inputAmount);
 
     function swapNFTsForToken(
         uint256[] memory _nftIds,
         uint256[] memory _amounts,
         uint256 minExpectedTokenOutput,
-        address payable tokenRecipient,
-        bool isRouter,
-        address routerCaller
+        address payable tokenRecipient
     ) external returns (uint256 outputAmount);
 
     function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external;
