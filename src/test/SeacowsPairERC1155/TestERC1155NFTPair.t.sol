@@ -173,4 +173,99 @@ contract TestERC1155NFTPair is WhenCreatePair {
 
         vm.stopPrank();
     }
+
+    function testConfigLinearPair() public {
+        vm.startPrank(owner);
+        // create a linear pair
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
+        SeacowsPair _linearPair = createERC1155ERC20NFTPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            linearCurve,
+            payable(owner),
+            token,
+            0,
+            0.1 ether,
+            1 ether
+        );
+        linearPair = ISeacowsPairERC1155(address(_linearPair));
+
+        // Change spot price
+        _linearPair.changeSpotPrice(0.5 ether);
+        assertEq(_linearPair.spotPrice(), 0.5 ether);
+        // Change delta
+        _linearPair.changeDelta(0.1 ether);
+        assertEq(_linearPair.delta(), 0.1 ether);
+
+        // Revert with invalid params
+        vm.expectRevert("Invalid new spot price for curve");
+        _linearPair.changeSpotPrice(0);
+
+        vm.expectRevert("Invalid delta for curve");
+        _linearPair.changeDelta(0);
+
+        vm.stopPrank();
+        /** Non pair owner is tryig to spot price */
+        vm.startPrank(alice);
+
+        vm.expectRevert("Caller is not an admin");
+        _linearPair.changeSpotPrice(0.5 ether);
+
+        vm.expectRevert("Caller is not an admin");
+        _linearPair.changeDelta(0.1 ether);
+
+        vm.stopPrank();
+    }
+
+    function testConfigExponentialPair() public {
+        vm.startPrank(owner);
+        // create a exponential pair
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 1;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
+        SeacowsPair _exponentialPair = createERC1155ETHNFTPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            exponentialCurve,
+            payable(owner),
+            0,
+            1.1 ether,
+            1 ether
+        );
+        exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
+
+        // Change spot price
+        _exponentialPair.changeSpotPrice(0.5 ether);
+        assertEq(_exponentialPair.spotPrice(), 0.5 ether);
+        // Change delta
+        _exponentialPair.changeDelta(1.1 ether);
+        assertEq(_exponentialPair.delta(), 1.1 ether);
+
+        // Revert with invalid params
+        vm.expectRevert("Invalid new spot price for curve");
+        _exponentialPair.changeSpotPrice(0);
+
+        vm.expectRevert("Invalid delta for curve");
+        _exponentialPair.changeDelta(0);
+
+        vm.stopPrank();
+        /** Non pair owner is tryig to spot price */
+        vm.startPrank(alice);
+
+        vm.expectRevert("Caller is not an admin");
+        _exponentialPair.changeSpotPrice(0.5 ether);
+
+        vm.expectRevert("Caller is not an admin");
+        _exponentialPair.changeDelta(1.1 ether);
+
+        vm.stopPrank();
+    }
 }
