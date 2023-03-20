@@ -65,7 +65,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     event SwapNFTOutPair();
     event SpotPriceUpdate(uint128 newSpotPrice);
     event TokenDeposit(uint256 amount);
-    event TokenWithdrawal(address recipient, uint256 amount);
+    event TokenWithdrawal(address token, address recipient, uint256 amount);
     event NFTWithdrawal(address recipient, uint256 amount);
     event DeltaUpdate(uint128 newDelta);
     event FeeUpdate(uint96 newFee);
@@ -165,7 +165,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         token().safeTransfer(_recipient, _amount);
 
         // emit event since it is the pair token
-        emit TokenWithdrawal(_recipient, _amount);
+        emit TokenWithdrawal(address(token()), _recipient, _amount);
     }
 
     /**
@@ -294,11 +294,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @param _factory The SeacowsPairFactory which stores SeacowsRouter allowlist info
         @param protocolFee The protocol fee to be paid
      */
-    function _pullTokenInputAndPayProtocolFee(
-        uint256 inputAmount,
-        ISeacowsPairFactoryLike _factory,
-        uint256 protocolFee
-    ) internal {
+    function _pullTokenInputAndPayProtocolFee(uint256 inputAmount, ISeacowsPairFactoryLike _factory, uint256 protocolFee) internal {
         require(msg.value == 0, "ERC20 pair");
 
         ERC20 _token = token();

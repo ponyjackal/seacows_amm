@@ -64,7 +64,7 @@ contract WhenWithdrawToken is WhenCreatePair {
         vm.stopPrank();
     }
 
-    function testwithdrawERC20() public {
+    function testWithdrawERC20() public {
         vm.startPrank(owner);
         /** owner withdraws tokens from erc721-erc20 token pair */
         erc721ERC20Pair.withdrawERC20(owner, 50 ether);
@@ -102,7 +102,7 @@ contract WhenWithdrawToken is WhenCreatePair {
         vm.stopPrank();
     }
 
-    function testdepositWETH() public {
+    function testWithdrawWETH() public {
         vm.startPrank(owner);
         /** owner withdraws WETH from erc721-weth pair */
         erc721WETHPair.withdrawERC20(owner, 4 ether);
