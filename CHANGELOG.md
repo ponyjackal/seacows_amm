@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.1.0 (2023-03-20)
+
+
+### Features
+
+* test config erc1155 token pairs ([#66](https://github.com/yolominds/Seacows_AMM_Foundry/issues/66)) ([41142f7](https://github.com/yolominds/Seacows_AMM_Foundry/commit/41142f7e1eb4b6e4d433e8a17392fd0ef92b9b6a))
+
 ### 1.0.11 (2023-03-17)
 
 ### 1.0.10 (2023-03-06)
