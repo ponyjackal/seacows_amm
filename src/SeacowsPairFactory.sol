@@ -93,7 +93,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     }
 
     event NewPair(address poolAddress);
-    event TokenDeposit(address poolAddress);
+    event TokenDeposit(address indexed poolAddress, uint256 amount);
     event NFTDeposit(address poolAddress);
     event ProtocolFeeRecipientUpdate(address recipientAddress);
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
@@ -420,7 +420,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.TOKEN, "Not a token pair");
         require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
         if (token == SeacowsPair(recipient).token()) {
-            emit TokenDeposit(recipient);
+            emit TokenDeposit(recipient, amount);
         }
     }
 
@@ -436,7 +436,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
 
         if (address(weth) == address(SeacowsPair(recipient).token())) {
-            emit TokenDeposit(recipient);
+            emit TokenDeposit(recipient, msg.value);
         }
     }
 

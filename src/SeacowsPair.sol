@@ -64,7 +64,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     event SwapNFTInPair();
     event SwapNFTOutPair();
     event SpotPriceUpdate(uint128 newSpotPrice);
-    event TokenDeposit(uint256 amount);
     event TokenWithdrawal(address token, address recipient, uint256 amount);
     event NFTWithdrawal(address recipient, uint256 amount);
     event DeltaUpdate(uint128 newDelta);

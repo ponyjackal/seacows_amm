@@ -261,6 +261,51 @@ contract TestERC1155TokenPair is WhenCreatePair {
         vm.stopPrank();
     }
 
+    function testAddLiquidityLinearPair() public {
+        vm.startPrank(owner);
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+        nftIds[2] = 6;
+
+        uint256[] memory nftAmounts = new uint256[](3);
+        // create a linear pair
+        SeacowsPair _linearPair = createERC1155ETHTokenPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            linearCurve,
+            payable(owner),
+            14 ether,
+            0.1 ether,
+            5 ether
+        );
+        linearPair = ISeacowsPairERC1155(address(_linearPair));
+
+        /** owner deposits ETH to erc721-weth pair */
+        seacowsPairFactory.depositETH{ value: 4 ether }(address(_linearPair));
+        /** check ETH balance */
+        uint256 wethBalance = IWETH(weth).balanceOf(address(_linearPair));
+        assertEq(wethBalance, 18 ether);
+        /** check bonding curve */
+        ICurve curve = _linearPair.bondingCurve();
+        assertEq(address(curve), address(linearCurve));
+        /** check delta */
+        uint128 delta = _linearPair.delta();
+        assertEq(delta, 0.1 ether);
+        /** check spot price */
+        uint128 spotPrice = _linearPair.spotPrice();
+        assertEq(spotPrice, 5 ether);
+
+        vm.stopPrank();
+
+        /** alice is trying to deposit tokens */
+        vm.startPrank(alice);
+        vm.expectRevert("Not a pair owner");
+        seacowsPairFactory.depositETH{ value: 4 ether }(address(_linearPair));
+        vm.stopPrank();
+    }
+
     function testAddLiquidityExponentialPair() public {
         vm.startPrank(owner);
         uint256[] memory nftIds = new uint256[](3);
