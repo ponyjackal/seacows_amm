@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract TestSeacowsSFT is ERC1155, Ownable {
     constructor() ERC1155("") {}
 
-    function safeMint(address to) public onlyOwner {
-        _mint(to, 1, 10_000, "");
+    function safeMint(address to, uint256 tokenId) public onlyOwner {
+        _mint(to, tokenId, 10_000, "");
     }
 }

@@ -26,9 +26,9 @@ contract TestERC1155TokenPair is WhenCreatePair {
 
         // deploy sft contract
         testSeacowsSFT = new TestSeacowsSFT();
-        testSeacowsSFT.safeMint(owner);
-        testSeacowsSFT.safeMint(alice);
-        testSeacowsSFT.safeMint(bob);
+        testSeacowsSFT.safeMint(owner, 1);
+        testSeacowsSFT.safeMint(alice, 1);
+        testSeacowsSFT.safeMint(bob, 1);
 
         token = new TestERC20();
         token.mint(owner, 10000 ether);

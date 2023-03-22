@@ -395,6 +395,9 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
       (if recipient is indeed a pair)
     */
     function depositNFTs(IERC721 _nft, uint256[] calldata ids, address recipient) external {
+        require(address(ISeacowsPair(recipient).owner()) == msg.sender, "Not a pair owner");
+        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
+
         // transfer NFTs from caller to recipient
         uint256 numNFTs = ids.length;
         for (uint256 i; i < numNFTs; ) {
@@ -404,10 +407,31 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
                 ++i;
             }
         }
-        if (isPair(recipient, PairVariant.ERC721_ERC20)) {
-            require(address(ISeacowsPair(recipient).owner()) == msg.sender, "Not a pair owner");
-            emit NFTDeposit(recipient);
+        emit NFTDeposit(recipient);
+    }
+
+    /** 
+      @dev Used to deposit ERC1155 NFTs into a pair after creation and emit an event for indexing 
+      (if recipient is indeed a pair)
+    */
+    function depositERC1155(IERC1155 _nft, uint256[] calldata ids, uint256[] calldata amounts, address recipient) external {
+        require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
+        require(address(ISeacowsPair(recipient).owner()) == msg.sender, "Not a pair owner");
+        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
+
+        // transfer NFTs from caller to recipient
+        uint256 numOfIds = ids.length;
+        for (uint256 i; i < numOfIds; ) {
+            // check if nft id is valid in this pair
+            require(ISeacowsPairERC1155(recipient).isValidNFTID(ids[i]), "Invalid nft id");
+            _nft.safeTransferFrom(msg.sender, recipient, ids[i], amounts[i], "");
+
+            unchecked {
+                ++i;
+            }
         }
+
+        emit NFTDeposit(recipient);
     }
 
     /**
