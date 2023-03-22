@@ -47,9 +47,5 @@ interface ISeacowsPair {
 
     function changeAssetRecipient(address payable newRecipient) external;
 
-    function call(address payable target, bytes calldata data) external;
-
-    function multicall(bytes[] calldata calls, bool revertOnFail) external;
-
     function balanceOf(address account, uint256 id) external view returns (uint256);
 }

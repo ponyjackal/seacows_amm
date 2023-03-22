@@ -64,8 +64,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     event SwapNFTInPair();
     event SwapNFTOutPair();
     event SpotPriceUpdate(uint128 newSpotPrice);
-    event TokenWithdrawal(address token, address recipient, uint256 amount);
-    event NFTWithdrawal(address recipient, uint256 amount);
+    event TokenWithdrawal(address indexed recipient, uint256 amount);
     event DeltaUpdate(uint128 newDelta);
     event FeeUpdate(uint96 newFee);
     event AssetRecipientChange(address a);
@@ -164,7 +163,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         token().safeTransfer(_recipient, _amount);
 
         // emit event since it is the pair token
-        emit TokenWithdrawal(address(token()), _recipient, _amount);
+        emit TokenWithdrawal(_recipient, _amount);
     }
 
     /**
@@ -413,41 +412,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
             assetRecipient = newRecipient;
             emit AssetRecipientChange(newRecipient);
         }
-    }
-
-    /**
-        @notice Allows the pair to make arbitrary external calls to contracts
-        whitelisted by the protocol. Only callable by the owner.
-        @param target The contract to call
-        @param data The calldata to pass to the contract
-     */
-    function call(address payable target, bytes calldata data) external onlyOwner {
-        ISeacowsPairFactoryLike _factory = factory();
-        require(_factory.callAllowed(target), "Target must be whitelisted");
-        (bool result, ) = target.call{ value: 0 }(data);
-        require(result, "Call failed");
-    }
-
-    /**
-        @notice Allows owner to batch multiple calls, forked from: https://github.com/boringcrypto/BoringSolidity/blob/master/contracts/BoringBatchable.sol 
-        @dev Intended for withdrawing/altering pool pricing in one tx, only callable by owner, cannot change owner
-        @param calls The calldata for each call to make
-        @param revertOnFail Whether or not to revert the entire tx if any of the calls fail
-     */
-    function multicall(bytes[] calldata calls, bool revertOnFail) external onlyOwner {
-        for (uint256 i; i < calls.length; ) {
-            (bool success, bytes memory result) = address(this).delegatecall(calls[i]);
-            if (!success && revertOnFail) {
-                revert(_getRevertMsg(result));
-            }
-
-            unchecked {
-                ++i;
-            }
-        }
-
-        // Prevent multicall from malicious frontend sneaking in ownership change
-        require(owner() == msg.sender, "Ownership cannot be changed in multicall");
     }
 
     /**

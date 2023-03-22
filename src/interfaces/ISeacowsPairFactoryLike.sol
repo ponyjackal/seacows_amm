@@ -15,9 +15,5 @@ interface ISeacowsPairFactoryLike {
 
     function protocolFeeRecipient() external view returns (address payable);
 
-    function callAllowed(address target) external view returns (bool);
-
-    // function routerStatus(SeacowsRouter router) external view returns (bool allowed, bool wasEverAllowed);
-
     function isPair(address potentialPair, PairVariant variant) external view returns (bool);
 }

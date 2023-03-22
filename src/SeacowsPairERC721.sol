@@ -17,6 +17,8 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
 
+    event WithdrawERC721(address indexed recipient, uint256[] ids);
+
     /** Internal Functions */
 
     function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal {
@@ -145,9 +147,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         @param _nft The NFT collection to take from
         @param nftIds The specific NFT IDs to take
      */
-    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds)
-        internal
-    {
+    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds) internal {
         {
             address _assetRecipient = getAssetRecipient();
             uint256 numNFTs = nftIds.length;
@@ -278,12 +278,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         }
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(
-            new uint256[](numNFTs),
-            maxExpectedTokenInput,
-            _bondingCurve,
-            _factory
-        );
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, _bondingCurve, _factory);
         _pullTokenInputAndPayProtocolFee(inputAmount, _factory, protocolFee);
         _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
         _refundTokenToSender(inputAmount);
@@ -300,11 +295,12 @@ contract SeacowsPairERC721 is SeacowsPair {
         @param tokenRecipient The recipient of the token output
         @return outputAmount The amount of token received
      */
-    function swapNFTsForToken(
-        uint256[] calldata nftIds,
-        uint256 minExpectedTokenOutput,
-        address payable tokenRecipient
-    ) external virtual nonReentrant returns (uint256 outputAmount) {
+    function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient)
+        external
+        virtual
+        nonReentrant
+        returns (uint256 outputAmount)
+    {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
@@ -340,11 +336,13 @@ contract SeacowsPairERC721 is SeacowsPair {
         @param nftRecipient The recipient of the NFTs
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForSpecificNFTs(
-        uint256[] calldata nftIds,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient
-    ) external payable virtual nonReentrant returns (uint256 inputAmount) {
+    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
+        external
+        payable
+        virtual
+        nonReentrant
+        returns (uint256 inputAmount)
+    {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
@@ -394,7 +392,7 @@ contract SeacowsPairERC721 is SeacowsPair {
                 }
             }
 
-            emit NFTWithdrawal(msg.sender, numNFTs);
+            emit WithdrawERC721(msg.sender, nftIds);
         }
     }
 }

@@ -23,6 +23,8 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
     uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
 
+    event WithdrawERC1155(address indexed recipient, uint256[] ids, uint256[] amounts);
+
     /** View Functions */
 
     /**
@@ -95,12 +97,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         @param _nftIds The specific NFT IDs to take, we just need the length of IDs, no need the values in it
         @param _amounts The amount for each ID
      */
-    function _takeNFTsFromSender(
-        address _nft,
-        uint256[] memory _nftIds,
-        uint256[] memory _amounts,
-        ISeacowsPairFactoryLike _factory
-    ) internal {
+    function _takeNFTsFromSender(address _nft, uint256[] memory _nftIds, uint256[] memory _amounts, ISeacowsPairFactoryLike _factory) internal {
         require(_nftIds.length == _amounts.length, "Invalid amounts");
 
         address _assetRecipient = getAssetRecipient();
@@ -201,11 +198,12 @@ contract SeacowsPairERC1155 is SeacowsPair {
     /** Mutative Functions */
 
     function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
-        require(poolType() == PoolType.TRADE, "Invalid pool type");
+        require(poolType() == PoolType.NFT || poolType() == PoolType.TRADE, "Invalid pool type");
         require(_nftIds.length == _amounts.length, "Invalid amounts");
 
         uint256 totalAmount;
         for (uint256 i; i < _nftIds.length; ) {
+            require(isValidNFTID(_nftIds[i]), "Invalid nft id");
             IERC1155(nft()).safeTransferFrom(address(this), _recipient, _nftIds[i], _amounts[i], "");
             totalAmount += _amounts[i];
             unchecked {
@@ -213,7 +211,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
             }
         }
 
-        emit NFTWithdrawal(_recipient, totalAmount);
+        emit WithdrawERC1155(_recipient, _nftIds, _amounts);
     }
 
     /**
@@ -227,12 +225,11 @@ contract SeacowsPairERC1155 is SeacowsPair {
         @param nftRecipient The recipient of the NFTs
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForNFTs(
-        uint256[] memory _nftIds,
-        uint256[] memory _amounts,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient
-    ) external nonReentrant returns (uint256 inputAmount) {
+    function swapTokenForNFTs(uint256[] memory _nftIds, uint256[] memory _amounts, uint256 maxExpectedTokenInput, address nftRecipient)
+        external
+        nonReentrant
+        returns (uint256 inputAmount)
+    {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();
@@ -277,12 +274,11 @@ contract SeacowsPairERC1155 is SeacowsPair {
         @param tokenRecipient The recipient of the token output
         @return outputAmount The amount of token received
      */
-    function swapNFTsForToken(
-        uint256[] memory _nftIds,
-        uint256[] memory _amounts,
-        uint256 minExpectedTokenOutput,
-        address payable tokenRecipient
-    ) external nonReentrant returns (uint256 outputAmount) {
+    function swapNFTsForToken(uint256[] memory _nftIds, uint256[] memory _amounts, uint256 minExpectedTokenOutput, address payable tokenRecipient)
+        external
+        nonReentrant
+        returns (uint256 outputAmount)
+    {
         // Store locally to remove extra calls
         ISeacowsPairFactoryLike _factory = factory();
         ICurve _bondingCurve = bondingCurve();

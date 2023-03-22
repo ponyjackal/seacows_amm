@@ -46,12 +46,6 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     uint256 public override protocolFeeMultiplier;
 
     mapping(ICurve => bool) public bondingCurveAllowed;
-    mapping(address => bool) public override callAllowed;
-    struct RouterStatus {
-        bool allowed;
-        bool wasEverAllowed;
-    }
-    // mapping(SeacowsRouter => RouterStatus) public override routerStatus;
 
     struct CreateERC721ERC20PairParams {
         IERC20 token;
@@ -94,7 +88,8 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
 
     event NewPair(address poolAddress);
     event TokenDeposit(address indexed poolAddress, uint256 amount);
-    event NFTDeposit(address poolAddress);
+    event ERC721Deposit(address indexed poolAddress, uint256[] ids);
+    event ERC1155Deposit(address indexed poolAddress, uint256[] ids, uint256[] amounts);
     event ProtocolFeeRecipientUpdate(address recipientAddress);
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
@@ -407,7 +402,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
                 ++i;
             }
         }
-        emit NFTDeposit(recipient);
+        emit ERC721Deposit(recipient, ids);
     }
 
     /** 
@@ -431,7 +426,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
             }
         }
 
-        emit NFTDeposit(recipient);
+        emit ERC1155Deposit(recipient, ids, amounts);
     }
 
     /**

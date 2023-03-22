@@ -400,4 +400,133 @@ contract TestERC1155NFTPair is WhenCreatePair {
         seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_exponentialPair));
         vm.stopPrank();
     }
+
+    function testWithdrawERC1155LinearPair() public {
+        vm.startPrank(owner);
+        // create a linear pair
+        uint256[] memory nftIds = new uint256[](3);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+        nftIds[2] = 6;
+
+        uint256[] memory nftAmounts = new uint256[](3);
+        nftAmounts[0] = 10;
+        nftAmounts[1] = 0;
+        nftAmounts[2] = 100;
+
+        SeacowsPair _linearPair = createERC1155ERC20NFTPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            linearCurve,
+            payable(owner),
+            token,
+            0,
+            1 ether,
+            5 ether
+        );
+        linearPair = ISeacowsPairERC1155(address(_linearPair));
+
+        /** Withdraw NFTs */
+        uint256[] memory withdrawIds = new uint256[](2);
+        withdrawIds[0] = 1;
+        withdrawIds[1] = 6;
+        uint256[] memory withdrawAmounts = new uint256[](2);
+        withdrawAmounts[0] = 10;
+        withdrawAmounts[1] = 40;
+
+        linearPair.withdrawERC1155(owner, withdrawIds, withdrawAmounts);
+        /** Check erc1155 nft balances */
+        uint256 balanceOne = testSeacowsSFT.balanceOf(address(_linearPair), 1);
+        assertEq(balanceOne, 0);
+        uint256 balanceThree = testSeacowsSFT.balanceOf(address(_linearPair), 3);
+        assertEq(balanceThree, 0);
+        uint256 balanceSix = testSeacowsSFT.balanceOf(address(_linearPair), 6);
+        assertEq(balanceSix, 60);
+        /** check bonding curve */
+        ICurve curve = _linearPair.bondingCurve();
+        assertEq(address(curve), address(linearCurve));
+        /** check delta */
+        uint128 delta = _linearPair.delta();
+        assertEq(delta, 1 ether);
+        /** check spot price */
+        uint128 spotPrice = _linearPair.spotPrice();
+        assertEq(spotPrice, 5 ether);
+
+        /** Try to deposit invalid nft ids */
+        uint256[] memory invalidIds = new uint256[](3);
+        invalidIds[0] = 4;
+        invalidIds[1] = 5;
+        invalidIds[2] = 8;
+        uint256[] memory invalidAmounts = new uint256[](3);
+        invalidAmounts[0] = 10;
+        invalidAmounts[1] = 100;
+        invalidAmounts[2] = 1000;
+        vm.expectRevert("Invalid nft id");
+        linearPair.withdrawERC1155(owner, invalidIds, invalidAmounts);
+
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert("Caller should be an owner");
+        linearPair.withdrawERC1155(alice, withdrawIds, withdrawAmounts);
+        vm.stopPrank();
+    }
+
+    function testWithdrawERC1155ExponentialPair() public {
+        vm.startPrank(owner);
+        // create a exponential pair
+        uint256[] memory nftIds = new uint256[](1);
+        nftIds[0] = 9;
+        uint256[] memory nftAmounts = new uint256[](1);
+        nftAmounts[0] = 1000;
+
+        SeacowsPair _exponentialPair = createERC1155ERC20NFTPair(
+            testSeacowsSFT,
+            nftIds,
+            nftAmounts,
+            exponentialCurve,
+            payable(owner),
+            token,
+            0,
+            1.05 ether,
+            20 ether
+        );
+        exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
+
+        /** Withdraw NFTs */
+        uint256[] memory withdrawIds = new uint256[](1);
+        withdrawIds[0] = 9;
+        uint256[] memory withdrawAmounts = new uint256[](1);
+        withdrawAmounts[0] = 100;
+
+        exponentialPair.withdrawERC1155(owner, withdrawIds, withdrawAmounts);
+        /** Check erc1155 nft balances */
+        uint256 balanceNine = testSeacowsSFT.balanceOf(address(_exponentialPair), 9);
+        assertEq(balanceNine, 900);
+        /** check bonding curve */
+        ICurve curve = _exponentialPair.bondingCurve();
+        assertEq(address(curve), address(exponentialCurve));
+        /** check delta */
+        uint128 delta = _exponentialPair.delta();
+        assertEq(delta, 1.05 ether);
+        /** check spot price */
+        uint128 spotPrice = _exponentialPair.spotPrice();
+        assertEq(spotPrice, 20 ether);
+
+        /** Try to deposit invalid nft ids */
+        uint256[] memory invalidIds = new uint256[](1);
+        invalidIds[0] = 1;
+        uint256[] memory invalidAmounts = new uint256[](1);
+        invalidAmounts[0] = 10;
+        vm.expectRevert("Invalid nft id");
+        exponentialPair.withdrawERC1155(owner, invalidIds, invalidAmounts);
+
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert("Caller should be an owner");
+        exponentialPair.withdrawERC1155(alice, withdrawIds, withdrawAmounts);
+        vm.stopPrank();
+    }
 }
