@@ -24,6 +24,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
     uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
 
     event WithdrawERC1155(address indexed recipient, uint256[] ids, uint256[] amounts);
+    event ERC1155Deposit(address indexed depositer, uint256[] ids, uint256[] amounts);
 
     /** View Functions */
 
@@ -196,6 +197,30 @@ contract SeacowsPairERC1155 is SeacowsPair {
     }
 
     /** Mutative Functions */
+
+    /** 
+      @dev Used to deposit ERC1155 NFTs into a pair after creation and emit an event for indexing 
+      (if recipient is indeed a pair)
+    */
+    function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external {
+        require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
+        require(owner() == msg.sender, "Not a pair owner");
+        require(poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
+
+        // transfer NFTs from caller to recipient
+        uint256 numOfIds = ids.length;
+        for (uint256 i; i < numOfIds; ) {
+            // check if nft id is valid in this pair
+            require(isValidNFTID(ids[i]), "Invalid nft id");
+            IERC1155(nft()).safeTransferFrom(msg.sender, address(this), ids[i], amounts[i], "");
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        emit ERC1155Deposit(msg.sender, ids, amounts);
+    }
 
     function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
         require(poolType() == PoolType.NFT || poolType() == PoolType.TRADE, "Invalid pool type");

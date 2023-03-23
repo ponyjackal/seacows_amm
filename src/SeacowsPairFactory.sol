@@ -88,7 +88,6 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     }
 
     event NewPair(address poolAddress);
-    event ERC1155Deposit(address indexed poolAddress, uint256[] ids, uint256[] amounts);
     event ProtocolFeeRecipientUpdate(address recipientAddress);
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
@@ -381,30 +380,6 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     {
         // initialize pair,
         _pair.initialize(msg.sender, _assetRecipient, _delta, _fee, _spotPrice, weth);
-    }
-
-    /** 
-      @dev Used to deposit ERC1155 NFTs into a pair after creation and emit an event for indexing 
-      (if recipient is indeed a pair)
-    */
-    function depositERC1155(IERC1155 _nft, uint256[] calldata ids, uint256[] calldata amounts, address recipient) external {
-        require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
-        require(address(ISeacowsPair(recipient).owner()) == msg.sender, "Not a pair owner");
-        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
-
-        // transfer NFTs from caller to recipient
-        uint256 numOfIds = ids.length;
-        for (uint256 i; i < numOfIds; ) {
-            // check if nft id is valid in this pair
-            require(ISeacowsPairERC1155(recipient).isValidNFTID(ids[i]), "Invalid nft id");
-            _nft.safeTransferFrom(msg.sender, recipient, ids[i], amounts[i], "");
-
-            unchecked {
-                ++i;
-            }
-        }
-
-        emit ERC1155Deposit(recipient, ids, amounts);
     }
 
     /** Liquidity functions */

@@ -309,7 +309,9 @@ contract TestERC1155NFTPair is WhenCreatePair {
         depositAmounts[0] = 10;
         depositAmounts[1] = 1000;
 
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_linearPair));
+        testSeacowsSFT.setApprovalForAll(address(linearPair), true);
+
+        linearPair.depositERC1155(depositIds, depositAmounts);
         /** Check erc1155 nft balances */
         uint256 balanceOne = testSeacowsSFT.balanceOf(address(_linearPair), 1);
         assertEq(balanceOne, 20);
@@ -337,13 +339,15 @@ contract TestERC1155NFTPair is WhenCreatePair {
         invalidAmounts[1] = 100;
         invalidAmounts[2] = 1000;
         vm.expectRevert("Invalid nft id");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, invalidIds, invalidAmounts, address(_linearPair));
+        linearPair.depositERC1155(invalidIds, invalidAmounts);
 
         vm.stopPrank();
 
         vm.startPrank(alice);
+        testSeacowsSFT.setApprovalForAll(address(linearPair), true);
+
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_linearPair));
+        linearPair.depositERC1155(depositIds, depositAmounts);
         vm.stopPrank();
     }
 
@@ -374,7 +378,9 @@ contract TestERC1155NFTPair is WhenCreatePair {
         uint256[] memory depositAmounts = new uint256[](1);
         depositAmounts[0] = 10;
 
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_exponentialPair));
+        testSeacowsSFT.setApprovalForAll(address(exponentialPair), true);
+
+        exponentialPair.depositERC1155(depositIds, depositAmounts);
         /** Check erc1155 nft balances */
         uint256 balanceNine = testSeacowsSFT.balanceOf(address(_exponentialPair), 9);
         assertEq(balanceNine, 1010);
@@ -394,13 +400,14 @@ contract TestERC1155NFTPair is WhenCreatePair {
         uint256[] memory invalidAmounts = new uint256[](1);
         invalidAmounts[0] = 10;
         vm.expectRevert("Invalid nft id");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, invalidIds, invalidAmounts, address(_exponentialPair));
+        exponentialPair.depositERC1155(invalidIds, invalidAmounts);
 
         vm.stopPrank();
 
         vm.startPrank(alice);
+        testSeacowsSFT.setApprovalForAll(address(exponentialPair), true);
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_exponentialPair));
+        exponentialPair.depositERC1155(depositIds, depositAmounts);
         vm.stopPrank();
     }
 
