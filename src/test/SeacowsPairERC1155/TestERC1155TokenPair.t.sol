@@ -290,7 +290,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         linearPair = ISeacowsPairERC1155(address(_linearPair));
 
         /** owner deposits ETH to erc721-weth pair */
-        seacowsPairFactory.depositETH{ value: 4 ether }(address(_linearPair));
+        _linearPair.depositETH{ value: 4 ether }();
         /** check ETH balance */
         uint256 wethBalance = IWETH(weth).balanceOf(address(_linearPair));
         assertEq(wethBalance, 18 ether);
@@ -309,7 +309,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositETH{ value: 4 ether }(address(_linearPair));
+        _linearPair.depositETH{ value: 4 ether }();
         vm.stopPrank();
     }
 
@@ -336,7 +336,8 @@ contract TestERC1155TokenPair is WhenCreatePair {
         exponentialPair = ISeacowsPairERC1155(address(_exponentialPair));
 
         /** owner deposits token to erc721-erc20 token pair */
-        seacowsPairFactory.depositERC20(token, address(_exponentialPair), 120 ether);
+        token.approve(address(_exponentialPair), 1000 ether);
+        _exponentialPair.depositERC20(120 ether);
         /** check token balance */
         uint256 tokenBalance = token.balanceOf(address(_exponentialPair));
         assertEq(tokenBalance, 220 ether);
@@ -353,8 +354,9 @@ contract TestERC1155TokenPair is WhenCreatePair {
 
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
+        token.approve(address(_exponentialPair), 1000 ether);
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositERC20(token, address(_exponentialPair), 100 ether);
+        _exponentialPair.depositERC20(100 ether);
         vm.stopPrank();
     }
 

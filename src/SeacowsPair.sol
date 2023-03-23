@@ -14,6 +14,7 @@ import { ICurve } from "./bondingcurve/ICurve.sol";
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegistry.sol";
+import { IWETH } from "./interfaces/IWETH.sol";
 
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -52,11 +53,14 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     // If true, protocol fee is disabled. otherwise it's disabled
     bool public isProtocolFeeDisabled;
 
+    address public weth;
+
     // Events
     event SwapNFTInPair();
     event SwapNFTOutPair();
     event SpotPriceUpdate(uint128 newSpotPrice);
     event TokenWithdrawal(address indexed recipient, uint256 amount);
+    event TokenDeposit(address indexed sender, uint256 amount);
     event DeltaUpdate(uint128 newDelta);
     event FeeUpdate(uint96 newFee);
     event AssetRecipientChange(address a);
@@ -77,8 +81,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
       @param _delta The initial delta of the bonding curve
       @param _fee The initial % fee taken, if this is a trade pair 
       @param _spotPrice The initial price to sell an asset into the pair
+      @param _weth Weth pair contract address
      */
-    function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external payable {
+    function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice, address _weth)
+        external
+        payable
+    {
         require(owner() == address(0), "Initialized");
         __Ownable_init(_owner);
         __ReentrancyGuard_init();
@@ -102,6 +110,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         require(_bondingCurve.validateSpotPrice(_spotPrice), "Invalid new spot price for curve");
         delta = _delta;
         spotPrice = _spotPrice;
+
+        weth = _weth;
     }
 
     // -----------------------------------------
@@ -414,5 +424,35 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
      */
     function disableProtocolFee(bool _isProtocolFeeDisabled) external onlyFactory {
         isProtocolFeeDisabled = _isProtocolFeeDisabled;
+    }
+
+    /**
+     * Liquidity functions
+     */
+
+    /**
+      @dev Used to deposit ERC20s into a pair after creation and emit an event for indexing 
+      (if recipient is indeed an ERC20 pair and the token matches)
+     */
+    function depositERC20(uint256 amount) external {
+        token().safeTransferFrom(msg.sender, address(this), amount);
+
+        require(poolType() == SeacowsPair.PoolType.TOKEN, "Not a token pair");
+        require(owner() == msg.sender, "Not a pair owner");
+
+        emit TokenDeposit(msg.sender, amount);
+    }
+
+    /**
+      @dev Used to deposit ETH into a pair after creation and emit an event for indexing 
+      (if recipient is indeed an ETH pair and the token matches)
+     */
+    function depositETH() external payable {
+        IWETH(weth).deposit{ value: msg.value }();
+
+        require(poolType() == SeacowsPair.PoolType.TOKEN, "Not a token pair");
+        require(owner() == msg.sender, "Not a pair owner");
+
+        emit TokenDeposit(msg.sender, msg.value);
     }
 }

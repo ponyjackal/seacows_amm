@@ -67,9 +67,9 @@ contract WhenDepositToken is WhenCreatePair {
     function testdepositERC20() public {
         vm.startPrank(owner);
         /** allow more tokens before deposit */
-        token.approve(address(seacowsPairFactory), 1000 ether);
+        token.approve(address(erc721ERC20Pair), 1000 ether);
         /** owner deposits token to erc721-erc20 token pair */
-        seacowsPairFactory.depositERC20(token, address(erc721ERC20Pair), 120 ether);
+        erc721ERC20Pair.depositERC20(120 ether);
         /** check token balance */
         uint256 tokenBalance = token.balanceOf(address(erc721ERC20Pair));
         assertEq(tokenBalance, 220 ether);
@@ -86,15 +86,16 @@ contract WhenDepositToken is WhenCreatePair {
 
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
+        token.approve(address(erc721ERC20Pair), 1000 ether);
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositERC20(token, address(erc721ERC20Pair), 100 ether);
+        erc721ERC20Pair.depositERC20(100 ether);
         vm.stopPrank();
     }
 
     function testdepositWETH() public {
         vm.startPrank(owner);
         /** owner deposits ETH to erc721-weth pair */
-        seacowsPairFactory.depositETH{ value: 4 ether }(address(erc721WETHPair));
+        erc721WETHPair.depositETH{ value: 4 ether }();
         /** check ETH balance */
         uint256 wethBalance = IWETH(weth).balanceOf(address(erc721WETHPair));
         assertEq(wethBalance, 18 ether);
@@ -112,7 +113,7 @@ contract WhenDepositToken is WhenCreatePair {
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositETH{ value: 4 ether }(address(erc721WETHPair));
+        erc721WETHPair.depositETH{ value: 4 ether }();
         vm.stopPrank();
     }
 }

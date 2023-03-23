@@ -88,7 +88,6 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     }
 
     event NewPair(address poolAddress);
-    event TokenDeposit(address indexed poolAddress, uint256 amount);
     event ERC721Deposit(address indexed poolAddress, uint256[] ids);
     event ERC1155Deposit(address indexed poolAddress, uint256[] ids, uint256[] amounts);
     event ProtocolFeeRecipientUpdate(address recipientAddress);
@@ -157,7 +156,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
             uint256(msg.value)
         );
         pair = _createPairERC721ERC20(params);
-        pair.initialize(msg.sender, params.assetRecipient, params.delta, params.fee, params.spotPrice);
+        pair.initialize(msg.sender, params.assetRecipient, params.delta, params.fee, params.spotPrice, weth);
 
         // transfer WETH from this contract to pair
         params.token.transferFrom(address(this), address(pair), params.initialTokenBalance);
@@ -206,7 +205,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         require(bondingCurveAllowed[params.bondingCurve], "Bonding curve not whitelisted");
 
         pair = _createPairERC721ERC20(params);
-        pair.initialize(msg.sender, params.assetRecipient, params.delta, params.fee, params.spotPrice);
+        pair.initialize(msg.sender, params.assetRecipient, params.delta, params.fee, params.spotPrice, weth);
 
         // transfer initial tokens to pair
         params.token.transferFrom(msg.sender, address(pair), params.initialTokenBalance);
@@ -383,7 +382,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         internal
     {
         // initialize pair,
-        _pair.initialize(msg.sender, _assetRecipient, _delta, _fee, _spotPrice);
+        _pair.initialize(msg.sender, _assetRecipient, _delta, _fee, _spotPrice, weth);
     }
 
     /** 
@@ -428,36 +427,6 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         }
 
         emit ERC1155Deposit(recipient, ids, amounts);
-    }
-
-    /**
-      @dev Used to deposit ERC20s into a pair after creation and emit an event for indexing 
-      (if recipient is indeed an ERC20 pair and the token matches)
-     */
-    function depositERC20(ERC20 token, address recipient, uint256 amount) external {
-        token.safeTransferFrom(msg.sender, recipient, amount);
-
-        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.TOKEN, "Not a token pair");
-        require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
-        if (token == SeacowsPair(recipient).token()) {
-            emit TokenDeposit(recipient, amount);
-        }
-    }
-
-    /**
-      @dev Used to deposit ETH into a pair after creation and emit an event for indexing 
-      (if recipient is indeed an ETH pair and the token matches)
-     */
-    function depositETH(address recipient) external payable {
-        IWETH(weth).deposit{ value: msg.value }();
-        IWETH(weth).transfer(recipient, msg.value);
-
-        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.TOKEN, "Not a token pair");
-        require(ISeacowsPair(recipient).owner() == msg.sender, "Not a pair owner");
-
-        if (address(weth) == address(SeacowsPair(recipient).token())) {
-            emit TokenDeposit(recipient, msg.value);
-        }
     }
 
     /** Liquidity functions */
