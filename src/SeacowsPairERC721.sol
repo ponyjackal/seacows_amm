@@ -18,6 +18,7 @@ contract SeacowsPairERC721 is SeacowsPair {
     uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
 
     event WithdrawERC721(address indexed recipient, uint256[] ids);
+    event ERC721Deposit(address indexed depositer, uint256[] ids);
 
     /** Internal Functions */
 
@@ -394,5 +395,25 @@ contract SeacowsPairERC721 is SeacowsPair {
 
             emit WithdrawERC721(msg.sender, nftIds);
         }
+    }
+
+    /** 
+      @dev Used to deposit NFTs into a pair after creation and emit an event for indexing 
+      (if recipient is indeed a pair)
+    */
+    function depositERC721(uint256[] calldata ids) external {
+        require(owner() == msg.sender, "Not a pair owner");
+        require(poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
+
+        // transfer NFTs from caller to recipient
+        uint256 numNFTs = ids.length;
+        for (uint256 i; i < numNFTs; ) {
+            IERC721(nft()).safeTransferFrom(msg.sender, address(this), ids[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+        emit ERC721Deposit(msg.sender, ids);
     }
 }

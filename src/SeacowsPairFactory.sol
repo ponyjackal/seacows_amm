@@ -88,13 +88,11 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     }
 
     event NewPair(address poolAddress);
-    event ERC721Deposit(address indexed poolAddress, uint256[] ids);
     event ERC1155Deposit(address indexed poolAddress, uint256[] ids, uint256[] amounts);
     event ProtocolFeeRecipientUpdate(address recipientAddress);
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
     event CallTargetStatusUpdate(address target, bool isAllowed);
-    // event RouterStatusUpdate(SeacowsRouter router, bool isAllowed);
     event ProtocolFeeDisabled(address pair, bool isDisabled);
 
     constructor(
@@ -383,26 +381,6 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
     {
         // initialize pair,
         _pair.initialize(msg.sender, _assetRecipient, _delta, _fee, _spotPrice, weth);
-    }
-
-    /** 
-      @dev Used to deposit NFTs into a pair after creation and emit an event for indexing 
-      (if recipient is indeed a pair)
-    */
-    function depositNFTs(IERC721 _nft, uint256[] calldata ids, address recipient) external {
-        require(address(ISeacowsPair(recipient).owner()) == msg.sender, "Not a pair owner");
-        require(ISeacowsPair(recipient).poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
-
-        // transfer NFTs from caller to recipient
-        uint256 numNFTs = ids.length;
-        for (uint256 i; i < numNFTs; ) {
-            _nft.safeTransferFrom(msg.sender, recipient, ids[i]);
-
-            unchecked {
-                ++i;
-            }
-        }
-        emit ERC721Deposit(recipient, ids);
     }
 
     /** 

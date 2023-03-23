@@ -6,22 +6,16 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
 interface ISeacowsPairERC721 is ISeacowsPair {
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient)
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient) external payable returns (uint256 inputAmount);
+
+    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
         external
         payable
         returns (uint256 inputAmount);
 
-    function swapTokenForSpecificNFTs(
-        uint256[] calldata nftIds,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient
-    ) external payable returns (uint256 inputAmount);
-
-    function swapNFTsForToken(
-        uint256[] calldata nftIds,
-        uint256 minExpectedTokenOutput,
-        address payable tokenRecipient
-    ) external returns (uint256 outputAmount);
+    function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient)
+        external
+        returns (uint256 outputAmount);
 
     function getBuyNFTQuote(uint256[] memory nftIds)
         external
@@ -36,4 +30,6 @@ interface ISeacowsPairERC721 is ISeacowsPair {
     function onERC721Received(address, address, uint256, bytes memory) external returns (bytes4);
 
     function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;
+
+    function depositERC721(uint256[] calldata ids) external;
 }

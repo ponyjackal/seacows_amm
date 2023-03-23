@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { SeacowsPair } from "../../SeacowsPair.sol";
 import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
@@ -17,9 +17,9 @@ import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract WhenDepositNFTs is WhenCreatePair {
-    SeacowsPair internal erc721ERC20Pair;
-    SeacowsPair internal erc721ETHPair;
+contract WhenDepositERC721 is WhenCreatePair {
+    ISeacowsPairERC721 internal erc721ERC20Pair;
+    ISeacowsPairERC721 internal erc721ETHPair;
 
     TestERC721 internal nft;
     TestERC20 internal token;
@@ -51,18 +51,25 @@ contract WhenDepositNFTs is WhenCreatePair {
         nftETHIds[1] = 3;
         nftETHIds[2] = 6;
 
-        erc721ETHPair = createNFTPairETH(nft, linearCurve, payable(owner), 1 ether, 5 ether, nftETHIds);
+        SeacowsPair _erc721ETHPair = createNFTPairETH(nft, linearCurve, payable(owner), 1 ether, 5 ether, nftETHIds);
+        erc721ETHPair = ISeacowsPairERC721(address(_erc721ETHPair));
 
         /** Create ERC721-ERC20 NFT Pair */
         uint256[] memory nftIds = new uint256[](2);
         nftIds[0] = 0;
         nftIds[1] = 5;
 
-        erc721ERC20Pair = createNFTPair(token, nft, exponentialCurve, payable(owner), 1.05 ether, 20 ether, nftIds, 1 ether);
+        SeacowsPair _erc721ERC20Pair = createNFTPair(token, nft, exponentialCurve, payable(owner), 1.05 ether, 20 ether, nftIds, 1 ether);
+        erc721ERC20Pair = ISeacowsPairERC721(address(_erc721ERC20Pair));
+
+        nft.setApprovalForAll(address(erc721ERC20Pair), true);
+        nft.setApprovalForAll(address(erc721ETHPair), true);
+
         vm.stopPrank();
 
         vm.startPrank(alice);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(erc721ERC20Pair), true);
+        nft.setApprovalForAll(address(erc721ETHPair), true);
         vm.stopPrank();
     }
 
@@ -73,7 +80,7 @@ contract WhenDepositNFTs is WhenCreatePair {
         nftIds[1] = 4;
 
         /** Deposit NFTs */
-        seacowsPairFactory.depositNFTs(nft, nftIds, address(erc721ETHPair));
+        erc721ETHPair.depositERC721(nftIds);
         /** Check nft balance */
         uint256 balance = nft.balanceOf(address(erc721ETHPair));
         assertEq(balance, 5);
@@ -93,7 +100,7 @@ contract WhenDepositNFTs is WhenCreatePair {
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositNFTs(nft, nftIdsForAlice, address(erc721ETHPair));
+        erc721ETHPair.depositERC721(nftIdsForAlice);
         vm.stopPrank();
     }
 
@@ -104,7 +111,7 @@ contract WhenDepositNFTs is WhenCreatePair {
         nftIds[1] = 8;
 
         /** Deposit NFTs */
-        seacowsPairFactory.depositNFTs(nft, nftIds, address(erc721ERC20Pair));
+        erc721ERC20Pair.depositERC721(nftIds);
         /** Check nft balance */
         uint256 balance = nft.balanceOf(address(erc721ERC20Pair));
         assertEq(balance, 4);
@@ -124,7 +131,7 @@ contract WhenDepositNFTs is WhenCreatePair {
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositNFTs(nft, nftIdsForAlice, address(erc721ETHPair));
+        erc721ERC20Pair.depositERC721(nftIdsForAlice);
         vm.stopPrank();
     }
 }
