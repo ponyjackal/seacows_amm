@@ -237,6 +237,9 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         uint256 totalAmount;
         for (uint256 i; i < _amounts.length; ) {
+            // check if nft id is valid in this pair
+            require(isValidNFTID(_nftIds[i]), "Invalid nft id");
+
             totalAmount += _amounts[i];
             unchecked {
                 ++i;
@@ -285,6 +288,9 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         uint256 totalAmount;
         for (uint256 i; i < _amounts.length; ) {
+            // check if nft id is valid in this pair
+            require(isValidNFTID(_nftIds[i]), "Invalid nft id");
+
             totalAmount += _amounts[i];
             unchecked {
                 ++i;
