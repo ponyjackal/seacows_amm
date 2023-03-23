@@ -29,7 +29,7 @@ interface ISeacowsPairERC721 is ISeacowsPair {
 
     function onERC721Received(address, address, uint256, bytes memory) external returns (bytes4);
 
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external;
+    function withdrawERC721(uint256[] calldata nftIds) external;
 
     function depositERC721(uint256[] calldata ids) external;
 }

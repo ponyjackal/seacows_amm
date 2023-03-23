@@ -368,33 +368,21 @@ contract SeacowsPairERC721 is SeacowsPair {
         emit SwapNFTOutPair();
     }
 
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyOwner {
+    function withdrawERC721(uint256[] calldata nftIds) external onlyOwner {
         IERC721 _nft = IERC721(nft());
         uint256 numNFTs = nftIds.length;
 
-        // If it's not the pair's NFT, just withdraw normally
-        if (a != _nft) {
-            for (uint256 i; i < numNFTs; ) {
-                a.safeTransferFrom(address(this), msg.sender, nftIds[i]);
-
-                unchecked {
-                    ++i;
-                }
-            }
-        }
         // Otherwise, withdraw and also remove the ID from the ID set
-        else {
-            for (uint256 i; i < numNFTs; ) {
-                _nft.safeTransferFrom(address(this), msg.sender, nftIds[i]);
-                idSet.remove(nftIds[i]);
+        for (uint256 i; i < numNFTs; ) {
+            _nft.safeTransferFrom(address(this), msg.sender, nftIds[i]);
+            idSet.remove(nftIds[i]);
 
-                unchecked {
-                    ++i;
-                }
+            unchecked {
+                ++i;
             }
-
-            emit WithdrawERC721(msg.sender, nftIds);
         }
+
+        emit WithdrawERC721(msg.sender, nftIds);
     }
 
     /** 
