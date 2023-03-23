@@ -32,7 +32,7 @@ abstract contract OwnableWithTransferCallback {
 
     /// @dev Throws if called by any account other than the owner.
     modifier onlyOwner() {
-        if (owner() != msg.sender) revert Ownable_NotOwner();
+        require(owner() == msg.sender, "Caller is not the owner");
         _;
     }
 

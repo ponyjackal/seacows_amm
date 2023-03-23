@@ -3,11 +3,9 @@ pragma solidity ^0.8.0;
 
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-// import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 import { OwnableWithTransferCallback } from "./lib/OwnableWithTransferCallback.sol";
@@ -20,7 +18,7 @@ import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegist
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 /// @notice This implements the core swap logic from NFT to TOKEN
-abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, AccessControl, ERC1155Holder {
+abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, ERC1155Holder {
     using SafeERC20 for ERC20;
 
     enum PoolType {
@@ -31,9 +29,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
     // 90%, must <= 1 - MAX_PROTOCOL_FEE (set in PairFactory)
     uint256 internal constant MAX_FEE = 0.90e18;
-
-    // Create a new role identifier for the minter role
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     // The current price of the NFT
     // @dev This is generally used to mean the immediate sell price for the next marginal NFT.
@@ -56,9 +51,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
     // If true, protocol fee is disabled. otherwise it's disabled
     bool public isProtocolFeeDisabled;
-
-    // LP total supply; only used in trade pair
-    mapping(uint256 => uint256) public totalSupply;
 
     // Events
     event SwapNFTInPair();
@@ -110,9 +102,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         require(_bondingCurve.validateSpotPrice(_spotPrice), "Invalid new spot price for curve");
         delta = _delta;
         spotPrice = _spotPrice;
-
-        // grant admin role to owner
-        _grantRole(ADMIN_ROLE, owner());
     }
 
     // -----------------------------------------
@@ -121,11 +110,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
 
     modifier onlyFactory() {
         require(msg.sender == address(factory()), "Caller is not a factory");
-        _;
-    }
-
-    modifier onlyAdmin() {
-        require(hasRole(ADMIN_ROLE, msg.sender), "Caller is not an admin");
         _;
     }
 
@@ -360,7 +344,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @notice Updates the selling spot price. Only callable by the owner.
         @param newSpotPrice The new selling spot price value, in Token
      */
-    function changeSpotPrice(uint128 newSpotPrice) external onlyAdmin {
+    function changeSpotPrice(uint128 newSpotPrice) external onlyOwner {
         ICurve _bondingCurve = bondingCurve();
         require(_bondingCurve.validateSpotPrice(newSpotPrice), "Invalid new spot price for curve");
         if (spotPrice != newSpotPrice) {
@@ -373,7 +357,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         @notice Updates the delta parameter. Only callable by the owner.
         @param newDelta The new delta parameter
      */
-    function changeDelta(uint128 newDelta) external onlyAdmin {
+    function changeDelta(uint128 newDelta) external onlyOwner {
         ICurve _bondingCurve = bondingCurve();
         require(_bondingCurve.validateDelta(newDelta), "Invalid delta for curve");
         if (delta != newDelta) {
@@ -388,7 +372,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
         MAX_FEE.
         @param newFee The new LP fee percentage, 18 decimals
      */
-    function changeFee(uint96 newFee) external onlyAdmin {
+    function changeFee(uint96 newFee) external onlyOwner {
         PoolType _poolType = poolType();
         require(_poolType == PoolType.TRADE, "Only for Trade pools");
         require(newFee < MAX_FEE, "Trade fee must be less than 90%");
@@ -415,24 +399,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, A
     }
 
     /**
-      @param _returnData The data returned from a multicall result
-      @dev Used to grab the revert string from the underlying call
-     */
-    function _getRevertMsg(bytes memory _returnData) internal pure returns (string memory) {
-        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
-        if (_returnData.length < 68) return "Transaction reverted silently";
-
-        assembly {
-            // Slice the sighash.
-            _returnData := add(_returnData, 0x04)
-        }
-        return abi.decode(_returnData, (string)); // All that remains is the revert string
-    }
-
-    /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 

@@ -207,10 +207,10 @@ contract TestERC1155TokenPair is WhenCreatePair {
         /** Non pair owner is tryig to spot price */
         vm.startPrank(alice);
 
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         _linearPair.changeSpotPrice(0.5 ether);
 
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         _linearPair.changeDelta(0.1 ether);
 
         vm.stopPrank();
@@ -252,10 +252,10 @@ contract TestERC1155TokenPair is WhenCreatePair {
         /** Non pair owner is tryig to spot price */
         vm.startPrank(alice);
 
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         _exponentialPair.changeSpotPrice(0.5 ether);
 
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         _exponentialPair.changeDelta(1.1 ether);
 
         vm.stopPrank();

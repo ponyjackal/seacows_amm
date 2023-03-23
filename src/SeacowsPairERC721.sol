@@ -367,7 +367,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         emit SwapNFTOutPair();
     }
 
-    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyAdmin {
+    function withdrawERC721(IERC721 a, uint256[] calldata nftIds) external onlyOwner {
         IERC721 _nft = IERC721(nft());
         uint256 numNFTs = nftIds.length;
 

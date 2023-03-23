@@ -171,15 +171,15 @@ contract WhenCreateNFTPair is WhenCreatePair {
         /** Non pair owner is tryig to change delta and spot price */
         vm.startPrank(alice);
         /** Change delta */
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         erc721EnumerableERC20Pair.changeDelta(0.1e18);
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         erc721ERC20Pair.changeDelta(1.1e18);
 
         /** Change spot price */
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         erc721EnumerableERC20Pair.changeSpotPrice(0.1e18);
-        vm.expectRevert("Caller is not an admin");
+        vm.expectRevert("Caller is not the owner");
         erc721ERC20Pair.changeSpotPrice(1.1e18);
         vm.stopPrank();
     }
