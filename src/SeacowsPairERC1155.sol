@@ -74,7 +74,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // nft balance
         nftReserve = nftAmount;
         // token balance
-        tokenReserve = token().balanceOf(address(this));
+        tokenReserve = token.balanceOf(address(this));
     }
 
     /** Internal Functions */
@@ -205,14 +205,14 @@ contract SeacowsPairERC1155 is SeacowsPair {
     function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external {
         require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
         require(owner() == msg.sender, "Not a pair owner");
-        require(poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
+        require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
 
         // transfer NFTs from caller to recipient
         uint256 numOfIds = ids.length;
         for (uint256 i; i < numOfIds; ) {
             // check if nft id is valid in this pair
             require(isValidNFTID(ids[i]), "Invalid nft id");
-            IERC1155(nft()).safeTransferFrom(msg.sender, address(this), ids[i], amounts[i], "");
+            IERC1155(nft).safeTransferFrom(msg.sender, address(this), ids[i], amounts[i], "");
 
             unchecked {
                 ++i;
@@ -223,13 +223,13 @@ contract SeacowsPairERC1155 is SeacowsPair {
     }
 
     function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
-        require(poolType() == PoolType.NFT || poolType() == PoolType.TRADE, "Invalid pool type");
+        require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Invalid pool type");
         require(_nftIds.length == _amounts.length, "Invalid amounts");
 
         uint256 totalAmount;
         for (uint256 i; i < _nftIds.length; ) {
             require(isValidNFTID(_nftIds[i]), "Invalid nft id");
-            IERC1155(nft()).safeTransferFrom(address(this), _recipient, _nftIds[i], _amounts[i], "");
+            IERC1155(nft).safeTransferFrom(address(this), _recipient, _nftIds[i], _amounts[i], "");
             totalAmount += _amounts[i];
             unchecked {
                 ++i;
@@ -255,11 +255,6 @@ contract SeacowsPairERC1155 is SeacowsPair {
         nonReentrant
         returns (uint256 inputAmount)
     {
-        // Store locally to remove extra calls
-        ISeacowsPairFactoryLike _factory = factory();
-        ICurve _bondingCurve = bondingCurve();
-        address _nft = nft();
-
         uint256 totalAmount;
         for (uint256 i; i < _amounts.length; ) {
             // check if nft id is valid in this pair
@@ -273,17 +268,16 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         // Input validation
         {
-            PoolType _poolType = poolType();
-            require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Wrong Pool type");
             require(_nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid nft ids");
             require(totalAmount > 0, "Invalid nft amount");
         }
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(totalAmount, maxExpectedTokenInput, _bondingCurve, _factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, _factory, protocolFee);
-        _sendNFTsToRecipient(_nft, nftRecipient, _nftIds, _amounts);
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(totalAmount, maxExpectedTokenInput, bondingCurve, factory);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+        _sendNFTsToRecipient(nft, nftRecipient, _nftIds, _amounts);
         _refundTokenToSender(inputAmount);
 
         // decrease total nft balance
@@ -307,10 +301,6 @@ contract SeacowsPairERC1155 is SeacowsPair {
         nonReentrant
         returns (uint256 outputAmount)
     {
-        // Store locally to remove extra calls
-        ISeacowsPairFactoryLike _factory = factory();
-        ICurve _bondingCurve = bondingCurve();
-
         uint256 totalAmount;
         for (uint256 i; i < _amounts.length; ) {
             // check if nft id is valid in this pair
@@ -324,22 +314,20 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         // Input validation
         {
-            PoolType _poolType = poolType();
-            require(_poolType == PoolType.TOKEN || _poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.TOKEN || poolType == PoolType.TRADE, "Wrong Pool type");
             require(nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid amounts");
             require(totalAmount > 0, "Must ask for > 0 NFTs");
         }
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(totalAmount, minExpectedTokenOutput, _bondingCurve, _factory);
+        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(totalAmount, minExpectedTokenOutput, bondingCurve, factory);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
-        _payProtocolFeeFromPair(_factory, protocolFee);
+        _payProtocolFeeFromPair(factory, protocolFee);
 
-        _takeNFTsFromSender(nft(), _nftIds, _amounts, _factory);
-
+        _takeNFTsFromSender(nft, _nftIds, _amounts, factory);
         // increase total nft balance
         nftAmount += totalAmount;
 

@@ -176,10 +176,10 @@ contract SeacowsPairERC721 is SeacowsPair {
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
     {
         uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve().getBuyInfo(
+        (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve.getBuyInfo(
             address(this),
             nftIds.length,
-            factory().protocolFeeMultiplier()
+            factory.protocolFeeMultiplier()
         );
         newSpotPrice = currentSpotPrice;
     }
@@ -194,10 +194,10 @@ contract SeacowsPairERC721 is SeacowsPair {
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
     {
         uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve().getSellInfo(
+        (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve.getSellInfo(
             address(this),
             nftIds.length,
-            factory().protocolFeeMultiplier()
+            factory.protocolFeeMultiplier()
         );
         newSpotPrice = currentSpotPrice;
     }
@@ -229,9 +229,9 @@ contract SeacowsPairERC721 is SeacowsPair {
      */
     function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
         // nft balance
-        nftReserve = IERC721(nft()).balanceOf(address(this));
+        nftReserve = IERC721(nft).balanceOf(address(this));
         // token balance
-        tokenReserve = token().balanceOf(address(this));
+        tokenReserve = token.balanceOf(address(this));
     }
 
     /**
@@ -239,7 +239,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         if it's the same collection used by pool. (As it doesn't auto-track because no ERC721Enumerable)
      */
     function onERC721Received(address, address, uint256 id, bytes memory) public virtual returns (bytes4) {
-        IERC721 _nft = IERC721(nft());
+        IERC721 _nft = IERC721(nft);
         // If it's from the pair's NFT, add the ID to ID set
         if (msg.sender == address(_nft)) {
             idSet.add(id);
@@ -266,22 +266,16 @@ contract SeacowsPairERC721 is SeacowsPair {
         nonReentrant
         returns (uint256 inputAmount)
     {
-        // Store locally to remove extra calls
-        ISeacowsPairFactoryLike _factory = factory();
-        ICurve _bondingCurve = bondingCurve();
-        address _nft = nft();
-
         // Input validation
         {
-            PoolType _poolType = poolType();
-            require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Wrong Pool type");
             require(numNFTs > 0, "Invalid nft amount");
         }
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, _bondingCurve, _factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, _factory, protocolFee);
-        _sendAnyNFTsToRecipient(_nft, nftRecipient, numNFTs);
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+        _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
         _refundTokenToSender(inputAmount);
 
         emit SwapNFTOutPair();
@@ -302,26 +296,21 @@ contract SeacowsPairERC721 is SeacowsPair {
         nonReentrant
         returns (uint256 outputAmount)
     {
-        // Store locally to remove extra calls
-        ISeacowsPairFactoryLike _factory = factory();
-        ICurve _bondingCurve = bondingCurve();
-
         // Input validation
         {
-            PoolType _poolType = poolType();
-            require(_poolType == PoolType.TOKEN || _poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.TOKEN || poolType == PoolType.TRADE, "Wrong Pool type");
             require(nftIds.length > 0, "Must ask for > 0 NFTs");
         }
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(nftIds, minExpectedTokenOutput, _bondingCurve, _factory);
+        (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(nftIds, minExpectedTokenOutput, bondingCurve, factory);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
-        _payProtocolFeeFromPair(_factory, protocolFee);
+        _payProtocolFeeFromPair(factory, protocolFee);
 
-        _takeNFTsFromSender(nft(), nftIds);
+        _takeNFTsFromSender(nft, nftIds);
 
         emit SwapNFTInPair();
     }
@@ -344,24 +333,19 @@ contract SeacowsPairERC721 is SeacowsPair {
         nonReentrant
         returns (uint256 inputAmount)
     {
-        // Store locally to remove extra calls
-        ISeacowsPairFactoryLike _factory = factory();
-        ICurve _bondingCurve = bondingCurve();
-
         // Input validation
         {
-            PoolType _poolType = poolType();
-            require(_poolType == PoolType.NFT || _poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Wrong Pool type");
             require((nftIds.length > 0), "Must ask for > 0 NFTs");
         }
 
         // Call bonding curve for pricing information
         uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, maxExpectedTokenInput, _bondingCurve, _factory);
+        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, maxExpectedTokenInput, bondingCurve, factory);
 
-        _pullTokenInputAndPayProtocolFee(inputAmount, _factory, protocolFee);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
 
-        _sendSpecificNFTsToRecipient(nft(), nftRecipient, nftIds);
+        _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
 
         _refundTokenToSender(inputAmount);
 
@@ -369,7 +353,7 @@ contract SeacowsPairERC721 is SeacowsPair {
     }
 
     function withdrawERC721(uint256[] calldata nftIds) external onlyOwner {
-        IERC721 _nft = IERC721(nft());
+        IERC721 _nft = IERC721(nft);
         uint256 numNFTs = nftIds.length;
 
         // Otherwise, withdraw and also remove the ID from the ID set
@@ -391,12 +375,12 @@ contract SeacowsPairERC721 is SeacowsPair {
     */
     function depositERC721(uint256[] calldata ids) external {
         require(owner() == msg.sender, "Not a pair owner");
-        require(poolType() == SeacowsPair.PoolType.NFT, "Not a nft pair");
+        require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
 
         // transfer NFTs from caller to recipient
         uint256 numNFTs = ids.length;
         for (uint256 i; i < numNFTs; ) {
-            IERC721(nft()).safeTransferFrom(msg.sender, address(this), ids[i]);
+            IERC721(nft).safeTransferFrom(msg.sender, address(this), ids[i]);
 
             unchecked {
                 ++i;
