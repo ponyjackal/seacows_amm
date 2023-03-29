@@ -108,6 +108,15 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         __Ownable_init(param.owner);
         __ReentrancyGuard_init();
 
+        bondingCurve = param.bondingCurve;
+        factory = param.factory;
+        nft = param.nft;
+        poolType = param.poolType;
+        token = param.token;
+        delta = param.delta;
+        spotPrice = param.spotPrice;
+        weth = param.weth;
+
         if ((param.poolType == PoolType.TOKEN) || (param.poolType == PoolType.NFT)) {
             require(param.fee == 0, "Only Trade Pools can have nonzero fee");
             if (param.assetRecipient != address(0)) {
@@ -120,17 +129,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
             require(param.assetRecipient == address(0), "Trade pools can't set asset recipient");
             fee = param.fee;
         }
+
         require(bondingCurve.validateDelta(param.delta), "Invalid delta for curve");
         require(bondingCurve.validateSpotPrice(param.spotPrice), "Invalid new spot price for curve");
-
-        factory = param.factory;
-        bondingCurve = param.bondingCurve;
-        nft = param.nft;
-        poolType = param.poolType;
-        token = param.token;
-        delta = param.delta;
-        spotPrice = param.spotPrice;
-        weth = param.weth;
     }
 
     // -----------------------------------------
