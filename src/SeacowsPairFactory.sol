@@ -196,7 +196,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         uint128 spotPrice = params.spotPrice;
         if (params.poolType == SeacowsPair.PoolType.TRADE) {
             // For trade pairs, spot price should be based on the token and nft reserves
-            spotPrice = (uint128)(msg.value / ISeacowsPairERC1155(address(pair)).nftAmount());
+            spotPrice = (uint128)(msg.value / totalAmount);
         }
 
         SeacowsPair.PairInitializeParams memory initParams = SeacowsPair.PairInitializeParams(
@@ -277,7 +277,7 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         uint128 spotPrice = params.spotPrice;
         if (params.poolType == SeacowsPair.PoolType.TRADE) {
             // For trade pairs, spot price should be based on the token and nft reserves
-            spotPrice = (uint128)(params.tokenAmount / ISeacowsPairERC1155(address(pair)).nftAmount());
+            spotPrice = (uint128)(params.tokenAmount / totalAmount);
         }
 
         SeacowsPair.PairInitializeParams memory initParams = SeacowsPair.PairInitializeParams(
@@ -416,7 +416,6 @@ contract SeacowsPairFactory is Ownable, SeacowsPositionManager, ISeacowsPairFact
         // create a pair
         pair = SeacowsPair(payable(template.clone()));
 
-        uint256 totalAmount;
         for (uint256 i; i < nftAmounts.length; ) {
             totalAmount += nftAmounts[i];
             // transfer nfts to the pair
