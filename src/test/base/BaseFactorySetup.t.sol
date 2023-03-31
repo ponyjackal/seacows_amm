@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import { SeacowsPairFactory } from "../../factories/SeacowsPairFactory.sol";
+import { SeacowsPairERC721Factory } from "../../factories/SeacowsPairERC721Factory.sol";
 import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { SeacowsPairERC721 } from "../../pairs/SeacowsPairERC721.sol";
 import { SeacowsPairERC1155 } from "../../pairs/SeacowsPairERC1155.sol";
@@ -24,6 +25,7 @@ contract BaseFactorySetup is Test {
     uint256 internal protocolFeeMultiplier;
 
     SeacowsPairFactory internal seacowsPairFactory;
+    SeacowsPairERC721Factory internal seacowsPairERC721Factory;
     SeacowsPairERC721 internal seacowsPairERC721;
     SeacowsPairERC1155 internal seacowsPairERC1155;
 
@@ -40,5 +42,8 @@ contract BaseFactorySetup is Test {
 
         /** deploy SeacowsPairFactory */
         seacowsPairFactory = new SeacowsPairFactory(weth, seacowsPairERC721, seacowsPairERC1155, protocolFeeRecipient, protocolFeeMultiplier);
+
+        /** deploy SeacowsPairERC721Factory */
+        seacowsPairERC721Factory = new SeacowsPairERC721Factory(weth, seacowsPairERC721, protocolFeeRecipient, protocolFeeMultiplier);
     }
 }

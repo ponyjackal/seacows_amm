@@ -10,7 +10,6 @@ import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
-import { SeacowsPairFactory } from "../../factories/SeacowsPairFactory.sol";
 import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
@@ -68,11 +67,11 @@ contract WhenBuyNFTs is WhenCreatePair {
         vm.stopPrank();
 
         /** enable/disable protocol fees */
-        seacowsPairFactory.disableProtocolFee(erc721ETHPair, false);
-        seacowsPairFactory.disableProtocolFee(erc721ERC20Pair, true);
+        seacowsPairERC721Factory.disableProtocolFee(erc721ETHPair, false);
+        seacowsPairERC721Factory.disableProtocolFee(erc721ERC20Pair, true);
 
         vm.startPrank(alice);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
         token.approve(address(erc721ERC20Pair), 100 ether);
         token.approve(address(erc721ETHPair), 100 ether);
         vm.stopPrank();

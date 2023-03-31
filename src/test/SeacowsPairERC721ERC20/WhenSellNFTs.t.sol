@@ -10,7 +10,6 @@ import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
 import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
-import { SeacowsPairFactory } from "../../factories/SeacowsPairFactory.sol";
 import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
@@ -44,13 +43,13 @@ contract WhenSellNFTs is WhenCreatePair {
         nft.safeMint(owner);
 
         /** Approve Bonding Curve */
-        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
-        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(exponentialCurve, true);
 
         /** Create Linear Token Pair */
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1000 ether);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
 
         linearPair = createTokenPair(token, nft, linearCurve, payable(owner), 0.5 ether, 5 ether, new uint256[](0), 15 ether);
         linearPairS3 = createTokenPair(token, nft, linearCurve, payable(owner), 0.5 ether, 1 ether, new uint256[](0), 100 ether);
@@ -60,9 +59,9 @@ contract WhenSellNFTs is WhenCreatePair {
         vm.stopPrank();
 
         /** enable/disable protocol fees */
-        seacowsPairFactory.disableProtocolFee(linearPair, false);
-        seacowsPairFactory.disableProtocolFee(linearPairS3, false);
-        seacowsPairFactory.disableProtocolFee(exponentialPair, true);
+        seacowsPairERC721Factory.disableProtocolFee(linearPair, false);
+        seacowsPairERC721Factory.disableProtocolFee(linearPairS3, false);
+        seacowsPairERC721Factory.disableProtocolFee(exponentialPair, true);
 
         vm.startPrank(alice);
         nft.setApprovalForAll(address(linearPair), true);
