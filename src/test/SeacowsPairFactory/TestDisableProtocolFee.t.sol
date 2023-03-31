@@ -58,7 +58,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         nftPair = createNFTPair(token, nft, exponentialCurve, payable(owner), 1.05 ether, 10 ether, nftPairNFTIds, 100 ether);
 
-        // /** Create ERC721Enumerable-ERC20 Trade Pair */
+        /** Create ERC721Enumerable-ERC20 Trade Pair */
         // uint256[] memory tradePairNFTIds = new uint256[](5);
         // tradePairNFTIds[0] = 0;
         // tradePairNFTIds[1] = 5;
@@ -68,16 +68,16 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         // tradePair = createTradePair(token, nft, cpmmCurve, 1 ether, 0.1 ether, 10 ether, tradePairNFTIds, 100 ether);
 
-        // /** Create ERC721Enumerable-ERC20 Token Pair */
-        // tokenPair = createTokenPair(token, nft, linearCurve, payable(owner), 1 ether, 10 ether, new uint256[](0), 100 ether);
-        // vm.stopPrank();
+        /** Create ERC721Enumerable-ERC20 Token Pair */
+        tokenPair = createTokenPair(token, nft, linearCurve, payable(owner), 1 ether, 10 ether, new uint256[](0), 100 ether);
+        vm.stopPrank();
 
-        // vm.startPrank(alice);
-        // nft.setApprovalForAll(address(seacowsPairFactory), true);
-        // nft.setApprovalForAll(address(tokenPair), true);
+        vm.startPrank(alice);
+        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(tokenPair), true);
         // nft.setApprovalForAll(address(tradePair), true);
 
-        // token.approve(address(nftPair), 1000 ether);
+        token.approve(address(nftPair), 1000 ether);
         // token.approve(address(tradePair), 1000 ether);
         vm.stopPrank();
     }
