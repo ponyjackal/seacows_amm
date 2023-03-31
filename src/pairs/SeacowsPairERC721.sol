@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import { SeacowsPairTrade } from "./SeacowsPairTrade.sol";
-import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
-import { ICurve } from "./bondingcurve/ICurve.sol";
-import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
+import { SeacowsPair } from "./SeacowsPair.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import { ICurve } from "../bondingcurve/ICurve.sol";
+import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
-contract SeacowsPairERC721Trade is SeacowsPairTrade {
+contract SeacowsPairERC721 is SeacowsPair {
     using EnumerableSet for EnumerableSet.UintSet;
 
     // Used for internal ID tracking
@@ -147,17 +147,15 @@ contract SeacowsPairERC721Trade is SeacowsPairTrade {
         @param nftIds The specific NFT IDs to take
      */
     function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds) internal {
-        {
-            address _assetRecipient = getAssetRecipient();
-            uint256 numNFTs = nftIds.length;
+        address _assetRecipient = getAssetRecipient();
+        uint256 numNFTs = nftIds.length;
 
-            // Pull NFTs directly from sender
-            for (uint256 i; i < numNFTs; ) {
-                IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
+        // Pull NFTs directly from sender
+        for (uint256 i; i < numNFTs; ) {
+            IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
 
-                unchecked {
-                    ++i;
-                }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -218,16 +216,6 @@ contract SeacowsPairERC721Trade is SeacowsPairTrade {
     }
 
     /**
-     * @notice get reserves in the pool, only available for trade pair
-     */
-    function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
-        // nft balance
-        nftReserve = IERC721(nft).balanceOf(address(this));
-        // token balance
-        tokenReserve = token.balanceOf(address(this));
-    }
-
-    /**
         @dev When safeTransfering an ERC721 in, we add ID to the idSet
         if it's the same collection used by pool. (As it doesn't auto-track because no ERC721Enumerable)
      */
@@ -261,7 +249,7 @@ contract SeacowsPairERC721Trade is SeacowsPairTrade {
     {
         // Input validation
         {
-            require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.NFT, "Wrong Pool type");
             require(numNFTs > 0, "Invalid nft amount");
         }
         // Call bonding curve for pricing information
@@ -291,7 +279,7 @@ contract SeacowsPairERC721Trade is SeacowsPairTrade {
     {
         // Input validation
         {
-            require(poolType == PoolType.TOKEN || poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.TOKEN, "Wrong Pool type");
             require(nftIds.length > 0, "Must ask for > 0 NFTs");
         }
 
@@ -328,7 +316,7 @@ contract SeacowsPairERC721Trade is SeacowsPairTrade {
     {
         // Input validation
         {
-            require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Wrong Pool type");
+            require(poolType == PoolType.NFT, "Wrong Pool type");
             require((nftIds.length > 0), "Must ask for > 0 NFTs");
         }
 
@@ -368,7 +356,7 @@ contract SeacowsPairERC721Trade is SeacowsPairTrade {
     */
     function depositERC721(uint256[] calldata ids) external {
         require(owner() == msg.sender, "Not a pair owner");
-        require(poolType == SeacowsPairTrade.PoolType.NFT, "Not a nft pair");
+        require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
 
         // transfer NFTs from caller to recipient
         uint256 numNFTs = ids.length;

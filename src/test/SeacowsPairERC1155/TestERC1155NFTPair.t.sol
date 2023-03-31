@@ -6,10 +6,10 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
-import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
+import { SeacowsPairERC1155 } from "../../pairs/SeacowsPairERC1155.sol";
 import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";

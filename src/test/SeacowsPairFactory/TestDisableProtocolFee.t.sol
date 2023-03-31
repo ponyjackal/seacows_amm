@@ -9,8 +9,8 @@ import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
-import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPairFactory } from "../../factories/SeacowsPairFactory.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";

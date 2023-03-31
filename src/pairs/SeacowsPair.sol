@@ -9,13 +9,13 @@ import { ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC
 import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { OwnableWithTransferCallback } from "./lib/OwnableWithTransferCallback.sol";
-import { ReentrancyGuard } from "./lib/ReentrancyGuard.sol";
-import { ICurve } from "./bondingcurve/ICurve.sol";
-import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
-import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
-import { SeacowsCollectionRegistry } from "./priceoracle/SeacowsCollectionRegistry.sol";
-import { IWETH } from "./interfaces/IWETH.sol";
+import { OwnableWithTransferCallback } from "../lib/OwnableWithTransferCallback.sol";
+import { ReentrancyGuard } from "../lib/ReentrancyGuard.sol";
+import { ICurve } from "../bondingcurve/ICurve.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
+import { SeacowsCollectionRegistry } from "../priceoracle/SeacowsCollectionRegistry.sol";
+import { IWETH } from "../interfaces/IWETH.sol";
 
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm

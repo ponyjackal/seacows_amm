@@ -9,9 +9,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
-import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
+import { SeacowsPairFactory } from "../../factories/SeacowsPairFactory.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
@@ -201,11 +200,7 @@ contract WhenCreateTokenPair is WhenCreatePair {
         nftEnumerable.setApprovalForAll(address(erc721EnumerableERC20Pair), true);
 
         vm.expectRevert();
-        ISeacowsPairERC721(address(erc721EnumerableERC20Pair)).swapNFTsForToken(
-            nftIds,
-            0.1 ether,
-            payable(alice)
-        );
+        ISeacowsPairERC721(address(erc721EnumerableERC20Pair)).swapNFTsForToken(nftIds, 0.1 ether, payable(alice));
 
         vm.stopPrank();
         /** Non pair owner is tryig to change delta and spot price */

@@ -16,16 +16,15 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { SeacowsPair } from "./SeacowsPair.sol";
-import { ICurve } from "./bondingcurve/ICurve.sol";
-import { SeacowsPairCloner } from "./lib/SeacowsPairCloner.sol";
-import { SeacowsPairERC721 } from "./SeacowsPairERC721.sol";
-import { SeacowsPairERC1155 } from "./SeacowsPairERC1155.sol";
+import { SeacowsPair } from "../pairs/SeacowsPair.sol";
+import { ICurve } from "../bondingcurve/ICurve.sol";
+import { SeacowsPairERC721 } from "../pairs/SeacowsPairERC721.sol";
+import { SeacowsPairERC1155 } from "../pairs/SeacowsPairERC1155.sol";
 
-import { IWETH } from "./interfaces/IWETH.sol";
-import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
-import { ISeacowsPair } from "./interfaces/ISeacowsPair.sol";
-import { ISeacowsPairERC1155 } from "./interfaces/ISeacowsPairERC1155.sol";
+import { IWETH } from "../interfaces/IWETH.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import { ISeacowsPair } from "../interfaces/ISeacowsPair.sol";
+import { ISeacowsPairERC1155 } from "../interfaces/ISeacowsPairERC1155.sol";
 
 ///Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
@@ -292,21 +291,6 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
         emit NewPair(address(pair));
 
         return pair;
-    }
-
-    /**
-        @notice Checks if an address is a SeacowsPair. Uses the fact that the pairs are EIP-1167 minimal proxies.
-        @param potentialPair The address to check
-        @param variant The pair variant (NFT is enumerable or not, pair uses ETH or ERC20)
-        @return True if the address is the specified pair variant, false otherwise
-     */
-    function isPair(address potentialPair, PairVariant variant) public view override returns (bool) {
-        if (variant == PairVariant.ERC721_ERC20) {
-            return SeacowsPairCloner.isPairClone(address(this), address(erc721Template), potentialPair);
-        } else {
-            // invalid input
-            return false;
-        }
     }
 
     /**

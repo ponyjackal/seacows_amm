@@ -3,20 +3,19 @@ pragma solidity >=0.8.4;
 
 import "forge-std/Test.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import { SeacowsPairCloner } from "../../lib/SeacowsPairCloner.sol";
-import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { ISeacowsPairFactoryLike } from "../../interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPairERC721 } from "../../SeacowsPairERC721.sol";
-import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
+
+import { SeacowsPairFactory } from "../../factories/SeacowsPairFactory.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
+import { SeacowsPairERC721 } from "../../pairs/SeacowsPairERC721.sol";
+import { SeacowsPairERC1155 } from "../../pairs/SeacowsPairERC1155.sol";
 import { LinearCurve } from "../../bondingcurve/LinearCurve.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
+
+import { ISeacowsPairFactoryLike } from "../../interfaces/ISeacowsPairFactoryLike.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract BaseFactorySetup is Test {
-    using SeacowsPairCloner for SeacowsPairERC721;
-
     // string internal ownerPrivateKey;
     // string internal spenderPrivateKey;
 
