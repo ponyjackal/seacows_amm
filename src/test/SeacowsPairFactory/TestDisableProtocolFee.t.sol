@@ -58,27 +58,27 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         nftPair = createNFTPair(token, nft, exponentialCurve, payable(owner), 1.05 ether, 10 ether, nftPairNFTIds, 100 ether);
 
-        /** Create ERC721Enumerable-ERC20 Trade Pair */
-        uint256[] memory tradePairNFTIds = new uint256[](5);
-        tradePairNFTIds[0] = 0;
-        tradePairNFTIds[1] = 5;
-        tradePairNFTIds[2] = 2;
-        tradePairNFTIds[3] = 4;
-        tradePairNFTIds[4] = 7;
+        // /** Create ERC721Enumerable-ERC20 Trade Pair */
+        // uint256[] memory tradePairNFTIds = new uint256[](5);
+        // tradePairNFTIds[0] = 0;
+        // tradePairNFTIds[1] = 5;
+        // tradePairNFTIds[2] = 2;
+        // tradePairNFTIds[3] = 4;
+        // tradePairNFTIds[4] = 7;
 
-        tradePair = createTradePair(token, nft, cpmmCurve, 1 ether, 0.1 ether, 10 ether, tradePairNFTIds, 100 ether);
+        // tradePair = createTradePair(token, nft, cpmmCurve, 1 ether, 0.1 ether, 10 ether, tradePairNFTIds, 100 ether);
 
-        /** Create ERC721Enumerable-ERC20 Token Pair */
-        tokenPair = createTokenPair(token, nft, linearCurve, payable(owner), 1 ether, 10 ether, new uint256[](0), 100 ether);
-        vm.stopPrank();
+        // /** Create ERC721Enumerable-ERC20 Token Pair */
+        // tokenPair = createTokenPair(token, nft, linearCurve, payable(owner), 1 ether, 10 ether, new uint256[](0), 100 ether);
+        // vm.stopPrank();
 
-        vm.startPrank(alice);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
-        nft.setApprovalForAll(address(tokenPair), true);
-        nft.setApprovalForAll(address(tradePair), true);
+        // vm.startPrank(alice);
+        // nft.setApprovalForAll(address(seacowsPairFactory), true);
+        // nft.setApprovalForAll(address(tokenPair), true);
+        // nft.setApprovalForAll(address(tradePair), true);
 
-        token.approve(address(nftPair), 1000 ether);
-        token.approve(address(tradePair), 1000 ether);
+        // token.approve(address(nftPair), 1000 ether);
+        // token.approve(address(tradePair), 1000 ether);
         vm.stopPrank();
     }
 
@@ -99,11 +99,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(
-            nftIds,
-            25 ether,
-            payable(alice)
-        );
+        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(nftIds, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 26.865 ether);
@@ -139,11 +135,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(
-            nftIds,
-            25 ether,
-            payable(alice)
-        );
+        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(nftIds, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 27 ether);
@@ -206,11 +198,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
         nftIds[0] = 1;
         nftIds[1] = 3;
 
-        ISeacowsPairERC721(address(nftPair)).swapTokenForSpecificNFTs(
-            nftIds,
-            25 ether,
-            payable(alice)
-        );
+        ISeacowsPairERC721(address(nftPair)).swapTokenForSpecificNFTs(nftIds, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.525 ether);
@@ -303,11 +291,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairERC721(address(tradePair)).swapNFTsForToken(
-            nftIds,
-            25 ether,
-            payable(alice)
-        );
+        ISeacowsPairERC721(address(tradePair)).swapNFTsForToken(nftIds, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 26.85 ether);
@@ -343,11 +327,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairERC721(address(tradePair)).swapNFTsForToken(
-            nftIds,
-            25 ether,
-            payable(alice)
-        );
+        ISeacowsPairERC721(address(tradePair)).swapNFTsForToken(nftIds, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 27 ether);

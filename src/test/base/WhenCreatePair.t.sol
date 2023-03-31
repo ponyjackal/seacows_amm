@@ -25,51 +25,51 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         BaseCurveSetup.setUp();
     }
 
-    function createTradePair(
-        IERC20 _token,
-        IERC721 _nft,
-        ICurve _bondingCurve,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] memory _initialNFTIDs,
-        uint256 _initialTokenBalance
-    ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
-            _token,
-            _nft,
-            _bondingCurve,
-            payable(address(0)),
-            SeacowsPair.PoolType.TRADE,
-            _delta,
-            _fee,
-            _spotPrice,
-            _initialNFTIDs,
-            _initialTokenBalance
-        );
-        pair = seacowsPairFactory.createPairERC20(params);
-    }
+    // function createTradePair(
+    //     IERC20 _token,
+    //     IERC721 _nft,
+    //     ICurve _bondingCurve,
+    //     uint128 _delta,
+    //     uint96 _fee,
+    //     uint128 _spotPrice,
+    //     uint256[] memory _initialNFTIDs,
+    //     uint256 _initialTokenBalance
+    // ) public returns (SeacowsPair pair) {
+    //     SeacowsPairFactory.CreateERC721ERC20PairParams memory params = SeacowsPairFactory.CreateERC721ERC20PairParams(
+    //         _token,
+    //         _nft,
+    //         _bondingCurve,
+    //         payable(address(0)),
+    //         SeacowsPair.PoolType.TRADE,
+    //         _delta,
+    //         _fee,
+    //         _spotPrice,
+    //         _initialNFTIDs,
+    //         _initialTokenBalance
+    //     );
+    //     pair = seacowsPairFactory.createPairERC20(params);
+    // }
 
-    function createTradePairETH(
-        IERC721 _nft,
-        ICurve _bondingCurve,
-        uint128 _delta,
-        uint96 _fee,
-        uint128 _spotPrice,
-        uint256[] memory _initialNFTIDs,
-        uint256 _initialETHBalance
-    ) public returns (SeacowsPair pair) {
-        pair = seacowsPairFactory.createPairETH{ value: _initialETHBalance }(
-            _nft,
-            _bondingCurve,
-            payable(address(0)),
-            SeacowsPair.PoolType.TRADE,
-            _delta,
-            _fee,
-            _spotPrice,
-            _initialNFTIDs
-        );
-    }
+    // function createTradePairETH(
+    //     IERC721 _nft,
+    //     ICurve _bondingCurve,
+    //     uint128 _delta,
+    //     uint96 _fee,
+    //     uint128 _spotPrice,
+    //     uint256[] memory _initialNFTIDs,
+    //     uint256 _initialETHBalance
+    // ) public returns (SeacowsPair pair) {
+    //     pair = seacowsPairFactory.createPairETH{ value: _initialETHBalance }(
+    //         _nft,
+    //         _bondingCurve,
+    //         payable(address(0)),
+    //         SeacowsPair.PoolType.TRADE,
+    //         _delta,
+    //         _fee,
+    //         _spotPrice,
+    //         _initialNFTIDs
+    //     );
+    // }
 
     function createTokenPair(
         IERC20 _token,
@@ -162,48 +162,48 @@ contract WhenCreatePair is BaseFactorySetup, BaseCurveSetup, BaseSetup {
         );
     }
 
-    function createERC1155ERC20TradePair(
-        IERC1155 _nft,
-        uint256[] memory _nftIds,
-        uint256[] memory _nftAmounts,
-        IERC20 _token,
-        uint256 _tokenAmount,
-        uint96 _fee
-    ) public returns (SeacowsPair pair) {
-        SeacowsPairFactory.CreateERC1155ERC20PairParams memory params = SeacowsPairFactory.CreateERC1155ERC20PairParams(
-            _token,
-            _nft,
-            cpmmCurve,
-            payable(address(0)),
-            SeacowsPair.PoolType.TRADE,
-            0,
-            _fee,
-            0,
-            _tokenAmount,
-            _nftIds,
-            _nftAmounts
-        );
-        pair = seacowsPairFactory.createPairERC1155ERC20(params);
-    }
+    // function createERC1155ERC20TradePair(
+    //     IERC1155 _nft,
+    //     uint256[] memory _nftIds,
+    //     uint256[] memory _nftAmounts,
+    //     IERC20 _token,
+    //     uint256 _tokenAmount,
+    //     uint96 _fee
+    // ) public returns (SeacowsPair pair) {
+    //     SeacowsPairFactory.CreateERC1155ERC20PairParams memory params = SeacowsPairFactory.CreateERC1155ERC20PairParams(
+    //         _token,
+    //         _nft,
+    //         cpmmCurve,
+    //         payable(address(0)),
+    //         SeacowsPair.PoolType.TRADE,
+    //         0,
+    //         _fee,
+    //         0,
+    //         _tokenAmount,
+    //         _nftIds,
+    //         _nftAmounts
+    //     );
+    //     pair = seacowsPairFactory.createPairERC1155ERC20(params);
+    // }
 
-    function createERC1155ETHTradePair(IERC1155 _nft, uint256[] memory _nftIds, uint256[] memory _nftAmounts, uint256 _ethAmount, uint96 _fee)
-        public
-        payable
-        returns (SeacowsPair pair)
-    {
-        SeacowsPairFactory.CreateERC1155ETHPairParams memory params = SeacowsPairFactory.CreateERC1155ETHPairParams(
-            _nft,
-            cpmmCurve,
-            payable(address(0)),
-            SeacowsPair.PoolType.TRADE,
-            0,
-            _fee,
-            0,
-            _nftIds,
-            _nftAmounts
-        );
-        pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
-    }
+    // function createERC1155ETHTradePair(IERC1155 _nft, uint256[] memory _nftIds, uint256[] memory _nftAmounts, uint256 _ethAmount, uint96 _fee)
+    //     public
+    //     payable
+    //     returns (SeacowsPair pair)
+    // {
+    //     SeacowsPairFactory.CreateERC1155ETHPairParams memory params = SeacowsPairFactory.CreateERC1155ETHPairParams(
+    //         _nft,
+    //         cpmmCurve,
+    //         payable(address(0)),
+    //         SeacowsPair.PoolType.TRADE,
+    //         0,
+    //         _fee,
+    //         0,
+    //         _nftIds,
+    //         _nftAmounts
+    //     );
+    //     pair = seacowsPairFactory.createPairERC1155ETH{ value: _ethAmount }(params);
+    // }
 
     function createERC1155ERC20NFTPair(
         IERC1155 _nft,

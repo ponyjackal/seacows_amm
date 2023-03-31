@@ -7,7 +7,7 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPair } from "./SeacowsPair.sol";
+import { SeacowsPairTrade } from "./SeacowsPairTrade.sol";
 import { ICurve } from "./bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
 
@@ -15,13 +15,11 @@ import { CurveErrorCodes } from "./bondingcurve/CurveErrorCodes.sol";
     @title An NFT/Token pair for an NFT that implements ERC721Enumerable
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
-contract SeacowsPairERC1155 is SeacowsPair {
+contract SeacowsPairERC1155 is SeacowsPairTrade {
     using SafeERC20 for ERC20;
 
     uint256[] public nftIds;
     uint256 public nftAmount;
-
-    uint256 internal constant IMMUTABLE_PARAMS_LENGTH = 81;
 
     event WithdrawERC1155(address indexed recipient, uint256[] ids, uint256[] amounts);
     event ERC1155Deposit(address indexed depositer, uint256[] ids, uint256[] amounts);
@@ -33,11 +31,6 @@ contract SeacowsPairERC1155 is SeacowsPair {
      */
     function pairVariant() public pure override returns (ISeacowsPairFactoryLike.PairVariant) {
         return ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20;
-    }
-
-    // @dev see SeacowsPairCloner for params length calculation
-    function _immutableParamsLength() internal pure override returns (uint256) {
-        return IMMUTABLE_PARAMS_LENGTH;
     }
 
     /**
@@ -205,7 +198,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
     function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external {
         require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
         require(owner() == msg.sender, "Not a pair owner");
-        require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
+        require(poolType == SeacowsPairTrade.PoolType.NFT, "Not a nft pair");
 
         // transfer NFTs from caller to recipient
         uint256 numOfIds = ids.length;

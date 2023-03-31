@@ -96,9 +96,6 @@ contract TestERC1155TokenPair is WhenCreatePair {
         SeacowsPair.PoolType poolType = linearPair.poolType();
         assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TOKEN));
 
-        uint256 lpBalance = seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(linearPair)));
-        assertEq(lpBalance, 0);
-
         assertEq(linearPair.delta(), 0.1 ether);
         assertEq(linearPair.fee(), 0);
 
@@ -137,9 +134,6 @@ contract TestERC1155TokenPair is WhenCreatePair {
 
         SeacowsPair.PoolType poolType = exponentialPair.poolType();
         assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.TOKEN));
-
-        uint256 lpBalance = seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(exponentialPair)));
-        assertEq(lpBalance, 0);
 
         assertEq(exponentialPair.delta(), 1.1 ether);
         assertEq(exponentialPair.fee(), 0);

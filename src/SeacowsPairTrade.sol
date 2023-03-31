@@ -20,12 +20,13 @@ import { IWETH } from "./interfaces/IWETH.sol";
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 /// @notice This implements the core swap logic from NFT to TOKEN
-abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, ERC1155Holder {
+abstract contract SeacowsPairTrade is OwnableWithTransferCallback, ReentrancyGuard, ERC1155Holder {
     using SafeERC20 for ERC20;
 
     enum PoolType {
         TOKEN,
-        NFT
+        NFT,
+        TRADE
     }
 
     struct PairInitializeParams {
@@ -123,6 +124,10 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
             } else {
                 assetRecipient = payable(param.owner);
             }
+        } else if (param.poolType == PoolType.TRADE) {
+            require(param.fee < MAX_FEE, "Trade fee must be less than 90%");
+            require(param.assetRecipient == address(0), "Trade pools can't set asset recipient");
+            fee = param.fee;
         }
 
         require(bondingCurve.validateDelta(param.delta), "Invalid delta for curve");
@@ -138,9 +143,20 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         _;
     }
 
+    modifier onlyTrade() {
+        require(poolType == PoolType.TRADE, "Not trade pair");
+        _;
+    }
+
     modifier onlyWithdrawable() {
         // For NFT, TOKEN pairs, only owner can call this function
-        require(msg.sender == owner(), "Caller should be an owner");
+        // For TRADE pairs, only factory can call this function
+        if (poolType == PoolType.TRADE) {
+            //TODO; if we move liquidity functions to router, this should be updated to router
+            require(msg.sender == address(factory), "Caller should be a factory");
+        } else {
+            require(msg.sender == owner(), "Caller should be an owner");
+        }
         _;
     }
 
@@ -177,6 +193,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         Can be set to another address by the owner, if set to address(0), defaults to the pair's own address
      */
     function getAssetRecipient() public view returns (address payable _assetRecipient) {
+        // If it's a TRADE pool, we know the recipient is 0 (TRADE pools can't set asset recipients)
+        // so just return address(this)
+        if (poolType == PoolType.TRADE) {
+            return payable(address(this));
+        }
+
         // Otherwise, we return the recipient if it's been set
         // or replace it with address(this) if it's 0
         _assetRecipient = assetRecipient;
@@ -223,6 +245,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
             emit DeltaUpdate(newDelta);
         }
     }
+
+    /**
+     * @notice get reserves in the pool, only available for trade pair
+     */
+    function getReserve() external view virtual returns (uint256 nftReserve, uint256 tokenReserve);
 
     /**
         @notice Pulls the token input of a trade from the trader and pays the protocol fee.
@@ -311,11 +338,27 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     }
 
     /**
+        @notice Updates the fee taken by the LP. Only callable by the owner.
+        Only callable if the pool is a Trade pool. Reverts if the fee is >=
+        MAX_FEE.
+        @param newFee The new LP fee percentage, 18 decimals
+     */
+    function changeFee(uint96 newFee) external onlyOwner {
+        require(poolType == PoolType.TRADE, "Only for Trade pools");
+        require(newFee < MAX_FEE, "Trade fee must be less than 90%");
+        if (fee != newFee) {
+            fee = newFee;
+            emit FeeUpdate(newFee);
+        }
+    }
+
+    /**
         @notice Changes the address that will receive assets received from
         trades. Only callable by the owner.
         @param newRecipient The new asset recipient
      */
     function changeAssetRecipient(address payable newRecipient) external onlyOwner {
+        require(poolType != PoolType.TRADE, "Not for Trade pools");
         require(newRecipient != address(0), "Invalid address");
 
         if (assetRecipient != newRecipient) {
