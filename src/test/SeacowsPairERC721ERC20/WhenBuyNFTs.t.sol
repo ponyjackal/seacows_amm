@@ -41,13 +41,13 @@ contract WhenBuyNFTs is WhenCreatePair {
         nft.safeMint(alice);
         nft.safeMint(alice);
         /** Approve Bonding Curve */
-        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
-        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(exponentialCurve, true);
 
         /** Create ERC721Enumerable-ERC20 NFT Pair */
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1 ether);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
 
         uint256[] memory nftETHIds = new uint256[](5);
         nftETHIds[0] = 1;
