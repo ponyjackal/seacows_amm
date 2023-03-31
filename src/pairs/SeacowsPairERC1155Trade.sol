@@ -7,7 +7,7 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
-import { SeacowsPair } from "./SeacowsPair.sol";
+import { SeacowsPairTrade } from "./SeacowsPairTrade.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
@@ -15,7 +15,7 @@ import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
     @title An NFT/Token pair for an NFT that implements ERC721Enumerable
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
-contract SeacowsPairERC1155 is SeacowsPair {
+contract SeacowsPairERC1155 is SeacowsPairTrade {
     using SafeERC20 for ERC20;
 
     uint256[] public nftIds;
@@ -58,6 +58,16 @@ contract SeacowsPairERC1155 is SeacowsPair {
         }
 
         return false;
+    }
+
+    /**
+     * @notice get reserves in the pool, only available for trade pair
+     */
+    function getReserve() external view override returns (uint256 nftReserve, uint256 tokenReserve) {
+        // nft balance
+        nftReserve = nftAmount;
+        // token balance
+        tokenReserve = token.balanceOf(address(this));
     }
 
     /** Internal Functions */
@@ -188,7 +198,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
     function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external {
         require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
         require(owner() == msg.sender, "Not a pair owner");
-        require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
+        require(poolType == SeacowsPairTrade.PoolType.NFT, "Not a nft pair");
 
         // transfer NFTs from caller to recipient
         uint256 numOfIds = ids.length;
@@ -206,7 +216,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
     }
 
     function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
-        require(poolType == PoolType.NFT, "Invalid pool type");
+        require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Invalid pool type");
         require(_nftIds.length == _amounts.length, "Invalid amounts");
 
         uint256 totalAmount;
@@ -251,7 +261,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         // Input validation
         {
-            require(poolType == PoolType.NFT, "Wrong Pool type");
+            require(poolType == PoolType.NFT || poolType == PoolType.TRADE, "Wrong Pool type");
             require(_nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid nft ids");
             require(totalAmount > 0, "Invalid nft amount");
         }
@@ -297,7 +307,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         // Input validation
         {
-            require(poolType == PoolType.TOKEN, "Wrong Pool type");
+            require(poolType == PoolType.TOKEN || poolType == PoolType.TRADE, "Wrong Pool type");
             require(nftIds.length > 0 && _nftIds.length == _amounts.length, "Invalid amounts");
             require(totalAmount > 0, "Must ask for > 0 NFTs");
         }
