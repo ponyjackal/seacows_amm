@@ -43,22 +43,22 @@ contract TestERC1155TokenPair is WhenCreatePair {
         token.mint(bob, 1000 ether);
 
         /** Approve Bonding Curve */
-        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
-        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairERC1155Factory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairERC1155Factory.setBondingCurveAllowed(exponentialCurve, true);
 
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC1155Factory), 1000 ether);
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairERC1155Factory), true);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC1155Factory), 1000 ether);
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairERC1155Factory), true);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC1155Factory), 1000 ether);
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairERC1155Factory), true);
         vm.stopPrank();
     }
 
@@ -574,7 +574,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         vm.stopPrank();
 
         // disable protocol fee
-        seacowsPairFactory.disableProtocolFee(_exponentialPair, true);
+        seacowsPairERC1155Factory.disableProtocolFee(_exponentialPair, true);
 
         vm.startPrank(alice);
         // approve erc1155 tokens to the pair
