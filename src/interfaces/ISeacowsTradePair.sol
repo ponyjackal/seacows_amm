@@ -4,5 +4,5 @@ pragma solidity >=0.8.0;
 import { ISeacowsPair } from "./ISeacowsPair.sol";
 
 interface ISeacowsTradePair is ISeacowsPair {
-    function getReserve() external returns (uint256, uint256);
+    function getReserve() external view returns (uint256, uint256);
 }
