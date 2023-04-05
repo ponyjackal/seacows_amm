@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
@@ -10,6 +10,8 @@ import { SeacowsPair } from "../pairs/SeacowsPair.sol";
 
 interface ISeacowsPair {
     function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external payable;
+
+    /** view functions */
 
     function pairVariant() external pure returns (ISeacowsPairFactoryLike.PairVariant);
 
@@ -27,15 +29,15 @@ interface ISeacowsPair {
 
     function fee() external view returns (uint96 fee);
 
-    function isProtocolFeeDisabled() external view returns (bool isProtocolFeeDisabled);
+    function token() external returns (IERC20 _token);
 
     function poolType() external pure returns (SeacowsPair.PoolType _poolType);
 
-    function token() external returns (ERC20 _token);
+    function isProtocolFeeDisabled() external view returns (bool isProtocolFeeDisabled);
 
     function getAssetRecipient() external view returns (address payable _assetRecipient);
 
-    function getReserve() external view returns (uint256 nftReserve, uint256 tokenReserve);
+    /** mutative functions */
 
     function withdrawERC20(address recipient, uint256 amount) external;
 
@@ -43,9 +45,5 @@ interface ISeacowsPair {
 
     function changeDelta(uint128 newDelta) external;
 
-    function changeFee(uint96 newFee) external;
-
     function changeAssetRecipient(address payable newRecipient) external;
-
-    function balanceOf(address account, uint256 id) external view returns (uint256);
 }
