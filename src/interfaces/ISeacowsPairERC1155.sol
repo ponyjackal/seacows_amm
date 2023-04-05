@@ -10,19 +10,15 @@ interface ISeacowsPairERC1155 is ISeacowsPair {
 
     function isValidNFTID(uint256 _id) external view returns (bool);
 
-    function swapTokenForNFTs(
-        uint256[] memory _nftIds,
-        uint256[] memory _amounts,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient
-    ) external returns (uint256 inputAmount);
+    function swapTokenForNFTs(uint256[] memory _nftIds, uint256[] memory _amounts, uint256 maxExpectedTokenInput, address nftRecipient)
+        external
+        returns (uint256 inputAmount);
 
-    function swapNFTsForToken(
-        uint256[] memory _nftIds,
-        uint256[] memory _amounts,
-        uint256 minExpectedTokenOutput,
-        address payable tokenRecipient
-    ) external returns (uint256 outputAmount);
+    function swapNFTsForToken(uint256[] memory _nftIds, uint256[] memory _amounts, uint256 minExpectedTokenOutput, address payable tokenRecipient)
+        external
+        returns (uint256 outputAmount);
+
+    function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external;
 
     function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external;
 

@@ -6,9 +6,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
@@ -38,13 +36,13 @@ contract WhenCreateNFTPair is WhenCreatePair {
         nft.safeMint(owner);
 
         /** Approve Bonding Curve */
-        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
-        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(exponentialCurve, true);
 
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1 ether);
+        nftEnumerable.setApprovalForAll(address(seacowsPairERC721Factory), true);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
         vm.stopPrank();
     }
 
@@ -75,8 +73,8 @@ contract WhenCreateNFTPair is WhenCreatePair {
         vm.startPrank(owner);
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1 ether);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
         erc721ERC20Pair = createNFTPair(token, nft, exponentialCurve, payable(alice), 2.2 ether, 2 ether, nftIds, 1 ether);
 
         assertEq(erc721ERC20Pair.nft(), address(nft));
@@ -99,8 +97,8 @@ contract WhenCreateNFTPair is WhenCreatePair {
         vm.startPrank(owner);
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1 ether);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
         erc721ERC20Pair = createNFTPair(token, nft, exponentialCurve, payable(0), 2.2 ether, 2 ether, nftIds, 1 ether);
 
         assertEq(erc721ERC20Pair.nft(), address(nft));
@@ -143,8 +141,8 @@ contract WhenCreateNFTPair is WhenCreatePair {
         /** Create ERC721-ERC20 NFT Pair */
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = 0;
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1 ether);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
         erc721ERC20Pair = createNFTPair(token, nft, exponentialCurve, payable(alice), 2.2 ether, 2 ether, nftIds, 1 ether);
 
         /** Change delta */

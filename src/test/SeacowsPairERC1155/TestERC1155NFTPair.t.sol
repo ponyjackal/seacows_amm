@@ -6,10 +6,10 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestSeacowsSFT } from "../../TestCollectionToken/TestSeacowsSFT.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
-import { SeacowsPairERC1155 } from "../../SeacowsPairERC1155.sol";
+import { SeacowsPairERC1155 } from "../../pairs/SeacowsPairERC1155.sol";
 import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
@@ -40,22 +40,22 @@ contract TestERC1155NFTPair is WhenCreatePair {
         token.mint(bob, 1000 ether);
 
         /** Approve Bonding Curve */
-        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
-        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairERC1155Factory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairERC1155Factory.setBondingCurveAllowed(exponentialCurve, true);
 
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC1155Factory), 1000 ether);
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairERC1155Factory), true);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC1155Factory), 1000 ether);
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairERC1155Factory), true);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        testSeacowsSFT.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC1155Factory), 1000 ether);
+        testSeacowsSFT.setApprovalForAll(address(seacowsPairERC1155Factory), true);
         vm.stopPrank();
     }
 
@@ -94,10 +94,6 @@ contract TestERC1155NFTPair is WhenCreatePair {
 
         SeacowsPair.PoolType poolType = linearPair.poolType();
         assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.NFT));
-
-        uint256 lpBalance = seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(linearPair)));
-
-        assertEq(lpBalance, 0);
 
         assertEq(linearPair.delta(), 0.1 ether);
         assertEq(linearPair.fee(), 0);
@@ -139,9 +135,6 @@ contract TestERC1155NFTPair is WhenCreatePair {
 
         SeacowsPair.PoolType poolType = exponentialPair.poolType();
         assertEq(uint256(poolType), uint256(SeacowsPair.PoolType.NFT));
-
-        uint256 lpBalance = seacowsPairFactory.balanceOf(owner, seacowsPairFactory.pairTokenIds(address(exponentialPair)));
-        assertEq(lpBalance, 0);
 
         assertEq(exponentialPair.delta(), 1.1 ether);
         assertEq(exponentialPair.fee(), 0);
@@ -309,7 +302,9 @@ contract TestERC1155NFTPair is WhenCreatePair {
         depositAmounts[0] = 10;
         depositAmounts[1] = 1000;
 
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_linearPair));
+        testSeacowsSFT.setApprovalForAll(address(linearPair), true);
+
+        linearPair.depositERC1155(depositIds, depositAmounts);
         /** Check erc1155 nft balances */
         uint256 balanceOne = testSeacowsSFT.balanceOf(address(_linearPair), 1);
         assertEq(balanceOne, 20);
@@ -337,13 +332,15 @@ contract TestERC1155NFTPair is WhenCreatePair {
         invalidAmounts[1] = 100;
         invalidAmounts[2] = 1000;
         vm.expectRevert("Invalid nft id");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, invalidIds, invalidAmounts, address(_linearPair));
+        linearPair.depositERC1155(invalidIds, invalidAmounts);
 
         vm.stopPrank();
 
         vm.startPrank(alice);
+        testSeacowsSFT.setApprovalForAll(address(linearPair), true);
+
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_linearPair));
+        linearPair.depositERC1155(depositIds, depositAmounts);
         vm.stopPrank();
     }
 
@@ -374,7 +371,9 @@ contract TestERC1155NFTPair is WhenCreatePair {
         uint256[] memory depositAmounts = new uint256[](1);
         depositAmounts[0] = 10;
 
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_exponentialPair));
+        testSeacowsSFT.setApprovalForAll(address(exponentialPair), true);
+
+        exponentialPair.depositERC1155(depositIds, depositAmounts);
         /** Check erc1155 nft balances */
         uint256 balanceNine = testSeacowsSFT.balanceOf(address(_exponentialPair), 9);
         assertEq(balanceNine, 1010);
@@ -394,13 +393,14 @@ contract TestERC1155NFTPair is WhenCreatePair {
         uint256[] memory invalidAmounts = new uint256[](1);
         invalidAmounts[0] = 10;
         vm.expectRevert("Invalid nft id");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, invalidIds, invalidAmounts, address(_exponentialPair));
+        exponentialPair.depositERC1155(invalidIds, invalidAmounts);
 
         vm.stopPrank();
 
         vm.startPrank(alice);
+        testSeacowsSFT.setApprovalForAll(address(exponentialPair), true);
         vm.expectRevert("Not a pair owner");
-        seacowsPairFactory.depositERC1155(testSeacowsSFT, depositIds, depositAmounts, address(_exponentialPair));
+        exponentialPair.depositERC1155(depositIds, depositAmounts);
         vm.stopPrank();
     }
 
@@ -636,7 +636,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
         vm.stopPrank();
 
         // disable protocol fee
-        seacowsPairFactory.disableProtocolFee(_exponentialPair, true);
+        seacowsPairERC1155Factory.disableProtocolFee(_exponentialPair, true);
 
         vm.startPrank(alice);
         // deposit eth for weth

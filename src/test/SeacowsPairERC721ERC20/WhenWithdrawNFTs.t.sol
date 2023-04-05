@@ -6,9 +6,7 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
@@ -47,14 +45,14 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         nftEnumerable.safeMint(alice);
         nftEnumerable.safeMint(alice);
         /** Approve Bonding Curve */
-        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
-        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(exponentialCurve, true);
 
         /** Create ERC721Enumerable-ERC20 NFT Pair */
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
-        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1 ether);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
+        nftEnumerable.setApprovalForAll(address(seacowsPairERC721Factory), true);
 
         uint256[] memory nftETHIds = new uint256[](3);
         nftETHIds[0] = 1;
@@ -73,8 +71,8 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
-        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
+        nftEnumerable.setApprovalForAll(address(seacowsPairERC721Factory), true);
         vm.stopPrank();
     }
 
@@ -85,7 +83,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         nftIds[1] = 6;
 
         /** Withdraw NFTs */
-        ISeacowsPairERC721(address(erc721ETHPair)).withdrawERC721(IERC721(address(nft)), nftIds);
+        ISeacowsPairERC721(address(erc721ETHPair)).withdrawERC721(nftIds);
         /** Check nft balance */
         uint256 balance = nft.balanceOf(address(erc721ETHPair));
         assertEq(balance, 1);
@@ -104,7 +102,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         nftMissingIds[0] = 5;
         nftMissingIds[1] = 8;
         vm.expectRevert();
-        ISeacowsPairERC721(address(erc721ETHPair)).withdrawERC721(IERC721(address(nft)), nftMissingIds);
+        ISeacowsPairERC721(address(erc721ETHPair)).withdrawERC721(nftMissingIds);
 
         vm.stopPrank();
 
@@ -113,7 +111,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
         vm.expectRevert("Caller is not the owner");
-        ISeacowsPairERC721(address(erc721ETHPair)).withdrawERC721(IERC721(address(nft)), nftIdsForAlice);
+        ISeacowsPairERC721(address(erc721ETHPair)).withdrawERC721(nftIdsForAlice);
         vm.stopPrank();
     }
 
@@ -124,7 +122,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         nftIds[1] = 7;
 
         /** Withdraw NFTs */
-        ISeacowsPairERC721(address(erc721ERC20Pair)).withdrawERC721(IERC721(address(nftEnumerable)), nftIds);
+        ISeacowsPairERC721(address(erc721ERC20Pair)).withdrawERC721(nftIds);
         /** Check nft balance */
         uint256 balance = nftEnumerable.balanceOf(address(erc721ERC20Pair));
         assertEq(balance, 1);
@@ -143,7 +141,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         nftMissingIds[0] = 5;
         nftMissingIds[1] = 8;
         vm.expectRevert();
-        ISeacowsPairERC721(address(erc721ERC20Pair)).withdrawERC721(IERC721(address(nftEnumerable)), nftMissingIds);
+        ISeacowsPairERC721(address(erc721ERC20Pair)).withdrawERC721(nftMissingIds);
 
         vm.stopPrank();
 
@@ -152,7 +150,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
         vm.expectRevert("Caller is not the owner");
-        ISeacowsPairERC721(address(erc721ERC20Pair)).withdrawERC721(IERC721(address(nftEnumerable)), nftIdsForAlice);
+        ISeacowsPairERC721(address(erc721ERC20Pair)).withdrawERC721(nftIdsForAlice);
         vm.stopPrank();
     }
 }

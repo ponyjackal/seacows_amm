@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 contract SeacowsPositionManager is ERC1155 {
-
     // Token ID starts from 1.
     uint256 public nextTokenId;
 
@@ -15,12 +14,7 @@ contract SeacowsPositionManager is ERC1155 {
         nextTokenId = 1;
     }
 
-    function uri(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
+    function uri(uint256 tokenId) public view override returns (string memory) {
         return "";
         // return
         //     NFTRenderer.render(
@@ -38,5 +32,4 @@ contract SeacowsPositionManager is ERC1155 {
         nextTokenId++;
         return pairTokenIds[_pair];
     }
-  
 }

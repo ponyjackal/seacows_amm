@@ -14,6 +14,4 @@ interface ISeacowsPairFactoryLike {
     function protocolFeeMultiplier() external view returns (uint256);
 
     function protocolFeeRecipient() external view returns (address payable);
-
-    function isPair(address potentialPair, PairVariant variant) external view returns (bool);
 }

@@ -9,9 +9,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { ISeacowsPairERC721 } from "../../interfaces/ISeacowsPairERC721.sol";
 
-import { SeacowsPair } from "../../SeacowsPair.sol";
-import { SeacowsPairFactory } from "../../SeacowsPairFactory.sol";
-import { SeacowsPair } from "../../SeacowsPair.sol";
+import { SeacowsPair } from "../../pairs/SeacowsPair.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
@@ -50,13 +48,13 @@ contract WhenCreateTokenPair is WhenCreatePair {
         }
 
         /** Approve Bonding Curve */
-        seacowsPairFactory.setBondingCurveAllowed(linearCurve, true);
-        seacowsPairFactory.setBondingCurveAllowed(exponentialCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);
+        seacowsPairERC721Factory.setBondingCurveAllowed(exponentialCurve, true);
 
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1000 ether);
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
-        nftEnumerable.setApprovalForAll(address(seacowsPairFactory), true);
+        token.approve(address(seacowsPairERC721Factory), 1000 ether);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
+        nftEnumerable.setApprovalForAll(address(seacowsPairERC721Factory), true);
         vm.stopPrank();
     }
 
@@ -149,7 +147,7 @@ contract WhenCreateTokenPair is WhenCreatePair {
     function testChangeSpotPriceAndDelta() public {
         /** Create ERC721Enumerable-ERC20 NFT Pair */
         vm.startPrank(owner);
-        token.approve(address(seacowsPairFactory), 1000 ether);
+        token.approve(address(seacowsPairERC721Factory), 1000 ether);
         erc721EnumerableERC20Pair = createTokenPair(
             token,
             nftEnumerable,
@@ -162,11 +160,11 @@ contract WhenCreateTokenPair is WhenCreatePair {
         );
 
         /** Create ERC721-ERC20 NFT Pair */
-        nft.setApprovalForAll(address(seacowsPairFactory), true);
+        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
         erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 1.1 ether, 1 ether, new uint256[](0), 14 ether);
         vm.stopPrank();
         /** Disbale protocol fee for erc721ERC20Pair */
-        seacowsPairFactory.disableProtocolFee(erc721ERC20Pair, true);
+        seacowsPairERC721Factory.disableProtocolFee(erc721ERC20Pair, true);
 
         /** Change delta */
         vm.startPrank(owner);
@@ -201,11 +199,7 @@ contract WhenCreateTokenPair is WhenCreatePair {
         nftEnumerable.setApprovalForAll(address(erc721EnumerableERC20Pair), true);
 
         vm.expectRevert();
-        ISeacowsPairERC721(address(erc721EnumerableERC20Pair)).swapNFTsForToken(
-            nftIds,
-            0.1 ether,
-            payable(alice)
-        );
+        ISeacowsPairERC721(address(erc721EnumerableERC20Pair)).swapNFTsForToken(nftIds, 0.1 ether, payable(alice));
 
         vm.stopPrank();
         /** Non pair owner is tryig to change delta and spot price */
