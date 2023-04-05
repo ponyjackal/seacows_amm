@@ -89,7 +89,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
         uint256 spotPrice = linearPair.spotPrice();
         assertEq(spotPrice, 1 ether);
 
-        ERC20 _token = linearPair.token();
+        IERC20 _token = linearPair.token();
         assertEq(address(_token), address(token));
 
         SeacowsPair.PoolType poolType = linearPair.poolType();
@@ -130,7 +130,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
         uint256 spotPrice = exponentialPair.spotPrice();
         assertEq(spotPrice, 1 ether);
 
-        ERC20 _token = exponentialPair.token();
+        IERC20 _token = exponentialPair.token();
         assertEq(address(_token), address(weth));
 
         SeacowsPair.PoolType poolType = exponentialPair.poolType();
