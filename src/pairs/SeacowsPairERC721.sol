@@ -6,6 +6,7 @@ import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableS
 
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import { ISeacowsERC721Router } from "../interfaces/ISeacowsERC721Router.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
@@ -156,6 +157,16 @@ contract SeacowsPairERC721 is SeacowsPair {
         if (isRouter) {
             // verify is router is validated
             require(factory.routerStatus(msg.sender), "Invalid router");
+
+            ISeacowsERC721Router router = ISeacowsERC721Router(msg.sender);
+            // Pull NFTs through router
+            for (uint256 i; i < numNFTs; ) {
+                router.pairTransferNFTFrom(IERC721(_nft), routerCaller, address(this), nftIds[i]);
+
+                unchecked {
+                    ++i;
+                }
+            }
         } else {
             // Pull NFTs directly from sender
             for (uint256 i; i < numNFTs; ) {
