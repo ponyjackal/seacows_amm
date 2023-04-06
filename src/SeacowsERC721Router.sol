@@ -15,6 +15,13 @@ contract SeacowsERC721Router {
         uint256[] nftIds;
     }
 
+    address public weth;
+
+    constructor(address _weth) {
+        require(_weth != address(0), "Invalid weht address");
+        weth = _weth;
+    }
+
     /**
         @notice Sell NFTs for ERC20 token
         @param _swap ERC721 pair swap param
@@ -29,7 +36,7 @@ contract SeacowsERC721Router {
     }
 
     /**
-        @notice Buy NFTs in ERC20 token
+        @notice Buy specific NFTs in ERC20 token
         @param _swapList ERC721 pair swap list
         @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
@@ -43,6 +50,27 @@ contract SeacowsERC721Router {
 
         for (uint256 i; i < numOfSwap; ) {
             remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+        @notice Buy any NFTs in ERC20 token
+        @param _swapList ERC721 pair swap list
+        @param _tokenAmount ERC20 token amount to swap
+        @param _recipient NFT recipient address
+     */
+    function swapTokenForAnyNFTs(PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+        external
+        returns (uint256 remainingValue)
+    {
+        remainingValue = _tokenAmount;
+        uint256 numOfSwap = _swapList.length;
+
+        for (uint256 i; i < numOfSwap; ) {
+            remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient);
             unchecked {
                 ++i;
             }
