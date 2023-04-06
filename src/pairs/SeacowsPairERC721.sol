@@ -145,17 +145,22 @@ contract SeacowsPairERC721 is SeacowsPair {
         @dev This is used by the SeacowsPair's swapNFTForToken function. 
         @param _nft The NFT collection to take from
         @param nftIds The specific NFT IDs to take
+        @param isRouter True if calling from LSSVMRouter, false otherwise.
+        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
      */
-    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds) internal {
+    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, bool isRouter, address routerCaller) internal {
         address _assetRecipient = getAssetRecipient();
         uint256 numNFTs = nftIds.length;
 
-        // Pull NFTs directly from sender
-        for (uint256 i; i < numNFTs; ) {
-            IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
+        // if swap is from router, we transfer nfts from router caller
+        if (isRouter) {} else {
+            // Pull NFTs directly from sender
+            for (uint256 i; i < numNFTs; ) {
+                IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
 
-            unchecked {
-                ++i;
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
@@ -269,14 +274,17 @@ contract SeacowsPairERC721 is SeacowsPair {
         @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
         amount is less than this value, the transaction will be reverted.
         @param tokenRecipient The recipient of the token output
+        @param isRouter True if calling from LSSVMRouter, false otherwise.
+        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
         @return outputAmount The amount of token received
      */
-    function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient)
-        external
-        virtual
-        nonReentrant
-        returns (uint256 outputAmount)
-    {
+    function swapNFTsForToken(
+        uint256[] calldata nftIds,
+        uint256 minExpectedTokenOutput,
+        address payable tokenRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external virtual nonReentrant returns (uint256 outputAmount) {
         // Input validation
         {
             require(poolType == PoolType.TOKEN, "Wrong Pool type");
@@ -291,7 +299,7 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         _payProtocolFeeFromPair(factory, protocolFee);
 
-        _takeNFTsFromSender(nft, nftIds);
+        _takeNFTsFromSender(nft, nftIds, isRouter, routerCaller);
 
         emit SwapNFTInPair();
     }
