@@ -42,7 +42,7 @@ contract SeacowsERC721Router {
         external
         returns (uint256 outputAmount)
     {
-        outputAmount = _swap.pair.swapNFTsForToken(_swap.nftIds, _minOutput, _recipient);
+        outputAmount = _swap.pair.swapNFTsForToken(_swap.nftIds, _minOutput, _recipient, true, msg.sender);
     }
 
     /**

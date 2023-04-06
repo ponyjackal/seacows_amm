@@ -98,7 +98,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(nftIds, 25 ether, payable(alice));
+        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(nftIds, 25 ether, payable(alice), false, address(0));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 26.865 ether);
@@ -134,7 +134,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(nftIds, 25 ether, payable(alice));
+        ISeacowsPairERC721(address(tokenPair)).swapNFTsForToken(nftIds, 25 ether, payable(alice), false, address(0));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance + 27 ether);

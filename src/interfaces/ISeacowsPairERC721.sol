@@ -13,9 +13,13 @@ interface ISeacowsPairERC721 is ISeacowsPair {
         payable
         returns (uint256 inputAmount);
 
-    function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient)
-        external
-        returns (uint256 outputAmount);
+    function swapNFTsForToken(
+        uint256[] calldata nftIds,
+        uint256 minExpectedTokenOutput,
+        address payable tokenRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external returns (uint256 outputAmount);
 
     function getBuyNFTQuote(uint256[] memory nftIds)
         external
