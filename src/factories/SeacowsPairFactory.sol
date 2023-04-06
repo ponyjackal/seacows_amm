@@ -44,7 +44,11 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     // Units are in base 1e18
     uint256 public override protocolFeeMultiplier;
 
+    // used for bondingCurve validation
     mapping(ICurve => bool) public bondingCurveAllowed;
+
+    // used for router validation
+    mapping(address => bool) public routerStatus;
 
     struct CreateERC721ERC20PairParams {
         IERC20 token;
@@ -89,6 +93,7 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     event ProtocolFeeRecipientUpdate(address recipientAddress);
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
+    event RouterStatusUpdate(address indexed router, bool isAllowed);
     event CallTargetStatusUpdate(address target, bool isAllowed);
     event ProtocolFeeDisabled(address pair, bool isDisabled);
 
@@ -347,6 +352,16 @@ contract SeacowsPairFactory is Ownable, ISeacowsPairFactoryLike {
     function setBondingCurveAllowed(ICurve bondingCurve, bool isAllowed) external onlyOwner {
         bondingCurveAllowed[bondingCurve] = isAllowed;
         emit BondingCurveStatusUpdate(bondingCurve, isAllowed);
+    }
+
+    /**
+        @notice Set router status
+        @param router The router address
+        @param isAllowed True to whitelist, false to remove from whitelist
+     */
+    function setRouterStatus(address router, bool isAllowed) external onlyOwner {
+        routerStatus[router] = isAllowed;
+        emit RouterStatusUpdate(router, isAllowed);
     }
 
     /**

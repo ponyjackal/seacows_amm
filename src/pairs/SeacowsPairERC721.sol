@@ -153,7 +153,10 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 numNFTs = nftIds.length;
 
         // if swap is from router, we transfer nfts from router caller
-        if (isRouter) {} else {
+        if (isRouter) {
+            // verify is router is validated
+            require(factory.routerStatus(msg.sender), "Invalid router");
+        } else {
             // Pull NFTs directly from sender
             for (uint256 i; i < numNFTs; ) {
                 IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
