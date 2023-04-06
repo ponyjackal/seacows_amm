@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 import { SeacowsPairERC721 } from "./pairs/SeacowsPairERC721.sol";
+import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairERC721 } from "./interfaces/ISeacowsPairERC721.sol";
 import { IWETH } from "./interfaces/IWETH.sol";
 
@@ -16,11 +19,15 @@ contract SeacowsERC721Router {
         uint256[] nftIds;
     }
 
+    ISeacowsPairFactoryLike public factory;
+
     address public weth;
 
-    constructor(address _weth) {
+    constructor(ISeacowsPairFactoryLike _factory, address _weth) {
         require(_weth != address(0), "Invalid weht address");
+
         weth = _weth;
+        factory = _factory;
     }
 
     /** Swap functions */
@@ -94,6 +101,22 @@ contract SeacowsERC721Router {
         IWETH(weth).deposit{ value: msg.value }();
 
         remainingValue = _swapTokenForAnyNFTs(_swapList, _tokenAmount, _recipient);
+    }
+
+    /**
+        @dev Allows a pair contract to transfer ERC721 NFTs directly from
+        the sender, in order to minimize the number of token transfers. Only callable by a pair.
+        @param nft The ERC721 NFT to transfer
+        @param from The address to transfer tokens from
+        @param to The address to transfer tokens to
+        @param id The ID of the NFT to transfer
+     */
+    function pairTransferNFTFrom(IERC721 nft, address from, address to, uint256 id) external {
+        // verify caller is a trusted pair contract
+        require(factory.pairStatus(msg.sender), "Not pair");
+
+        // transfer NFTs to pair
+        nft.safeTransferFrom(from, to, id);
     }
 
     /** Internal functions */

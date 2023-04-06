@@ -44,6 +44,9 @@ contract SeacowsPairERC1155Factory is Ownable, ISeacowsPairFactoryLike {
     // used for router validation
     mapping(address => bool) public routerStatus;
 
+    // used for pair validation
+    mapping(address => bool) public pairStatus;
+
     struct CreateERC1155ERC20PairParams {
         IERC20 token;
         IERC1155 nft;
@@ -75,6 +78,7 @@ contract SeacowsPairERC1155Factory is Ownable, ISeacowsPairFactoryLike {
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
     event RouterStatusUpdate(address indexed router, bool isAllowed);
+    event PairStatusUpdate(address indexed pair, bool isAllowed);
     event CallTargetStatusUpdate(address target, bool isAllowed);
     event ProtocolFeeDisabled(address pair, bool isDisabled);
 
@@ -229,6 +233,16 @@ contract SeacowsPairERC1155Factory is Ownable, ISeacowsPairFactoryLike {
     }
 
     /**
+        @notice Set pair status
+        @param pair The pair address
+        @param isAllowed True to whitelist, false to remove from whitelist
+     */
+    function setPairStatus(address pair, bool isAllowed) external onlyOwner {
+        pairStatus[pair] = isAllowed;
+        emit PairStatusUpdate(pair, isAllowed);
+    }
+
+    /**
         @notice Enable/disable a protocol fee in the pair
         @param _pair The pair contract
         @param _isProtocolFeeDisabled True to disable, false to enable protocol fee
@@ -261,5 +275,8 @@ contract SeacowsPairERC1155Factory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+
+        // set pair active
+        pairStatus[address(pair)] = true;
     }
 }
