@@ -16,6 +16,7 @@ import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.s
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 import { SeacowsCollectionRegistry } from "../priceoracle/SeacowsCollectionRegistry.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
+import { ISeacowsRouter } from "../interfaces/ISeacowsRouter.sol";
 
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -229,18 +230,37 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         @param inputAmount The amount of tokens to be sent
         @param _factory The SeacowsPairFactory which stores SeacowsRouter allowlist info
         @param protocolFee The protocol fee to be paid
+        @param isRouter Whether or not the caller is LSSVMRouter
+        @param routerCaller If called from LSSVMRouter, store the original caller
      */
-    function _pullTokenInputAndPayProtocolFee(uint256 inputAmount, ISeacowsPairFactoryLike _factory, uint256 protocolFee) internal {
+    function _pullTokenInputAndPayProtocolFee(
+        uint256 inputAmount,
+        ISeacowsPairFactoryLike _factory,
+        uint256 protocolFee,
+        bool isRouter,
+        address routerCaller
+    ) internal {
         require(msg.value == 0, "ERC20 pair");
 
         address _assetRecipient = getAssetRecipient();
 
-        // Transfer tokens directly
-        token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
+        if (isRouter) {
+            // verify is router is validated
+            require(factory.routerStatus(msg.sender), "Invalid router");
 
-        // Take protocol fee (if it exists)
-        if (protocolFee > 0) {
-            token.transferFrom(msg.sender, address(_factory), protocolFee);
+            ISeacowsERC721Router router = ISeacowsERC721Router(msg.sender);
+
+            // transfer erc20 tokens through router
+            router.pairTransferERC20From(token, routerCaller, _assetRecipient, inputAmount - protocolFee);
+            router.pairTransferERC20From(token, routerCaller, address(_factory), protocolFee);
+        } else {
+            // Transfer tokens directly
+            token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
+
+            // Take protocol fee (if it exists)
+            if (protocolFee > 0) {
+                token.transferFrom(msg.sender, address(_factory), protocolFee);
+            }
         }
     }
 

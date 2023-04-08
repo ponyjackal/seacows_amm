@@ -327,15 +327,17 @@ contract SeacowsPairERC721 is SeacowsPair {
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
+        @param isRouter True if calling from router, false otherwise.
+        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
-        external
-        payable
-        virtual
-        nonReentrant
-        returns (uint256 inputAmount)
-    {
+    function swapTokenForSpecificNFTs(
+        uint256[] calldata nftIds,
+        uint256 maxExpectedTokenInput,
+        address nftRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external payable virtual nonReentrant returns (uint256 inputAmount) {
         // Input validation
         {
             require(poolType == PoolType.NFT, "Wrong Pool type");

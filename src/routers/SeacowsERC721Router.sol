@@ -119,6 +119,22 @@ contract SeacowsERC721Router {
         nft.safeTransferFrom(from, to, id);
     }
 
+    /**
+        @dev Allows an ERC20 pair contract to transfer ERC20 tokens directly from
+        the sender, in order to minimize the number of token transfers. Only callable by an ERC20 pair.
+        @param token The ERC20 token to transfer
+        @param from The address to transfer tokens from
+        @param to The address to transfer tokens to
+        @param amount The amount of tokens to transfer
+     */
+    function pairTransferERC20From(ERC20 token, address from, address to, uint256 amount) external {
+        // verify caller is a trusted pair contract
+        require(factory.pairStatus(msg.sender), "Not pair");
+
+        // transfer tokens to pair
+        token.safeTransferFrom(from, to, amount);
+    }
+
     /** Internal functions */
 
     /**

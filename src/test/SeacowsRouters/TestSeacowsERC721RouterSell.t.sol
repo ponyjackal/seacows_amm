@@ -20,7 +20,7 @@ import { SeacowsERC721Router } from "../../routers/SeacowsERC721Router.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract TestSeacowsERC721Router is WhenCreatePair {
+contract TestSeacowsERC721RouterSell is WhenCreatePair {
     SeacowsPair internal linearPair;
     SeacowsPair internal linearPairS3;
     SeacowsPair internal exponentialPair;
