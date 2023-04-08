@@ -161,7 +161,7 @@ contract SeacowsPairERC721 is SeacowsPair {
             ISeacowsERC721Router router = ISeacowsERC721Router(msg.sender);
             // Pull NFTs through router
             for (uint256 i; i < numNFTs; ) {
-                router.pairTransferNFTFrom(IERC721(_nft), routerCaller, address(this), nftIds[i]);
+                router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[i]);
 
                 unchecked {
                     ++i;
