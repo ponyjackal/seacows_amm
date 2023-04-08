@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { SeacowsPairERC721 } from "../pairs/SeacowsPairERC721.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
@@ -127,12 +128,12 @@ contract SeacowsERC721Router {
         @param to The address to transfer tokens to
         @param amount The amount of tokens to transfer
      */
-    function pairTransferERC20From(ERC20 token, address from, address to, uint256 amount) external {
+    function pairTransferERC20From(IERC20 token, address from, address to, uint256 amount) external {
         // verify caller is a trusted pair contract
         require(factory.pairStatus(msg.sender), "Not pair");
 
         // transfer tokens to pair
-        token.safeTransferFrom(from, to, amount);
+        token.transferFrom(from, to, amount);
     }
 
     /** Internal functions */
@@ -152,7 +153,7 @@ contract SeacowsERC721Router {
         uint256 numOfSwap = _swapList.length;
 
         for (uint256 i; i < numOfSwap; ) {
-            remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient);
+            remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient, true, msg.sender);
             unchecked {
                 ++i;
             }
@@ -174,7 +175,7 @@ contract SeacowsERC721Router {
         uint256 numOfSwap = _swapList.length;
 
         for (uint256 i; i < numOfSwap; ) {
-            remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient);
+            remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient, true, msg.sender);
             unchecked {
                 ++i;
             }

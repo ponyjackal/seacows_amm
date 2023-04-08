@@ -6,12 +6,18 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
 interface ISeacowsPairERC721 is ISeacowsPair {
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient) external payable returns (uint256 inputAmount);
-
-    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
         external
         payable
         returns (uint256 inputAmount);
+
+    function swapTokenForSpecificNFTs(
+        uint256[] calldata nftIds,
+        uint256 maxExpectedTokenInput,
+        address nftRecipient,
+        bool isRouter,
+        address routerCaller
+    ) external payable returns (uint256 inputAmount);
 
     function swapNFTsForToken(
         uint256[] calldata nftIds,

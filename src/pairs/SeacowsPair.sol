@@ -248,7 +248,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
             // verify is router is validated
             require(factory.routerStatus(msg.sender), "Invalid router");
 
-            ISeacowsERC721Router router = ISeacowsERC721Router(msg.sender);
+            ISeacowsRouter router = ISeacowsRouter(msg.sender);
 
             // transfer erc20 tokens through router
             router.pairTransferERC20From(token, routerCaller, _assetRecipient, inputAmount - protocolFee);

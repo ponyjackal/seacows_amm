@@ -91,7 +91,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = IWETH(weth).balanceOf(alice);
         uint256 tokenBalanceOwner = IWETH(weth).balanceOf(owner);
 
-        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(nftIds, 15 ether, address(alice));
+        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(nftIds, 15 ether, address(alice), false, address(0));
         /** Check nft owners */
         assertEq(nft.ownerOf(1), alice);
         assertEq(nft.ownerOf(2), alice);
@@ -119,7 +119,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalanceOwner = token.balanceOf(owner);
 
-        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(nftIds, 15 ether, address(alice));
+        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(nftIds, 15 ether, address(alice), false, address(0));
         /** Check nft owners */
         assertEq(nft.ownerOf(3), alice);
         assertEq(nft.ownerOf(9), alice);
@@ -145,14 +145,14 @@ contract WhenBuyNFTs is WhenCreatePair {
         nftETHIds[1] = 2;
 
         vm.expectRevert();
-        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(nftETHIds, 15 ether, address(alice));
+        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(nftETHIds, 15 ether, address(alice), false, address(0));
 
         uint256[] memory nftIds = new uint256[](2);
         nftIds[0] = 1;
         nftIds[1] = 2;
 
         vm.expectRevert("In too many tokens");
-        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(nftIds, 10 ether, address(alice));
+        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(nftIds, 10 ether, address(alice), false, address(0));
 
         vm.stopPrank();
     }

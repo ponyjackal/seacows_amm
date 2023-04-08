@@ -257,9 +257,11 @@ contract SeacowsPairERC721 is SeacowsPair {
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
+                @param isRouter True if calling from router, false otherwise.
+        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient)
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
         external
         payable
         virtual
@@ -274,7 +276,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter, routerCaller);
         _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
         _refundTokenToSender(inputAmount);
 
@@ -348,7 +350,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, maxExpectedTokenInput, bondingCurve, factory);
 
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter, routerCaller);
 
         _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
 
