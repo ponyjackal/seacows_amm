@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import { SeacowsPairERC721 } from "./pairs/SeacowsPairERC721.sol";
-import { ISeacowsPairFactoryLike } from "./interfaces/ISeacowsPairFactoryLike.sol";
-import { ISeacowsPairERC721 } from "./interfaces/ISeacowsPairERC721.sol";
-import { IWETH } from "./interfaces/IWETH.sol";
+import { SeacowsPairERC721 } from "../pairs/SeacowsPairERC721.sol";
+import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import { ISeacowsPairERC721 } from "../interfaces/ISeacowsPairERC721.sol";
+import { IWETH } from "../interfaces/IWETH.sol";
 
 contract SeacowsERC721Router {
     struct PairSwapAny {
