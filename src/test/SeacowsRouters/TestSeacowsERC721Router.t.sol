@@ -102,81 +102,101 @@ contract TestSeacowsERC721Router is WhenCreatePair {
         vm.stopPrank();
     }
 
-    // function testSellNFTsToExponentialPair() public {
-    //     /** Alice is trying to sell NFTs to nft pair */
-    //     vm.startPrank(alice);
+    function testSellNFTsToExponentialPair() public {
+        /** Alice is trying to sell NFTs to nft pair */
+        vm.startPrank(alice);
 
-    //     uint256[] memory nftIds = new uint256[](2);
-    //     nftIds[0] = 1;
-    //     nftIds[1] = 2;
+        uint256[] memory nftIds = new uint256[](2);
+        nftIds[0] = 1;
+        nftIds[1] = 2;
 
-    //     uint256 tokenBalanceAlice = token.balanceOf(alice);
-    //     uint256 tokenBalancePair = token.balanceOf(address(exponentialPair));
+        uint256 tokenBalanceAlice = token.balanceOf(alice);
+        uint256 tokenBalancePair = token.balanceOf(address(exponentialPair));
 
-    //     ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false, address(0));
+        SeacowsERC721Router.PairSwapSpecific memory param = SeacowsERC721Router.PairSwapSpecific(
+            ISeacowsPairERC721(address(exponentialPair)),
+            nftIds
+        );
+        seacowsERC721Router.swapNFTsForToken(param, 9 ether, payable(alice));
 
-    //     /** Check nft owners */
-    //     assertEq(nft.ownerOf(1), owner);
-    //     assertEq(nft.ownerOf(2), owner);
-    //     /** Check pair configs */
-    //     assertEq(exponentialPair.spotPrice(), 4.13223140495867768 ether);
-    //     assertEq(exponentialPair.delta(), 1.1 ether);
-    //     /** Check token balance update */
-    //     uint256 updatedTokenBalanceAlice = token.balanceOf(alice);
-    //     assertEq(updatedTokenBalanceAlice, tokenBalanceAlice + 9.54545454545454542 ether);
+        /** Check nft owners */
+        assertEq(nft.ownerOf(1), owner);
+        assertEq(nft.ownerOf(2), owner);
+        /** Check pair configs */
+        assertEq(exponentialPair.spotPrice(), 4.13223140495867768 ether);
+        assertEq(exponentialPair.delta(), 1.1 ether);
+        /** Check token balance update */
+        uint256 updatedTokenBalanceAlice = token.balanceOf(alice);
+        assertEq(updatedTokenBalanceAlice, tokenBalanceAlice + 9.54545454545454542 ether);
 
-    //     uint256 updatedTokenBalancePair = token.balanceOf(address(exponentialPair));
-    //     assertEq(updatedTokenBalancePair, tokenBalancePair - 9.593181818181818147 ether);
+        uint256 updatedTokenBalancePair = token.balanceOf(address(exponentialPair));
+        assertEq(updatedTokenBalancePair, tokenBalancePair - 9.593181818181818147 ether);
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 
-    // function testSellNFTsPairInsufficientTokens() public {
-    //     /** Alice is trying to sell NFTs to nft pair */
-    //     vm.startPrank(alice);
+    function testSellNFTsPairInsufficientTokens() public {
+        /** Alice is trying to sell NFTs to nft pair */
+        vm.startPrank(alice);
 
-    //     uint256[] memory nftIds = new uint256[](10);
-    //     for (uint256 i; i < 10; i++) {
-    //         nftIds[i] = i;
-    //     }
+        uint256[] memory nftIds = new uint256[](10);
+        for (uint256 i; i < 10; i++) {
+            nftIds[i] = i;
+        }
 
-    //     uint256 tokenBalanceAlice = token.balanceOf(alice);
-    //     uint256 tokenBalancePair = token.balanceOf(address(linearPair));
+        uint256 tokenBalanceAlice = token.balanceOf(alice);
+        uint256 tokenBalancePair = token.balanceOf(address(linearPair));
 
-    //     vm.expectRevert("ERC20: transfer amount exceeds balance");
-    //     ISeacowsPairERC721(address(linearPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false, address(0));
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        SeacowsERC721Router.PairSwapSpecific memory linearParam = SeacowsERC721Router.PairSwapSpecific(
+            ISeacowsPairERC721(address(linearPair)),
+            nftIds
+        );
+        seacowsERC721Router.swapNFTsForToken(linearParam, 9 ether, payable(alice));
 
-    //     vm.expectRevert("Out too little tokens");
-    //     ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 100 ether, payable(alice), false, address(0));
+        vm.expectRevert("Out too little tokens");
+        SeacowsERC721Router.PairSwapSpecific memory exponentialParam = SeacowsERC721Router.PairSwapSpecific(
+            ISeacowsPairERC721(address(exponentialPair)),
+            nftIds
+        );
+        seacowsERC721Router.swapNFTsForToken(exponentialParam, 100 ether, payable(alice));
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 
-    // function testSellNFTsPairZeroSpotPrice() public {
-    //     /** Alice is trying to sell NFTs to nft pair */
-    //     vm.startPrank(alice);
+    function testSellNFTsPairZeroSpotPrice() public {
+        /** Alice is trying to sell NFTs to nft pair */
+        vm.startPrank(alice);
 
-    //     uint256[] memory nftIds = new uint256[](10);
-    //     for (uint256 i; i < 10; i++) {
-    //         nftIds[i] = i;
-    //     }
+        uint256[] memory nftIds = new uint256[](10);
+        for (uint256 i; i < 10; i++) {
+            nftIds[i] = i;
+        }
 
-    //     vm.expectRevert();
-    //     ISeacowsPairERC721(address(linearPairS3)).swapNFTsForToken(nftIds, 1 ether, payable(alice), false, address(0));
-    //     vm.stopPrank();
-    // }
+        vm.expectRevert();
+        SeacowsERC721Router.PairSwapSpecific memory linearParam = SeacowsERC721Router.PairSwapSpecific(
+            ISeacowsPairERC721(address(linearPairS3)),
+            nftIds
+        );
+        seacowsERC721Router.swapNFTsForToken(linearParam, 1 ether, payable(alice));
+        vm.stopPrank();
+    }
 
-    // function testSellInvalidNFTs() public {
-    //     /** Alice is trying to sell NFTs to nft pair */
-    //     vm.startPrank(alice);
+    function testSellInvalidNFTs() public {
+        /** Alice is trying to sell NFTs to nft pair */
+        vm.startPrank(alice);
 
-    //     uint256[] memory nftIds = new uint256[](2);
-    //     nftIds[0] = 11;
-    //     nftIds[1] = 12;
+        uint256[] memory nftIds = new uint256[](2);
+        nftIds[0] = 11;
+        nftIds[1] = 12;
 
-    //     vm.expectRevert("ERC721: caller is not token owner or approved");
-    //     ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false, address(0));
+        vm.expectRevert("ERC721: caller is not token owner or approved");
+        SeacowsERC721Router.PairSwapSpecific memory param = SeacowsERC721Router.PairSwapSpecific(
+            ISeacowsPairERC721(address(exponentialPair)),
+            nftIds
+        );
+        seacowsERC721Router.swapNFTsForToken(param, 9 ether, payable(alice));
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 }
