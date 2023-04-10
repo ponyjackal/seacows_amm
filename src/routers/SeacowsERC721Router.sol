@@ -131,9 +131,25 @@ contract SeacowsERC721Router {
     function pairTransferERC20From(IERC20 token, address from, address to, uint256 amount) external {
         // verify caller is a trusted pair contract
         require(factory.pairStatus(msg.sender), "Not pair");
+        //TODO; need a validation
 
         // transfer tokens to pair
         token.transferFrom(from, to, amount);
+    }
+
+    /**
+        @dev Allows an WETH pair contract to transfer WETH directly from
+        the sender, in order to minimize the number of token transfers. Only callable by an WETH pair.
+        @param to The address to transfer tokens to
+        @param amount The amount of tokens to transfer
+     */
+    function pairTransferETHFrom(address to, uint256 amount) external {
+        // verify caller is a trusted pair contract
+        require(factory.pairStatus(msg.sender), "Not pair");
+        //TODO; need a validation
+
+        // transfer tokens to pair
+        IWETH(weth).transfer(to, amount);
     }
 
     /** Internal functions */
