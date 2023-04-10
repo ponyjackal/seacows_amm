@@ -62,17 +62,22 @@ contract SeacowsERC721Router {
     /**
         @notice Buy specific NFTs in ETH
         @param _swapList ERC721 pair swap list
-        @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
      */
-    function swapTokenForSpecificNFTsETH(PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+    function swapTokenForSpecificNFTsETH(PairSwapSpecific[] calldata _swapList, address _recipient)
         external
         payable
         returns (uint256 remainingValue)
     {
+        // convert eth to weth
         IWETH(weth).deposit{ value: msg.value }();
 
-        remainingValue = _swapTokenForSpecificNFTs(_swapList, _tokenAmount, _recipient);
+        remainingValue = _swapTokenForSpecificNFTs(_swapList, msg.value, _recipient);
+
+        // we refund the remaining eth
+        IWETH(weth).withdraw(remainingValue);
+        (bool sent, bytes memory data) = msg.sender.call{ value: remainingValue }("");
+        require(sent, "Failed to send Ether");
     }
 
     /**
@@ -91,17 +96,18 @@ contract SeacowsERC721Router {
     /**
         @notice Buy specific NFTs in ETH
         @param _swapList ERC721 pair swap list
-        @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
      */
-    function swapTokenForAnyNFTsETH(PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient)
-        external
-        payable
-        returns (uint256 remainingValue)
-    {
+    function swapTokenForAnyNFTsETH(PairSwapAny[] calldata _swapList, address _recipient) external payable returns (uint256 remainingValue) {
+        // convert eth to weth
         IWETH(weth).deposit{ value: msg.value }();
 
-        remainingValue = _swapTokenForAnyNFTs(_swapList, _tokenAmount, _recipient);
+        remainingValue = _swapTokenForAnyNFTs(_swapList, msg.value, _recipient);
+
+        // we refund the remaining eth
+        IWETH(weth).withdraw(remainingValue);
+        (bool sent, bytes memory data) = msg.sender.call{ value: remainingValue }("");
+        require(sent, "Failed to send Ether");
     }
 
     /**
@@ -197,4 +203,6 @@ contract SeacowsERC721Router {
             }
         }
     }
+
+    receive() external payable {}
 }

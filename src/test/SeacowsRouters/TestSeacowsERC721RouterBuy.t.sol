@@ -87,19 +87,16 @@ contract TestSeacowsERC721RouterBuy is WhenCreatePair {
         /** Alice is trying to buy NFTs from nft pair */
         vm.startPrank(alice);
 
-        // IWETH(weth).deposit{ value: 100 ether }();
-        // IWETH(weth).approve(address(seacowsERC721Router), 100 ether);
-
         uint256[] memory nftIds = new uint256[](2);
         nftIds[0] = 1;
         nftIds[1] = 2;
 
         uint256 tokenBalanceAlice = alice.balance;
-        uint256 tokenBalanceOwner = owner.balance;
+        uint256 tokenBalanceOwner = IWETH(weth).balanceOf(owner);
 
         SeacowsERC721Router.PairSwapSpecific[] memory params = new SeacowsERC721Router.PairSwapSpecific[](1);
         params[0] = SeacowsERC721Router.PairSwapSpecific(ISeacowsPairERC721(address(erc721ETHPair)), nftIds);
-        seacowsERC721Router.swapTokenForSpecificNFTsETH{ value: 100 ether }(params, 15 ether, address(alice));
+        seacowsERC721Router.swapTokenForSpecificNFTsETH{ value: 100 ether }(params, address(alice));
 
         /** Check nft owners */
         assertEq(nft.ownerOf(1), alice);
@@ -111,7 +108,7 @@ contract TestSeacowsERC721RouterBuy is WhenCreatePair {
         uint256 updatedTokenBalanceAlice = alice.balance;
         assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.5575 ether);
 
-        uint256 updatedTokenBalanceOwner = owner.balance;
+        uint256 updatedTokenBalanceOwner = IWETH(weth).balanceOf(owner);
         assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.5 ether);
 
         vm.stopPrank();
@@ -181,17 +178,14 @@ contract TestSeacowsERC721RouterBuy is WhenCreatePair {
         /** Alice is trying to buy NFTs from nft pair */
         vm.startPrank(alice);
 
-        // IWETH(weth).deposit{ value: 100 ether }();
-        // IWETH(weth).approve(address(seacowsERC721Router), 100 ether);
-
         uint256 tokenBalanceAlice = alice.balance;
-        uint256 tokenBalanceOwner = owner.balance;
+        uint256 tokenBalanceOwner = IWETH(weth).balanceOf(owner);
 
         uint256 beforeNftBalance = nft.balanceOf(alice);
 
         SeacowsERC721Router.PairSwapAny[] memory params = new SeacowsERC721Router.PairSwapAny[](1);
         params[0] = SeacowsERC721Router.PairSwapAny(ISeacowsPairERC721(address(erc721ETHPair)), 2);
-        seacowsERC721Router.swapTokenForAnyNFTsETH{ value: 100 ether }(params, 15 ether, address(alice));
+        seacowsERC721Router.swapTokenForAnyNFTsETH{ value: 100 ether }(params, address(alice));
 
         /** Check nft balance */
         uint256 afterNftBalance = nft.balanceOf(alice);
@@ -203,7 +197,7 @@ contract TestSeacowsERC721RouterBuy is WhenCreatePair {
         uint256 updatedTokenBalanceAlice = alice.balance;
         assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.5575 ether);
 
-        uint256 updatedTokenBalanceOwner = owner.balance;
+        uint256 updatedTokenBalanceOwner = IWETH(weth).balanceOf(owner);
         assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.5 ether);
 
         vm.stopPrank();
