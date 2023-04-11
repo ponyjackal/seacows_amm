@@ -76,7 +76,7 @@ contract SeacowsERC721Router {
 
         // we refund the remaining eth
         IWETH(weth).withdraw(remainingValue);
-        (bool sent, bytes memory data) = msg.sender.call{ value: remainingValue }("");
+        (bool sent, ) = msg.sender.call{ value: remainingValue }("");
         require(sent, "Failed to send Ether");
     }
 
@@ -106,7 +106,7 @@ contract SeacowsERC721Router {
 
         // we refund the remaining eth
         IWETH(weth).withdraw(remainingValue);
-        (bool sent, bytes memory data) = msg.sender.call{ value: remainingValue }("");
+        (bool sent, ) = msg.sender.call{ value: remainingValue }("");
         require(sent, "Failed to send Ether");
     }
 
@@ -172,9 +172,9 @@ contract SeacowsERC721Router {
         returns (uint256 remainingValue)
     {
         remainingValue = _tokenAmount;
-        uint256 numOfSwap = _swapList.length;
+        uint256 numOfSwaps = _swapList.length;
 
-        for (uint256 i; i < numOfSwap; ) {
+        for (uint256 i; i < numOfSwaps; ) {
             remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient, true, msg.sender);
             unchecked {
                 ++i;
@@ -194,9 +194,9 @@ contract SeacowsERC721Router {
         returns (uint256 remainingValue)
     {
         remainingValue = _tokenAmount;
-        uint256 numOfSwap = _swapList.length;
+        uint256 numOfSwaps = _swapList.length;
 
-        for (uint256 i; i < numOfSwap; ) {
+        for (uint256 i; i < numOfSwaps; ) {
             remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient, true, msg.sender);
             unchecked {
                 ++i;
