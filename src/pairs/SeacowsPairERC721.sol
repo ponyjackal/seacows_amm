@@ -22,7 +22,8 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     /** Internal Functions */
 
-    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal returns (uint256[] memory nftIds) {
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal returns (uint256[] memory) {
+        uint256[] memory nftIds = new uint256[](numNFTs);
         // Send NFTs to recipient
         // We're missing enumerable, so we also update the pair's own ID set
         // NOTE: We start from last index to first index to save on gas
@@ -38,6 +39,8 @@ contract SeacowsPairERC721 is SeacowsPair {
                 ++i;
             }
         }
+
+        return nftIds;
     }
 
     function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal {
