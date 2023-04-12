@@ -23,6 +23,16 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
     event WithdrawERC1155(address indexed recipient, uint256[] ids, uint256[] amounts);
     event ERC1155Deposit(address indexed depositer, uint256[] ids, uint256[] amounts);
+    event Swap(
+        address indexed sender,
+        uint256 tokenIn,
+        uint256[] nftIdsIn,
+        uint256[] amountsIn,
+        uint256 tokenOut,
+        uint256[] nftIdsOut,
+        uint256[] amountsOut,
+        address indexed recipient
+    );
 
     /** View Functions */
 
@@ -266,7 +276,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // decrease total nft balance
         nftAmount -= totalAmount;
 
-        emit SwapNFTOutPair();
+        emit Swap(msg.sender, inputAmount, new uint256[](0), new uint256[](0), 0, _nftIds, _amounts, nftRecipient);
     }
 
     /**
@@ -314,7 +324,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // increase total nft balance
         nftAmount += totalAmount;
 
-        emit SwapNFTInPair();
+        emit Swap(msg.sender, 0, _nftIds, _amounts, outputAmount, new uint256[](0), new uint256[](0), tokenRecipient);
     }
 
     /**

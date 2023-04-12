@@ -81,8 +81,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     address public weth;
 
     // Events
-    event SwapNFTInPair();
-    event SwapNFTOutPair();
     event SpotPriceUpdate(uint128 oldSpotPrice, uint128 newSpotPrice);
     event TokenWithdrawal(address indexed recipient, uint256 amount);
     event TokenDeposit(address indexed sender, uint256 amount);

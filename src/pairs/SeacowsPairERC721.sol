@@ -18,16 +18,18 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     event WithdrawERC721(address indexed recipient, uint256[] ids);
     event ERC721Deposit(address indexed depositer, uint256[] ids);
+    event Swap(address indexed sender, uint256 tokenIn, uint256[] nftIdsIn, uint256 tokenOut, uint256[] nftIdsOut, address indexed recipient);
 
     /** Internal Functions */
 
-    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal {
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal returns (uint256[] memory nftIds) {
         // Send NFTs to recipient
         // We're missing enumerable, so we also update the pair's own ID set
         // NOTE: We start from last index to first index to save on gas
         uint256 lastIndex = idSet.length() - 1;
         for (uint256 i; i < numNFTs; ) {
             uint256 nftId = idSet.at(lastIndex);
+            nftIds[i] = nftId;
             IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftId);
             idSet.remove(nftId);
 
@@ -277,10 +279,10 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
         _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter, routerCaller);
-        _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
+        uint256[] memory nftIds = _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
         _refundTokenToSender(inputAmount);
 
-        emit SwapNFTOutPair();
+        emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
 
     /**
@@ -317,7 +319,7 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         _takeNFTsFromSender(nft, nftIds, isRouter, routerCaller);
 
-        emit SwapNFTInPair();
+        emit Swap(msg.sender, 0, nftIds, outputAmount, new uint256[](0), tokenRecipient);
     }
 
     /**
@@ -356,7 +358,7 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         _refundTokenToSender(inputAmount);
 
-        emit SwapNFTOutPair();
+        emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
 
     function withdrawERC721(uint256[] calldata nftIds) external onlyOwner {
