@@ -148,12 +148,12 @@ contract SeacowsPairERC1155 is SeacowsPairTrade {
 
         // Emit spot price update if it has been updated
         if (currentSpotPrice != newSpotPrice) {
-            emit SpotPriceUpdate(newSpotPrice);
+            emit SpotPriceUpdate(currentSpotPrice, newSpotPrice);
         }
 
         // Emit delta update if it has been updated
         if (currentDelta != newDelta) {
-            emit DeltaUpdate(newDelta);
+            emit DeltaUpdate(currentDelta, newDelta);
         }
     }
 

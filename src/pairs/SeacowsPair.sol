@@ -83,12 +83,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     // Events
     event SwapNFTInPair();
     event SwapNFTOutPair();
-    event SpotPriceUpdate(uint128 newSpotPrice);
+    event SpotPriceUpdate(uint128 oldSpotPrice, uint128 newSpotPrice);
     event TokenWithdrawal(address indexed recipient, uint256 amount);
     event TokenDeposit(address indexed sender, uint256 amount);
-    event DeltaUpdate(uint128 newDelta);
-    event FeeUpdate(uint96 newFee);
-    event AssetRecipientChange(address a);
+    event DeltaUpdate(uint128 oldDelta, uint128 newDelta);
+    event FeeUpdate(uint96 oldFee, uint96 newFee);
+    event AssetRecipientChange(address oldRecipient, address newRecipient);
 
     // Parameterized Errors
     error BondingCurveError(CurveErrorCodes.Error error);
@@ -216,12 +216,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
         // Emit spot price update if it has been updated
         if (currentSpotPrice != newSpotPrice) {
-            emit SpotPriceUpdate(newSpotPrice);
+            emit SpotPriceUpdate(currentSpotPrice, newSpotPrice);
         }
 
         // Emit delta update if it has been updated
         if (currentDelta != newDelta) {
-            emit DeltaUpdate(newDelta);
+            emit DeltaUpdate(currentDelta, newDelta);
         }
     }
 
@@ -319,8 +319,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     function changeSpotPrice(uint128 newSpotPrice) external onlyOwner {
         require(bondingCurve.validateSpotPrice(newSpotPrice), "Invalid new spot price for curve");
         if (spotPrice != newSpotPrice) {
+            emit SpotPriceUpdate(spotPrice, newSpotPrice);
             spotPrice = newSpotPrice;
-            emit SpotPriceUpdate(newSpotPrice);
         }
     }
 
@@ -331,8 +331,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     function changeDelta(uint128 newDelta) external onlyOwner {
         require(bondingCurve.validateDelta(newDelta), "Invalid delta for curve");
         if (delta != newDelta) {
+            emit DeltaUpdate(delta, newDelta);
             delta = newDelta;
-            emit DeltaUpdate(newDelta);
         }
     }
 
@@ -345,8 +345,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         require(newRecipient != address(0), "Invalid address");
 
         if (assetRecipient != newRecipient) {
+            emit AssetRecipientChange(assetRecipient, newRecipient);
             assetRecipient = newRecipient;
-            emit AssetRecipientChange(newRecipient);
         }
     }
 
