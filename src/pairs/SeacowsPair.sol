@@ -24,6 +24,11 @@ import { ISeacowsRouter } from "../interfaces/ISeacowsRouter.sol";
 abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, ERC1155Holder {
     using SafeERC20 for ERC20;
 
+    // 90%, must <= 1 - MAX_PROTOCOL_FEE (set in PairFactory)
+    uint256 internal constant MAX_FEE = 0.90e18;
+
+    uint256 public constant MASK = type(uint112).min;
+
     enum PoolType {
         TOKEN,
         NFT
@@ -52,9 +57,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     PoolType public poolType;
 
     IERC20 public token;
-
-    // 90%, must <= 1 - MAX_PROTOCOL_FEE (set in PairFactory)
-    uint256 internal constant MAX_FEE = 0.90e18;
 
     // The current price of the NFT
     // @dev This is generally used to mean the immediate sell price for the next marginal NFT.
@@ -91,6 +93,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     event DeltaUpdate(uint128 oldDelta, uint128 newDelta);
     event FeeUpdate(uint96 oldFee, uint96 newFee);
     event AssetRecipientChange(address oldRecipient, address newRecipient);
+    event Sync(uint112 reserve0, uint112 reserve1);
 
     // Parameterized Errors
     error BondingCurveError(CurveErrorCodes.Error error);
@@ -314,6 +317,17 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         if (outputAmount > 0) {
             token.transfer(tokenRecipient, outputAmount);
         }
+    }
+
+    // update reserves and, on the first call per block, price accumulators
+    function _update(uint256 balance0, uint256 balance1) private {
+        require(balance0 <= MASK && balance1 <= MASK, "UniswapV2: OVERFLOW");
+
+        reserve0 = uint112(balance0);
+        reserve1 = uint112(balance1);
+        blockTimestampLast = uint32(block.timestamp % 2**32);
+
+        emit Sync(reserve0, reserve1);
     }
 
     /**
