@@ -282,6 +282,11 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
         _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter, routerCaller);
+
+        // make sure we recieved correct amount of tokens by checking reserves
+        uint256 _tokenBalance = token.balanceOf(address(this));
+        require(tokenReserve + inputAmount <= _tokenBalance, "Invalid token amount");
+
         uint256[] memory nftIds = _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
         _refundTokenToSender(inputAmount);
 
@@ -322,7 +327,7 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         // make sure we recieved correct amount of nfts by checking reserves
         uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
-        require(nftReserve + nftIds.length <= _nftBalance, "NFTs are not transferred");
+        require(nftReserve + nftIds.length <= _nftBalance, "Invalid NFT amount");
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
@@ -360,6 +365,10 @@ contract SeacowsPairERC721 is SeacowsPair {
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, maxExpectedTokenInput, bondingCurve, factory);
 
         _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter, routerCaller);
+
+        // make sure we recieved correct amount of tokens by checking reserves
+        uint256 _tokenBalance = token.balanceOf(address(this));
+        require(tokenReserve + inputAmount <= _tokenBalance, "Invalid token amount");
 
         _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
 
