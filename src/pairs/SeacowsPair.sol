@@ -24,9 +24,6 @@ import { ISeacowsRouter } from "../interfaces/ISeacowsRouter.sol";
 abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, ERC1155Holder {
     using SafeERC20 for ERC20;
 
-    // 90%, must <= 1 - MAX_PROTOCOL_FEE (set in PairFactory)
-    uint256 internal constant MAX_FEE = 0.90e18;
-
     uint256 public constant MASK = type(uint112).min;
 
     enum PoolType {
