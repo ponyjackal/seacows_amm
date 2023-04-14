@@ -79,9 +79,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
     address public weth;
 
-    uint112 private reserve0; // uses single storage slot, accessible via getReserves
-    uint112 private reserve1; // uses single storage slot, accessible via getReserves
-    uint32 private blockTimestampLast; // uses single storage slot, accessible via getReserves
+    uint112 internal nftReserve; // uses single storage slot, accessible via getReserves, for nft
+    uint112 internal tokenReserve; // uses single storage slot, accessible via getReserves for token
+    uint32 internal blockTimestampLast; // uses single storage slot, accessible via getReserves
 
     // Events
     event SpotPriceUpdate(uint128 oldSpotPrice, uint128 newSpotPrice);
@@ -189,9 +189,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         }
     }
 
-    function getReserves() public view returns (uint112 _reserve0, uint112 _reserve1, uint32 _blockTimestampLast) {
-        _reserve0 = reserve0;
-        _reserve1 = reserve1;
+    function getReserves() public view returns (uint112 _nftReserve, uint112 _tokenReserve, uint32 _blockTimestampLast) {
+        _nftReserve = nftReserve;
+        _tokenReserve = tokenReserve;
         _blockTimestampLast = blockTimestampLast;
     }
 
@@ -314,17 +314,28 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         if (outputAmount > 0) {
             token.transfer(tokenRecipient, outputAmount);
         }
+        // we update reserves accordingly
+        _syncReserve();
     }
 
     // update reserves and, on the first call per block, price accumulators
-    function _update(uint256 balance0, uint256 balance1) private {
-        require(balance0 <= MASK && balance1 <= MASK, "UniswapV2: OVERFLOW");
+    function _updateReserve(uint256 _nftReserve, uint256 _tokenReserve) private {
+        require(_nftReserve <= MASK && _tokenReserve <= MASK, "OVERFLOW");
 
-        reserve0 = uint112(balance0);
-        reserve1 = uint112(balance1);
+        nftReserve = uint112(_nftReserve);
+        tokenReserve = uint112(_tokenReserve);
         blockTimestampLast = uint32(block.timestamp % 2**32);
 
-        emit Sync(reserve0, reserve1);
+        emit Sync(nftReserve, tokenReserve);
+    }
+
+    // update reserves and, on the first call per block, price accumulators
+    function _syncReserve() private {
+        // we update reserves accordingly
+        uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
+        uint256 _tokenBalance = token.balanceOf(address(this));
+
+        _updateReserve(_nftBalance, _tokenBalance);
     }
 
     /**
@@ -401,6 +412,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         require(poolType == PoolType.TOKEN, "Not a token pair");
         require(owner() == msg.sender, "Not a pair owner");
 
+        // we update reserves accordingly
+        _syncReserve();
+
         emit TokenDeposit(msg.sender, amount);
     }
 
@@ -413,6 +427,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
         require(poolType == PoolType.TOKEN, "Not a token pair");
         require(owner() == msg.sender, "Not a pair owner");
+
+        // we update reserves accordingly
+        _syncReserve();
 
         emit TokenDeposit(msg.sender, msg.value);
     }

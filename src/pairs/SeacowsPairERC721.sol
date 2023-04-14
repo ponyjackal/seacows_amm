@@ -316,11 +316,15 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(nftIds, minExpectedTokenOutput, bondingCurve, factory);
 
-        _sendTokenOutput(tokenRecipient, outputAmount);
-
         _payProtocolFeeFromPair(factory, protocolFee);
 
         _takeNFTsFromSender(nft, nftIds, isRouter, routerCaller);
+
+        // make sure we recieved correct amount of nfts by checking reserves
+        uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
+        require(nftReserve + nftIds.length <= _nftBalance, "NFTs are not transferred");
+
+        _sendTokenOutput(tokenRecipient, outputAmount);
 
         emit Swap(msg.sender, 0, nftIds, outputAmount, new uint256[](0), tokenRecipient);
     }
