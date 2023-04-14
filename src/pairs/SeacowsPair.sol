@@ -252,22 +252,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
         address _assetRecipient = getAssetRecipient();
 
-        if (isRouter) {
-            // verify is router is validated
-            require(factory.routerStatus(msg.sender), "Invalid router");
-
-            ISeacowsRouter router = ISeacowsRouter(msg.sender);
-
-            if (address(token) == weth && address(token) != address(0)) {
-                // for weth pair, we pull weth from the router, not the router caller
-                router.pairTransferETHFrom(_assetRecipient, inputAmount - protocolFee);
-                router.pairTransferETHFrom(address(_factory), protocolFee);
-            } else {
-                // transfer erc20 tokens through router
-                router.pairTransferERC20From(token, routerCaller, _assetRecipient, inputAmount - protocolFee);
-                router.pairTransferERC20From(token, routerCaller, address(_factory), protocolFee);
-            }
-        } else {
+        if (!isRouter) {
             // Transfer tokens directly
             token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
 
@@ -276,6 +261,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
                 token.transferFrom(msg.sender, address(_factory), protocolFee);
             }
         }
+
+        // for the routers, we assume they already sent the assets to the pair
     }
 
     /**

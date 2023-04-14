@@ -160,19 +160,6 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         // if swap is from router, we transfer nfts from router caller
         if (isRouter) {
-            // verify is router is validated
-            require(factory.routerStatus(msg.sender), "Invalid router");
-
-            ISeacowsERC721Router router = ISeacowsERC721Router(msg.sender);
-            // Pull NFTs through router
-            for (uint256 i; i < numNFTs; ) {
-                router.pairTransferNFTFrom(IERC721(_nft), routerCaller, _assetRecipient, nftIds[i]);
-
-                unchecked {
-                    ++i;
-                }
-            }
-        } else {
             // Pull NFTs directly from sender
             for (uint256 i; i < numNFTs; ) {
                 IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
@@ -182,6 +169,8 @@ contract SeacowsPairERC721 is SeacowsPair {
                 }
             }
         }
+
+        // for the routers, we assume they already sent the assets to the pair
     }
 
     /** View Functions */
