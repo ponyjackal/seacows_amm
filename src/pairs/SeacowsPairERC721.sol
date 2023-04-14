@@ -152,9 +152,8 @@ contract SeacowsPairERC721 is SeacowsPair {
         @param _nft The NFT collection to take from
         @param nftIds The specific NFT IDs to take
         @param isRouter True if calling from LSSVMRouter, false otherwise.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
      */
-    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, bool isRouter, address routerCaller) internal {
+    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, bool isRouter) internal {
         address _assetRecipient = getAssetRecipient();
         uint256 numNFTs = nftIds.length;
 
@@ -252,10 +251,9 @@ contract SeacowsPairERC721 is SeacowsPair {
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
                 @param isRouter True if calling from router, false otherwise.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter, address routerCaller)
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter)
         external
         payable
         virtual
@@ -270,7 +268,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter, routerCaller);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter);
 
         // make sure we recieved correct amount of tokens by checking reserves
         uint256 _tokenBalance = token.balanceOf(address(this));
@@ -290,16 +288,14 @@ contract SeacowsPairERC721 is SeacowsPair {
         amount is less than this value, the transaction will be reverted.
         @param tokenRecipient The recipient of the token output
         @param isRouter True if calling from LSSVMRouter, false otherwise.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
         @return outputAmount The amount of token received
      */
-    function swapNFTsForToken(
-        uint256[] calldata nftIds,
-        uint256 minExpectedTokenOutput,
-        address payable tokenRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external virtual nonReentrant returns (uint256 outputAmount) {
+    function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient, bool isRouter)
+        external
+        virtual
+        nonReentrant
+        returns (uint256 outputAmount)
+    {
         // Input validation
         {
             require(poolType == PoolType.TOKEN, "Wrong Pool type");
@@ -312,7 +308,7 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         _payProtocolFeeFromPair(factory, protocolFee);
 
-        _takeNFTsFromSender(nft, nftIds, isRouter, routerCaller);
+        _takeNFTsFromSender(nft, nftIds, isRouter);
 
         // make sure we recieved correct amount of nfts by checking reserves
         uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
@@ -333,16 +329,15 @@ contract SeacowsPairERC721 is SeacowsPair {
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
         @param isRouter True if calling from router, false otherwise.
-        @param routerCaller If isRouter is true, ERC20 tokens will be transferred from this address.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForSpecificNFTs(
-        uint256[] calldata nftIds,
-        uint256 maxExpectedTokenInput,
-        address nftRecipient,
-        bool isRouter,
-        address routerCaller
-    ) external payable virtual nonReentrant returns (uint256 inputAmount) {
+    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter)
+        external
+        payable
+        virtual
+        nonReentrant
+        returns (uint256 inputAmount)
+    {
         // Input validation
         {
             require(poolType == PoolType.NFT, "Wrong Pool type");
@@ -353,7 +348,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, maxExpectedTokenInput, bondingCurve, factory);
 
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter, routerCaller);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter);
 
         // make sure we recieved correct amount of tokens by checking reserves
         uint256 _tokenBalance = token.balanceOf(address(this));

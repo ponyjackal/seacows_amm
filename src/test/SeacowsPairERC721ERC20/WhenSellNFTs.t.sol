@@ -81,7 +81,7 @@ contract WhenSellNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalancePair = token.balanceOf(address(linearPair));
 
-        ISeacowsPairERC721(address(linearPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721(address(linearPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false);
 
         /** Check nft owners */
         assertEq(nft.ownerOf(1), owner);
@@ -110,7 +110,7 @@ contract WhenSellNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalancePair = token.balanceOf(address(exponentialPair));
 
-        ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false);
 
         /** Check nft owners */
         assertEq(nft.ownerOf(1), owner);
@@ -141,10 +141,10 @@ contract WhenSellNFTs is WhenCreatePair {
         uint256 tokenBalancePair = token.balanceOf(address(linearPair));
 
         vm.expectRevert("ERC20: transfer amount exceeds balance");
-        ISeacowsPairERC721(address(linearPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721(address(linearPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false);
 
         vm.expectRevert("Out too little tokens");
-        ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 100 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 100 ether, payable(alice), false);
 
         vm.stopPrank();
     }
@@ -159,7 +159,7 @@ contract WhenSellNFTs is WhenCreatePair {
         }
 
         vm.expectRevert();
-        ISeacowsPairERC721(address(linearPairS3)).swapNFTsForToken(nftIds, 1 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721(address(linearPairS3)).swapNFTsForToken(nftIds, 1 ether, payable(alice), false);
         vm.stopPrank();
     }
 
@@ -172,7 +172,7 @@ contract WhenSellNFTs is WhenCreatePair {
         nftIds[1] = 12;
 
         vm.expectRevert("ERC721: caller is not token owner or approved");
-        ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false, address(0));
+        ISeacowsPairERC721(address(exponentialPair)).swapNFTsForToken(nftIds, 9 ether, payable(alice), false);
 
         vm.stopPrank();
     }

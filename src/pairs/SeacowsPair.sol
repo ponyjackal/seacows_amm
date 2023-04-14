@@ -239,15 +239,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         @param _factory The SeacowsPairFactory which stores SeacowsRouter allowlist info
         @param protocolFee The protocol fee to be paid
         @param isRouter Whether or not the caller is LSSVMRouter
-        @param routerCaller If called from LSSVMRouter, store the original caller
      */
-    function _pullTokenInputAndPayProtocolFee(
-        uint256 inputAmount,
-        ISeacowsPairFactoryLike _factory,
-        uint256 protocolFee,
-        bool isRouter,
-        address routerCaller
-    ) internal {
+    function _pullTokenInputAndPayProtocolFee(uint256 inputAmount, ISeacowsPairFactoryLike _factory, uint256 protocolFee, bool isRouter) internal {
         require(msg.value == 0, "ERC20 pair");
 
         address _assetRecipient = getAssetRecipient();
