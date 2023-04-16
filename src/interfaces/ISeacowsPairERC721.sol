@@ -20,11 +20,11 @@ interface ISeacowsPairERC721 is ISeacowsPair {
         external
         returns (uint256 outputAmount);
 
-    function getBuyNFTQuote(uint256[] memory nftIds)
+    function getBuyNFTQuote(uint256 numOfNfts)
         external
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee);
 
-    function getSellNFTQuote(uint256[] memory nftIds)
+    function getSellNFTQuote(uint256 numOfNfts)
         external
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee);
 

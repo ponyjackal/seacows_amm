@@ -176,9 +176,9 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     /**
         @dev Used as read function to query the bonding curve for buy pricing info
-        @param nftIds The nftIds to buy from the pair
+        @param numOfNfts The number of nfts to buy
      */
-    function getBuyNFTQuote(uint256[] memory nftIds)
+    function getBuyNFTQuote(uint256 numOfNfts)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
@@ -186,7 +186,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 currentSpotPrice;
         (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve.getBuyInfo(
             address(this),
-            nftIds.length,
+            numOfNfts,
             factory.protocolFeeMultiplier()
         );
         newSpotPrice = currentSpotPrice;
@@ -194,9 +194,9 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     /**
         @dev Used as read function to query the bonding curve for sell pricing info
-        @param nftIds The nftIds to buy from the pair
+        @param numOfNfts The number of nfts to sell
      */
-    function getSellNFTQuote(uint256[] memory nftIds)
+    function getSellNFTQuote(uint256 numOfNfts)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
@@ -204,7 +204,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 currentSpotPrice;
         (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve.getSellInfo(
             address(this),
-            nftIds.length,
+            numOfNfts,
             factory.protocolFeeMultiplier()
         );
         newSpotPrice = currentSpotPrice;
