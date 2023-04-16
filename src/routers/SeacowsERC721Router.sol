@@ -43,6 +43,16 @@ contract SeacowsERC721Router {
         external
         returns (uint256 outputAmount)
     {
+        // we will need to transfer nfts to the pair before swap
+        uint256 numOfNfts = _swap.nftIds.length;
+        IERC721 nft = IERC721(_swap.pair.nft());
+        for (uint256 i; i < numOfNfts; ) {
+            nft.transferFrom(msg.sender, address(_swap.pair), _swap.nftIds[i]);
+            unchecked {
+                ++i;
+            }
+        }
+
         outputAmount = _swap.pair.swapNFTsForToken(_swap.nftIds, _minOutput, _recipient, true);
     }
 
