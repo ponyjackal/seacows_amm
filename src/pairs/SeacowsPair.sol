@@ -260,11 +260,14 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
     /**
         @notice Sends excess tokens back to the caller (if applicable)
-        @dev We send ETH back to the caller even when called from SeacowsRouter because we do an aggregate slippage check for certain bulk swaps. (Instead of sending directly back to the router caller) 
-        Excess ETH sent for one swap can then be used to help pay for the next swap.
+        @dev If not router, we dont need to refund since we grab the exact amount, for the routers, we refund tokens
      */
     function _refundTokenToSender(uint256 inputAmount) internal {
-        // Do nothing since we transferred the exact input amount
+        // refund tokens
+        uint256 amountReceived = tokenReserve - token.balanceOf(address(this));
+        token.transfer(msg.sender, amountReceived - inputAmount);
+        // sync reserves
+        _syncReserve();
     }
 
     /**
@@ -310,7 +313,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     }
 
     // update reserves and, on the first call per block, price accumulators
-    function _syncReserve() private {
+    function _syncReserve() internal {
         // we update reserves accordingly
         uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
         uint256 _tokenBalance = token.balanceOf(address(this));
