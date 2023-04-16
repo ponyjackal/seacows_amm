@@ -66,7 +66,7 @@ contract SeacowsERC721Router {
         external
         returns (uint256 remainingValue)
     {
-        remainingValue = _swapTokenForSpecificNFTs(_swapList, _tokenAmount, _recipient);
+        remainingValue = _swapTokenForSpecificNFTs(_swapList, _tokenAmount, _recipient, msg.sender);
     }
 
     /**
@@ -82,12 +82,7 @@ contract SeacowsERC721Router {
         // convert eth to weth
         IWETH(weth).deposit{ value: msg.value }();
 
-        remainingValue = _swapTokenForSpecificNFTs(_swapList, msg.value, _recipient);
-
-        // we refund the remaining eth
-        IWETH(weth).withdraw(remainingValue);
-        (bool sent, ) = msg.sender.call{ value: remainingValue }("");
-        require(sent, "Failed to send Ether");
+        remainingValue = _swapTokenForSpecificNFTs(_swapList, msg.value, _recipient, address(this));
     }
 
     /**
@@ -100,7 +95,7 @@ contract SeacowsERC721Router {
         external
         returns (uint256 remainingValue)
     {
-        remainingValue = _swapTokenForAnyNFTs(_swapList, _tokenAmount, _recipient);
+        remainingValue = _swapTokenForAnyNFTs(_swapList, _tokenAmount, _recipient, msg.sender);
     }
 
     /**
@@ -112,60 +107,7 @@ contract SeacowsERC721Router {
         // convert eth to weth
         IWETH(weth).deposit{ value: msg.value }();
 
-        remainingValue = _swapTokenForAnyNFTs(_swapList, msg.value, _recipient);
-
-        // we refund the remaining eth
-        IWETH(weth).withdraw(remainingValue);
-        (bool sent, ) = msg.sender.call{ value: remainingValue }("");
-        require(sent, "Failed to send Ether");
-    }
-
-    /**
-        @dev Allows a pair contract to transfer ERC721 NFTs directly from
-        the sender, in order to minimize the number of token transfers. Only callable by a pair.
-        @param nft The ERC721 NFT to transfer
-        @param from The address to transfer tokens from
-        @param to The address to transfer tokens to
-        @param id The ID of the NFT to transfer
-     */
-    function pairTransferNFTFrom(IERC721 nft, address from, address to, uint256 id) external {
-        // verify caller is a trusted pair contract
-        require(factory.pairStatus(msg.sender), "Not pair");
-
-        // transfer NFTs to pair
-        nft.safeTransferFrom(from, to, id);
-    }
-
-    /**
-        @dev Allows an ERC20 pair contract to transfer ERC20 tokens directly from
-        the sender, in order to minimize the number of token transfers. Only callable by an ERC20 pair.
-        @param token The ERC20 token to transfer
-        @param from The address to transfer tokens from
-        @param to The address to transfer tokens to
-        @param amount The amount of tokens to transfer
-     */
-    function pairTransferERC20From(IERC20 token, address from, address to, uint256 amount) external {
-        // verify caller is a trusted pair contract
-        require(factory.pairStatus(msg.sender), "Not pair");
-        //TODO; need a validation
-
-        // transfer tokens to pair
-        token.transferFrom(from, to, amount);
-    }
-
-    /**
-        @dev Allows an WETH pair contract to transfer WETH directly from
-        the sender, in order to minimize the number of token transfers. Only callable by an WETH pair.
-        @param to The address to transfer tokens to
-        @param amount The amount of tokens to transfer
-     */
-    function pairTransferETHFrom(address to, uint256 amount) external {
-        // verify caller is a trusted pair contract
-        require(factory.pairStatus(msg.sender), "Not pair");
-        //TODO; need a validation
-
-        // transfer tokens to pair
-        IWETH(weth).transfer(to, amount);
+        remainingValue = _swapTokenForAnyNFTs(_swapList, msg.value, _recipient, address(this));
     }
 
     /** Internal functions */
@@ -176,8 +118,9 @@ contract SeacowsERC721Router {
         @param _swapList ERC721 pair swap list
         @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
+        @param _from Token owner
      */
-    function _swapTokenForSpecificNFTs(PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+    function _swapTokenForSpecificNFTs(PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
         internal
         returns (uint256 remainingValue)
     {
@@ -186,7 +129,7 @@ contract SeacowsERC721Router {
         for (uint256 i; i < numOfSwaps; ) {
             // transfer tokens to the pair
             (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].nftIds.length);
-            _swapList[i].pair.token().transferFrom(msg.sender, address(_swapList[i].pair), inputAmount);
+            _swapList[i].pair.token().transferFrom(_from, address(_swapList[i].pair), inputAmount);
 
             remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient, true);
             unchecked {
@@ -201,8 +144,9 @@ contract SeacowsERC721Router {
         @param _swapList ERC721 pair swap list
         @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
+        @param _from Token owner
      */
-    function _swapTokenForAnyNFTs(PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+    function _swapTokenForAnyNFTs(PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
         internal
         returns (uint256 remainingValue)
     {
@@ -212,7 +156,7 @@ contract SeacowsERC721Router {
         for (uint256 i; i < numOfSwaps; ) {
             // transfer tokens to the pair
             (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].numItems);
-            _swapList[i].pair.token().transferFrom(msg.sender, address(_swapList[i].pair), inputAmount);
+            _swapList[i].pair.token().transferFrom(_from, address(_swapList[i].pair), inputAmount);
 
             remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient, true);
             unchecked {
