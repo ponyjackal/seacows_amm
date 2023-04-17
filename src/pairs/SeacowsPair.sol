@@ -18,6 +18,8 @@ import { SeacowsCollectionRegistry } from "../priceoracle/SeacowsCollectionRegis
 import { IWETH } from "../interfaces/IWETH.sol";
 import { ISeacowsRouter } from "../interfaces/ISeacowsRouter.sol";
 
+import "forge-std/console.sol";
+
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 /// @notice This implements the core swap logic from NFT to TOKEN
@@ -269,8 +271,11 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         @dev If not router, we dont need to refund since we grab the exact amount, for the routers, we refund tokens
      */
     function _refundTokenToSender(uint256 inputAmount) internal {
+        console.log("token reserve", tokenReserve);
+        console.log("token balance", token.balanceOf(address(this)));
+        console.log("input amount", inputAmount);
         // make sure that we dont lose any tokens
-        require(tokenReserve >= token.balanceOf(address(this)), "Invalid swap");
+        require(tokenReserve <= token.balanceOf(address(this)), "Invalid swap");
 
         // refund tokens
         uint256 refundAmount = token.balanceOf(address(this)) - tokenReserve;
