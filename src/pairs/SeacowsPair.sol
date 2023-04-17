@@ -262,7 +262,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
      */
     function _refundTokenToSender(uint256 inputAmount) internal {
         // refund tokens
-        uint256 amountReceived = tokenReserve - token.balanceOf(address(this));
+        uint256 amountReceived = token.balanceOf(address(this)) - tokenReserve;
         token.transfer(msg.sender, amountReceived - inputAmount);
         // sync reserves
         _syncReserve();
