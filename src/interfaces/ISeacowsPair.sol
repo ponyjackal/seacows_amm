@@ -46,4 +46,6 @@ interface ISeacowsPair {
     function changeDelta(uint128 newDelta) external;
 
     function changeAssetRecipient(address payable newRecipient) external;
+
+    function syncReserve() external;
 }

@@ -151,6 +151,10 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+
+        // sync reserve
+        pair.syncReserve();
+
         emit NewPair(address(pair));
     }
 
@@ -191,6 +195,10 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+
+        // sync reserve
+        pair.syncReserve();
+
         emit NewPair(address(pair));
     }
 

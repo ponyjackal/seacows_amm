@@ -193,6 +193,8 @@ contract TestDisableProtocolFee is WhenCreatePair {
         /** Alice buys NFTs from the nft pair without protocol fee */
         vm.startPrank(alice);
         uint256 aliceTokenBalance = token.balanceOf(alice);
+        uint256 ownerTokenBalance = token.balanceOf(owner); // asset recipient
+
         uint256[] memory nftIds = new uint256[](2);
         nftIds[0] = 1;
         nftIds[1] = 3;
@@ -201,6 +203,10 @@ contract TestDisableProtocolFee is WhenCreatePair {
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.525 ether);
+
+        /** Check asset recipient token balance */
+        uint256 ownerTokenBalanceUpdated = token.balanceOf(owner);
+        assertEq(ownerTokenBalanceUpdated, ownerTokenBalance + 21.525 ether);
 
         /** Check if nfts are transferred to the alice */
         assertEq(nft.ownerOf(1), alice);

@@ -282,7 +282,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         // we will refund remaining amount
         token.transfer(msg.sender, refundAmount);
         // sync reserves
-        _syncReserve();
+        syncReserve();
     }
 
     /**
@@ -313,7 +313,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
             token.transfer(tokenRecipient, outputAmount);
         }
         // we update reserves accordingly
-        _syncReserve();
+        syncReserve();
     }
 
     // update reserves and, on the first call per block, price accumulators
@@ -326,7 +326,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     }
 
     // update reserves and, on the first call per block, price accumulators
-    function _syncReserve() internal {
+    function syncReserve() public {
         // we update reserves accordingly
         uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
         uint256 _tokenBalance = token.balanceOf(address(this));
@@ -409,7 +409,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         require(owner() == msg.sender, "Not a pair owner");
 
         // we update reserves accordingly
-        _syncReserve();
+        syncReserve();
 
         emit TokenDeposit(msg.sender, amount);
     }
@@ -425,7 +425,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         require(owner() == msg.sender, "Not a pair owner");
 
         // we update reserves accordingly
-        _syncReserve();
+        syncReserve();
 
         emit TokenDeposit(msg.sender, msg.value);
     }
