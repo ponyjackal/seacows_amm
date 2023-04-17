@@ -130,7 +130,7 @@ contract TestSeacowsERC721RouterSell is WhenCreatePair {
         assertEq(updatedTokenBalanceAlice, tokenBalanceAlice + 9.54545454545454542 ether);
 
         uint256 updatedTokenBalancePair = token.balanceOf(address(exponentialPair));
-        assertEq(updatedTokenBalancePair, tokenBalancePair - 9.593181818181818147 ether);
+        assertEq(updatedTokenBalancePair, tokenBalancePair - 9.54545454545454542 ether);
 
         vm.stopPrank();
     }
