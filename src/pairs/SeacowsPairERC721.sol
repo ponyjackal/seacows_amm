@@ -403,4 +403,13 @@ contract SeacowsPairERC721 is SeacowsPair {
         }
         emit ERC721Deposit(msg.sender, ids);
     }
+
+    // update reserves and, on the first call per block, price accumulators
+    function syncReserve() public override {
+        // we update reserves accordingly
+        uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
+        uint256 _tokenBalance = token.balanceOf(address(this));
+
+        _updateReserve(_nftBalance, _tokenBalance);
+    }
 }

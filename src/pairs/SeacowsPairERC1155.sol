@@ -350,4 +350,12 @@ contract SeacowsPairERC1155 is SeacowsPair {
     function removeNFTAmount(uint256 _nftAmount) external onlyFactory {
         nftAmount -= _nftAmount;
     }
+
+    // update reserves and, on the first call per block, price accumulators
+    function syncReserve() public override {
+        // we update reserves accordingly
+        uint256 _tokenBalance = token.balanceOf(address(this));
+
+        _updateReserve(nftAmount, _tokenBalance);
+    }
 }

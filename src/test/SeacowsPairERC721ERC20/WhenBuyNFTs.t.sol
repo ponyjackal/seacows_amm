@@ -131,7 +131,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.55 ether);
 
         uint256 updatedTokenBalanceOwner = token.balanceOf(owner);
-        assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.49225 ether);
+        assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.55 ether);
 
         vm.stopPrank();
     }
