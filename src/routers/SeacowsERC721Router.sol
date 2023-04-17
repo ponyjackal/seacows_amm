@@ -83,6 +83,8 @@ contract SeacowsERC721Router {
         IWETH(weth).deposit{ value: msg.value }();
 
         remainingValue = _swapTokenForSpecificNFTs(_swapList, msg.value, _recipient, address(this));
+
+        _refundEth(remainingValue);
     }
 
     /**
@@ -108,6 +110,8 @@ contract SeacowsERC721Router {
         IWETH(weth).deposit{ value: msg.value }();
 
         remainingValue = _swapTokenForAnyNFTs(_swapList, msg.value, _recipient, address(this));
+
+        _refundEth(remainingValue);
     }
 
     /** Internal functions */
@@ -163,6 +167,13 @@ contract SeacowsERC721Router {
                 ++i;
             }
         }
+    }
+
+    function _refundEth(uint256 amount) internal {
+        // we refund the remaining eth
+        IWETH(weth).withdraw(amount);
+        (bool sent, ) = msg.sender.call{ value: amount }("");
+        require(sent, "Failed to send Ether");
     }
 
     receive() external payable {}

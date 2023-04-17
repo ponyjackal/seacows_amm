@@ -244,12 +244,20 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         address _assetRecipient = getAssetRecipient();
 
         if (!isRouter) {
-            // Transfer tokens directly
+            // Transfer tokens directly from caller
             token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
 
             // Take protocol fee (if it exists)
             if (protocolFee > 0) {
                 token.transferFrom(msg.sender, address(_factory), protocolFee);
+            }
+        } else {
+            // Using router, we already recieved tokens, we transfer tokens from the pair
+            token.transfer(_assetRecipient, inputAmount - protocolFee);
+
+            // Take protocol fee (if it exists)
+            if (protocolFee > 0) {
+                token.transfer(address(_factory), protocolFee);
             }
         }
 
@@ -261,9 +269,13 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         @dev If not router, we dont need to refund since we grab the exact amount, for the routers, we refund tokens
      */
     function _refundTokenToSender(uint256 inputAmount) internal {
+        // make sure that we dont lose any tokens
+        require(tokenReserve >= token.balanceOf(address(this)), "Invalid swap");
+
         // refund tokens
-        uint256 amountReceived = token.balanceOf(address(this)) - tokenReserve;
-        token.transfer(msg.sender, amountReceived - inputAmount);
+        uint256 refundAmount = token.balanceOf(address(this)) - tokenReserve;
+        // we will refund remaining amount
+        token.transfer(msg.sender, refundAmount);
         // sync reserves
         _syncReserve();
     }
