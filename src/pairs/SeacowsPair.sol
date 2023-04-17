@@ -24,8 +24,6 @@ import { ISeacowsRouter } from "../interfaces/ISeacowsRouter.sol";
 abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, ERC1155Holder {
     using SafeERC20 for ERC20;
 
-    uint256 public constant MASK = type(uint112).min;
-
     enum PoolType {
         TOKEN,
         NFT
@@ -79,9 +77,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
     address public weth;
 
-    uint112 internal nftReserve; // uses single storage slot, accessible via getReserves, for nft
-    uint112 internal tokenReserve; // uses single storage slot, accessible via getReserves for token
-    uint32 internal blockTimestampLast; // uses single storage slot, accessible via getReserves
+    uint256 internal nftReserve; // reserves for nft
+    uint256 internal tokenReserve; // reserves for token
+    uint256 internal blockTimestampLast;
 
     // Events
     event SpotPriceUpdate(uint128 oldSpotPrice, uint128 newSpotPrice);
@@ -90,7 +88,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     event DeltaUpdate(uint128 oldDelta, uint128 newDelta);
     event FeeUpdate(uint96 oldFee, uint96 newFee);
     event AssetRecipientChange(address oldRecipient, address newRecipient);
-    event Sync(uint112 reserve0, uint112 reserve1);
+    event Sync(uint256 reserve0, uint256 reserve1);
 
     // Parameterized Errors
     error BondingCurveError(CurveErrorCodes.Error error);
@@ -189,7 +187,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         }
     }
 
-    function getReserves() public view returns (uint112 _nftReserve, uint112 _tokenReserve, uint32 _blockTimestampLast) {
+    function getReserves() public view returns (uint256 _nftReserve, uint256 _tokenReserve, uint256 _blockTimestampLast) {
         _nftReserve = nftReserve;
         _tokenReserve = tokenReserve;
         _blockTimestampLast = blockTimestampLast;
@@ -303,11 +301,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
     // update reserves and, on the first call per block, price accumulators
     function _updateReserve(uint256 _nftReserve, uint256 _tokenReserve) private {
-        require(_nftReserve <= MASK && _tokenReserve <= MASK, "OVERFLOW");
-
-        nftReserve = uint112(_nftReserve);
-        tokenReserve = uint112(_tokenReserve);
-        blockTimestampLast = uint32(block.timestamp % 2**32);
+        nftReserve = _nftReserve;
+        tokenReserve = _tokenReserve;
+        blockTimestampLast = block.timestamp;
 
         emit Sync(nftReserve, tokenReserve);
     }
