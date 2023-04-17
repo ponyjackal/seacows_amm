@@ -158,7 +158,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 numNFTs = nftIds.length;
 
         // if swap is from router, we transfer nfts from router caller
-        if (isRouter) {
+        if (!isRouter) {
             // Pull NFTs directly from sender
             for (uint256 i; i < numNFTs; ) {
                 IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
@@ -167,8 +167,16 @@ contract SeacowsPairERC721 is SeacowsPair {
                     ++i;
                 }
             }
-        }
+        } else {
+            // if router, we transfer nfts from the pair to the asset recipient
+            for (uint256 i; i < numNFTs; ) {
+                IERC721(_nft).safeTransferFrom(address(this), _assetRecipient, nftIds[i]);
 
+                unchecked {
+                    ++i;
+                }
+            }
+        }
         // for the routers, we assume they already sent the assets to the pair
     }
 
@@ -308,11 +316,10 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         _payProtocolFeeFromPair(factory, protocolFee);
 
-        _takeNFTsFromSender(nft, nftIds, isRouter);
+        // if router, make sure we recieved correct amount of nfts by checking reserves
+        require(!isRouter || nftReserve + nftIds.length <= IERC721(nft).balanceOf(address(this)), "Invalid NFT amount");
 
-        // make sure we recieved correct amount of nfts by checking reserves
-        uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
-        require(nftReserve + nftIds.length <= _nftBalance, "Invalid NFT amount");
+        _takeNFTsFromSender(nft, nftIds, isRouter);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
