@@ -47,8 +47,5 @@ contract BaseFactorySetup is Test {
 
         /** deploy SeacowsERC721Router */
         seacowsERC721Router = new SeacowsERC721Router(ISeacowsPairFactoryLike(address(seacowsPairERC721Factory)), weth);
-
-        /** set router status */
-        seacowsPairERC721Factory.setRouterStatus(address(seacowsERC721Router), true);
     }
 }
