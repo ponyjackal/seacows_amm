@@ -584,7 +584,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
         uint256 sftAfterBalanceThree = testSeacowsSFT.balanceOf(alice, 3);
         uint256 sftAfterBalanceSix = testSeacowsSFT.balanceOf(alice, 6);
 
-        assertEq(tokenAfterBalance, tokenBeforeBalance - 18.09 ether);
+        assertEq(tokenAfterBalance, tokenBeforeBalance - 18 ether);
         assertEq(sftAfterBalanceOne, sftBeforeBalanceOne + 1);
         assertEq(sftAfterBalanceThree, sftBeforeBalanceThree);
         assertEq(sftAfterBalanceSix, sftBeforeBalanceSix + 2);

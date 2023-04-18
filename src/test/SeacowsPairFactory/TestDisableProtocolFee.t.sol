@@ -168,7 +168,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
         ISeacowsPairERC721(address(nftPair)).swapTokenForAnyNFTs(2, 25 ether, payable(alice), false);
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
-        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.632625 ether);
+        assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.525 ether);
 
         /** Check if nfts are transferred to the alice */
         assertEq(nft.balanceOf(alice), 12);

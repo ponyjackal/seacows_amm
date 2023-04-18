@@ -106,10 +106,10 @@ contract TestSeacowsERC721RouterBuy is WhenCreatePair {
         assertEq(erc721ETHPair.delta(), 0.5 ether);
         /** Check token balance update */
         uint256 updatedTokenBalanceAlice = alice.balance;
-        assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.5575 ether);
+        assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.5 ether);
 
         uint256 updatedTokenBalanceOwner = IWETH(weth).balanceOf(owner);
-        assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.5 ether);
+        assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.4425 ether);
 
         vm.stopPrank();
     }
@@ -195,10 +195,10 @@ contract TestSeacowsERC721RouterBuy is WhenCreatePair {
         assertEq(erc721ETHPair.delta(), 0.5 ether);
         /** Check token balance update */
         uint256 updatedTokenBalanceAlice = alice.balance;
-        assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.5575 ether);
+        assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.5 ether);
 
         uint256 updatedTokenBalanceOwner = IWETH(weth).balanceOf(owner);
-        assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.5 ether);
+        assertEq(updatedTokenBalanceOwner, tokenBalanceOwner + 11.4425 ether);
 
         vm.stopPrank();
     }

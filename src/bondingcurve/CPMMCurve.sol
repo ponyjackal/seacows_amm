@@ -73,8 +73,6 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
             protocolFee = 0;
         }
 
-        // Add the protocol fee to the required input amount
-        inputValue += protocolFee;
         // Keep delta the same
         newDelta = delta;
 
