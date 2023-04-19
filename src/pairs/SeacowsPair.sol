@@ -236,32 +236,19 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         @param inputAmount The amount of tokens to be sent
         @param _factory The SeacowsPairFactory which stores SeacowsRouter allowlist info
         @param protocolFee The protocol fee to be paid
-        @param isRouter Whether or not the caller is LSSVMRouter
      */
-    function _pullTokenInputAndPayProtocolFee(uint256 inputAmount, ISeacowsPairFactoryLike _factory, uint256 protocolFee, bool isRouter) internal {
+    function _pullTokenInputAndPayProtocolFee(uint256 inputAmount, ISeacowsPairFactoryLike _factory, uint256 protocolFee) internal {
         require(msg.value == 0, "ERC20 pair");
 
         address _assetRecipient = getAssetRecipient();
 
-        if (!isRouter) {
-            // Transfer tokens directly from caller
-            token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
-
-            // Take protocol fee (if it exists)
-            if (protocolFee > 0) {
-                token.transferFrom(msg.sender, address(_factory), protocolFee);
-            }
-        } else {
-            // Using router, we already recieved tokens, we transfer tokens from the pair
-            token.transfer(_assetRecipient, inputAmount - protocolFee);
-
-            // Take protocol fee (if it exists)
-            if (protocolFee > 0) {
-                token.transfer(address(_factory), protocolFee);
-            }
-        }
-
         // for the routers, we assume they already sent the assets to the pair
+        token.transfer(_assetRecipient, inputAmount - protocolFee);
+
+        // Take protocol fee (if it exists)
+        if (protocolFee > 0) {
+            token.transfer(address(_factory), protocolFee);
+        }
     }
 
     /**
@@ -270,10 +257,10 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
      */
     function _refundTokenToSender(uint256 inputAmount) internal {
         // make sure that we dont lose any tokens
-        require(tokenReserve <= token.balanceOf(address(this)), "Invalid swap");
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid swap");
 
         // refund tokens
-        uint256 refundAmount = token.balanceOf(address(this)) - tokenReserve;
+        uint256 refundAmount = token.balanceOf(address(this)) - tokenReserve - inputAmount;
         // we will refund remaining amount
         token.transfer(msg.sender, refundAmount);
         // sync reserves

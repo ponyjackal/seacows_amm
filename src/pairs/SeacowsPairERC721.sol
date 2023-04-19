@@ -151,33 +151,20 @@ contract SeacowsPairERC721 is SeacowsPair {
         @dev This is used by the SeacowsPair's swapNFTForToken function. 
         @param _nft The NFT collection to take from
         @param nftIds The specific NFT IDs to take
-        @param isRouter True if calling from LSSVMRouter, false otherwise.
      */
-    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds, bool isRouter) internal {
+    function _takeNFTsFromSender(address _nft, uint256[] calldata nftIds) internal {
         address _assetRecipient = getAssetRecipient();
         uint256 numNFTs = nftIds.length;
 
-        // if swap is from router, we transfer nfts from router caller
-        if (!isRouter) {
-            // Pull NFTs directly from sender
-            for (uint256 i; i < numNFTs; ) {
-                IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
+        // we assume they already sent the assets to the pair
+        // we transfer nfts from the pair to the asset recipient
+        for (uint256 i; i < numNFTs; ) {
+            IERC721(_nft).safeTransferFrom(address(this), _assetRecipient, nftIds[i]);
 
-                unchecked {
-                    ++i;
-                }
-            }
-        } else {
-            // if router, we transfer nfts from the pair to the asset recipient
-            for (uint256 i; i < numNFTs; ) {
-                IERC721(_nft).safeTransferFrom(address(this), _assetRecipient, nftIds[i]);
-
-                unchecked {
-                    ++i;
-                }
+            unchecked {
+                ++i;
             }
         }
-        // for the routers, we assume they already sent the assets to the pair
     }
 
     /** View Functions */
@@ -253,15 +240,15 @@ contract SeacowsPairERC721 is SeacowsPair {
     /**
         @notice Sends token to the pair in exchange for any `numNFTs` NFTs
         @dev To compute the amount of token to send, call bondingCurve.getBuyInfo.
-        This swap function is meant for users who are ID agnostic
+        This swap function is meant for users who are ID agnostic, 
+        we assume this function is called through the router
         @param numNFTs The number of NFTs to purchase
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
-                @param isRouter True if calling from router, false otherwise.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter)
+    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient)
         external
         payable
         virtual
@@ -277,13 +264,14 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
 
-        // if we use router, make sure we recieved correct amount of tokens by checking reserves
-        require(!isRouter || tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
+        // make sure we recieved correct amount of tokens by checking reserves
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
 
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter);
+        _refundTokenToSender(inputAmount);
+
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
 
         uint256[] memory nftIds = _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
-        _refundTokenToSender(inputAmount);
 
         emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
@@ -291,14 +279,14 @@ contract SeacowsPairERC721 is SeacowsPair {
     /**
         @notice Sends a set of NFTs to the pair in exchange for token
         @dev To compute the amount of token to that will be received, call bondingCurve.getSellInfo.
+        we assume this function is called through the router
         @param nftIds The list of IDs of the NFTs to sell to the pair
         @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
         amount is less than this value, the transaction will be reverted.
         @param tokenRecipient The recipient of the token output
-        @param isRouter True if calling from LSSVMRouter, false otherwise.
         @return outputAmount The amount of token received
      */
-    function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient, bool isRouter)
+    function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient)
         external
         virtual
         nonReentrant
@@ -316,10 +304,10 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         _payProtocolFeeFromPair(factory, protocolFee);
 
-        // if router, make sure we recieved correct amount of nfts by checking reserves
-        require(!isRouter || nftReserve + nftIds.length <= IERC721(nft).balanceOf(address(this)), "Invalid NFT amount");
+        // make sure we recieved correct amount of nfts by checking reserves
+        require(nftReserve + nftIds.length <= IERC721(nft).balanceOf(address(this)), "Invalid NFT amount");
 
-        _takeNFTsFromSender(nft, nftIds, isRouter);
+        _takeNFTsFromSender(nft, nftIds);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
 
@@ -331,14 +319,14 @@ contract SeacowsPairERC721 is SeacowsPair {
         @dev To compute the amount of token to send, call bondingCurve.getBuyInfo
         This swap is meant for users who want specific IDs. Also higher chance of
         reverting if some of the specified IDs leave the pool before the swap goes through.
+        we assume this function is called through the router
         @param nftIds The list of IDs of the NFTs to purchase
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
         @param nftRecipient The recipient of the NFTs
-        @param isRouter True if calling from router, false otherwise.
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient, bool isRouter)
+    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
         external
         payable
         virtual
@@ -355,14 +343,14 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, maxExpectedTokenInput, bondingCurve, factory);
 
-        // if we use router, make sure we recieved correct amount of tokens by checking reserves
-        require(!isRouter || tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
-
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, isRouter);
-
-        _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
+        // make sure we recieved correct amount of tokens by checking reserves
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
 
         _refundTokenToSender(inputAmount);
+
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+
+        _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
 
         emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
