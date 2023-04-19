@@ -16,6 +16,7 @@ import { TestERC20 } from "../../TestCollectionToken/TestERC20.sol";
 import { TestERC721 } from "../../TestCollectionToken/TestERC721.sol";
 import { TestERC721Enumerable } from "../../TestCollectionToken/TestERC721Enumerable.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
+import { SeacowsERC721Router } from "../../routers/SeacowsERC721Router.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
@@ -71,9 +72,9 @@ contract WhenBuyNFTs is WhenCreatePair {
         seacowsPairERC721Factory.disableProtocolFee(erc721ERC20Pair, true);
 
         vm.startPrank(alice);
-        nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
-        token.approve(address(erc721ERC20Pair), 100 ether);
-        token.approve(address(erc721ETHPair), 100 ether);
+        nft.setApprovalForAll(address(seacowsERC721Router), true);
+        token.approve(address(seacowsERC721Router), 100 ether);
+        token.approve(address(seacowsERC721Router), 100 ether);
         vm.stopPrank();
     }
 
@@ -88,10 +89,12 @@ contract WhenBuyNFTs is WhenCreatePair {
         nftIds[0] = 1;
         nftIds[1] = 2;
 
-        uint256 tokenBalanceAlice = IWETH(weth).balanceOf(alice);
+        uint256 tokenBalanceAlice = alice.balance;
         uint256 tokenBalanceOwner = IWETH(weth).balanceOf(owner);
 
-        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(nftIds, 15 ether, address(alice));
+        SeacowsERC721Router.PairSwapSpecific[] memory params = new SeacowsERC721Router.PairSwapSpecific[](1);
+        params[0] = SeacowsERC721Router.PairSwapSpecific(ISeacowsPairERC721(address(erc721ETHPair)), nftIds);
+        seacowsERC721Router.swapTokenForSpecificNFTsETH{ value: 15 ether }(params, address(alice));
         /** Check nft owners */
         assertEq(nft.ownerOf(1), alice);
         assertEq(nft.ownerOf(2), alice);
@@ -99,7 +102,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         assertEq(erc721ETHPair.spotPrice(), 6 ether);
         assertEq(erc721ETHPair.delta(), 0.5 ether);
         /** Check token balance update */
-        uint256 updatedTokenBalanceAlice = IWETH(weth).balanceOf(alice);
+        uint256 updatedTokenBalanceAlice = alice.balance;
         assertEq(updatedTokenBalanceAlice, tokenBalanceAlice - 11.5 ether);
 
         uint256 updatedTokenBalanceOwner = IWETH(weth).balanceOf(owner);
@@ -119,7 +122,10 @@ contract WhenBuyNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalanceOwner = token.balanceOf(owner);
 
-        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(nftIds, 15 ether, address(alice));
+        SeacowsERC721Router.PairSwapSpecific[] memory params = new SeacowsERC721Router.PairSwapSpecific[](1);
+        params[0] = SeacowsERC721Router.PairSwapSpecific(ISeacowsPairERC721(address(erc721ERC20Pair)), nftIds);
+        seacowsERC721Router.swapTokenForSpecificNFTs(params, 15 ether, address(alice));
+
         /** Check nft owners */
         assertEq(nft.ownerOf(3), alice);
         assertEq(nft.ownerOf(9), alice);
@@ -144,15 +150,21 @@ contract WhenBuyNFTs is WhenCreatePair {
         nftETHIds[0] = 1;
         nftETHIds[1] = 2;
 
+        SeacowsERC721Router.PairSwapSpecific[] memory ethParams = new SeacowsERC721Router.PairSwapSpecific[](1);
+        ethParams[0] = SeacowsERC721Router.PairSwapSpecific(ISeacowsPairERC721(address(erc721ETHPair)), nftETHIds);
+
         vm.expectRevert();
-        ISeacowsPairERC721(address(erc721ETHPair)).swapTokenForSpecificNFTs(nftETHIds, 15 ether, address(alice));
+        seacowsERC721Router.swapTokenForSpecificNFTsETH{ value: 10000005 ether }(ethParams, address(alice));
 
         uint256[] memory nftIds = new uint256[](2);
         nftIds[0] = 1;
         nftIds[1] = 2;
 
+        SeacowsERC721Router.PairSwapSpecific[] memory params = new SeacowsERC721Router.PairSwapSpecific[](1);
+        params[0] = SeacowsERC721Router.PairSwapSpecific(ISeacowsPairERC721(address(erc721ERC20Pair)), nftIds);
+
         vm.expectRevert("In too many tokens");
-        ISeacowsPairERC721(address(erc721ERC20Pair)).swapTokenForSpecificNFTs(nftIds, 10 ether, address(alice));
+        seacowsERC721Router.swapTokenForSpecificNFTs(params, 10 ether, address(alice));
 
         vm.stopPrank();
     }
