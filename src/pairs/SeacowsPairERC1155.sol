@@ -269,7 +269,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(totalAmount, maxExpectedTokenInput, bondingCurve, factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee, false);
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
         _sendNFTsToRecipient(nft, nftRecipient, _nftIds, _amounts);
         _refundTokenToSender(inputAmount);
 

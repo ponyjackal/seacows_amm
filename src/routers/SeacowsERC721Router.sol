@@ -53,7 +53,7 @@ contract SeacowsERC721Router {
             }
         }
 
-        outputAmount = _swap.pair.swapNFTsForToken(_swap.nftIds, _minOutput, _recipient, true);
+        outputAmount = _swap.pair.swapNFTsForToken(_swap.nftIds, _minOutput, _recipient);
     }
 
     /**
@@ -135,7 +135,7 @@ contract SeacowsERC721Router {
             (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].nftIds.length);
             _swapList[i].pair.token().transferFrom(_from, address(_swapList[i].pair), inputAmount);
 
-            remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient, true);
+            remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient);
             unchecked {
                 ++i;
             }
@@ -162,7 +162,7 @@ contract SeacowsERC721Router {
             (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].numItems);
             _swapList[i].pair.token().transferFrom(_from, address(_swapList[i].pair), inputAmount);
 
-            remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient, true);
+            remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient);
             unchecked {
                 ++i;
             }

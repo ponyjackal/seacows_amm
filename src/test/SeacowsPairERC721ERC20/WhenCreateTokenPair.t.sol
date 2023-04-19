@@ -199,7 +199,7 @@ contract WhenCreateTokenPair is WhenCreatePair {
         nftEnumerable.setApprovalForAll(address(erc721EnumerableERC20Pair), true);
 
         vm.expectRevert();
-        ISeacowsPairERC721(address(erc721EnumerableERC20Pair)).swapNFTsForToken(nftIds, 0.1 ether, payable(alice), false);
+        ISeacowsPairERC721(address(erc721EnumerableERC20Pair)).swapNFTsForToken(nftIds, 0.1 ether, payable(alice));
 
         vm.stopPrank();
         /** Non pair owner is tryig to change delta and spot price */
