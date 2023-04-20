@@ -355,7 +355,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
 
-    function withdrawERC721(uint256[] calldata nftIds) external onlyOwner {
+    function withdrawERC721(uint256[] calldata nftIds) external onlyWithdrawable {
         IERC721 _nft = IERC721(nft);
         uint256 numNFTs = nftIds.length;
 
@@ -376,7 +376,7 @@ contract SeacowsPairERC721 is SeacowsPair {
       @dev Used to deposit NFTs into a pair after creation and emit an event for indexing 
       (if recipient is indeed a pair)
     */
-    function depositERC721(uint256[] calldata ids) external {
+    function depositERC721(uint256[] calldata ids) external onlyOwner {
         require(owner() == msg.sender, "Not a pair owner");
         require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
 

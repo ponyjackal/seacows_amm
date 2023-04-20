@@ -378,7 +378,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
       @dev Used to deposit ERC20s into a pair after creation and emit an event for indexing 
       (if recipient is indeed an ERC20 pair and the token matches)
      */
-    function depositERC20(uint256 amount) external {
+    function depositERC20(uint256 amount) external onlyOwner {
         token.transferFrom(msg.sender, address(this), amount);
 
         require(poolType == PoolType.TOKEN, "Not a token pair");
@@ -394,7 +394,7 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
       @dev Used to deposit ETH into a pair after creation and emit an event for indexing 
       (if recipient is indeed an ETH pair and the token matches)
      */
-    function depositETH() external payable {
+    function depositETH() external payable onlyOwner {
         IWETH(weth).deposit{ value: msg.value }();
 
         require(poolType == PoolType.TOKEN, "Not a token pair");
