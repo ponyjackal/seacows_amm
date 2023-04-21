@@ -46,6 +46,6 @@ contract BaseFactorySetup is Test {
         seacowsPairERC1155Factory = new SeacowsPairERC1155Factory(weth, seacowsPairERC1155, protocolFeeRecipient, protocolFeeMultiplier);
 
         /** deploy SeacowsERC721Router */
-        seacowsERC721Router = new SeacowsERC721Router(ISeacowsPairFactoryLike(address(seacowsPairERC721Factory)), weth);
+        seacowsERC721Router = new SeacowsERC721Router(weth);
     }
 }

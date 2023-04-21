@@ -5,7 +5,6 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { SeacowsPairERC721 } from "../pairs/SeacowsPairERC721.sol";
-import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 import { ISeacowsPairERC721 } from "../interfaces/ISeacowsPairERC721.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
 
@@ -20,15 +19,12 @@ contract SeacowsERC721Router {
         uint256[] nftIds;
     }
 
-    ISeacowsPairFactoryLike public factory;
-
     address public weth;
 
-    constructor(ISeacowsPairFactoryLike _factory, address _weth) {
+    constructor(address _weth) {
         require(_weth != address(0), "Invalid weht address");
 
         weth = _weth;
-        factory = _factory;
     }
 
     /** Swap functions */
