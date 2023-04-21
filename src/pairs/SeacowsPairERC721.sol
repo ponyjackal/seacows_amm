@@ -273,6 +273,9 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         uint256[] memory nftIds = _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
 
+        // we update reserves accordingly
+        syncReserve();
+
         emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
 
@@ -310,6 +313,9 @@ contract SeacowsPairERC721 is SeacowsPair {
         _takeNFTsFromSender(nft, nftIds);
 
         _sendTokenOutput(tokenRecipient, outputAmount);
+
+        // we update reserves accordingly
+        syncReserve();
 
         emit Swap(msg.sender, 0, nftIds, outputAmount, new uint256[](0), tokenRecipient);
     }
@@ -351,6 +357,9 @@ contract SeacowsPairERC721 is SeacowsPair {
         _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
 
         _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
+
+        // we sync rerseves
+        syncReserve();
 
         emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }

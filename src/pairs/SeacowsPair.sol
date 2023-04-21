@@ -297,8 +297,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         if (outputAmount > 0) {
             token.transfer(tokenRecipient, outputAmount);
         }
-        // we update reserves accordingly
-        syncReserve();
     }
 
     // update reserves and, on the first call per block, price accumulators
