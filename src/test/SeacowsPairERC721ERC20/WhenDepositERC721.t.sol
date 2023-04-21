@@ -98,7 +98,7 @@ contract WhenDepositERC721 is WhenCreatePair {
         uint256[] memory nftIdsForAlice = new uint256[](2);
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         erc721ETHPair.depositERC721(nftIdsForAlice);
         vm.stopPrank();
     }
@@ -129,7 +129,7 @@ contract WhenDepositERC721 is WhenCreatePair {
         uint256[] memory nftIdsForAlice = new uint256[](2);
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         erc721ERC20Pair.depositERC721(nftIdsForAlice);
         vm.stopPrank();
     }
