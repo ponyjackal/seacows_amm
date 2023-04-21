@@ -160,6 +160,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
         token.transfer(_recipient, _amount);
 
+        // sync reserves
+        syncReserve();
+
         // emit event since it is the pair token
         emit TokenWithdrawal(_recipient, _amount);
     }

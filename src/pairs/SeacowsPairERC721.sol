@@ -369,6 +369,9 @@ contract SeacowsPairERC721 is SeacowsPair {
             }
         }
 
+        // sync reserves
+        syncReserve();
+
         emit WithdrawERC721(msg.sender, nftIds);
     }
 
@@ -389,6 +392,10 @@ contract SeacowsPairERC721 is SeacowsPair {
                 ++i;
             }
         }
+
+        // sync reserves
+        syncReserve();
+
         emit ERC721Deposit(msg.sender, ids);
     }
 
