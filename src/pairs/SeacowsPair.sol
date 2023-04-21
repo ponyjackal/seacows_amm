@@ -382,7 +382,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         token.transferFrom(msg.sender, address(this), amount);
 
         require(poolType == PoolType.TOKEN, "Not a token pair");
-        require(owner() == msg.sender, "Not a pair owner");
 
         // we update reserves accordingly
         syncReserve();
@@ -398,7 +397,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         IWETH(weth).deposit{ value: msg.value }();
 
         require(poolType == PoolType.TOKEN, "Not a token pair");
-        require(owner() == msg.sender, "Not a pair owner");
 
         // we update reserves accordingly
         syncReserve();
