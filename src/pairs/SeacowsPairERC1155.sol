@@ -19,7 +19,6 @@ contract SeacowsPairERC1155 is SeacowsPair {
     using SafeERC20 for ERC20;
 
     uint256[] public nftIds;
-    uint256 public nftAmount;
 
     event WithdrawERC1155(address indexed recipient, uint256[] ids, uint256[] amounts);
     event ERC1155Deposit(address indexed depositer, uint256[] ids, uint256[] amounts);
@@ -195,9 +194,8 @@ contract SeacowsPairERC1155 is SeacowsPair {
       @dev Used to deposit ERC1155 NFTs into a pair after creation and emit an event for indexing 
       (if recipient is indeed a pair)
     */
-    function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external {
+    function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external onlyOwner {
         require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
-        require(owner() == msg.sender, "Not a pair owner");
         require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
 
         // transfer NFTs from caller to recipient
@@ -215,7 +213,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         emit ERC1155Deposit(msg.sender, ids, amounts);
     }
 
-    function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
+    function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyOwner {
         require(poolType == PoolType.NFT, "Invalid pool type");
         require(_nftIds.length == _amounts.length, "Invalid amounts");
 
@@ -274,7 +272,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         _refundTokenToSender(inputAmount);
 
         // decrease total nft balance
-        nftAmount -= totalAmount;
+        nftReserve -= totalAmount;
 
         emit Swap(msg.sender, inputAmount, new uint256[](0), new uint256[](0), 0, _nftIds, _amounts, nftRecipient);
     }
@@ -322,7 +320,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         _takeNFTsFromSender(nft, _nftIds, _amounts, factory);
         // increase total nft balance
-        nftAmount += totalAmount;
+        nftReserve += totalAmount;
 
         emit Swap(msg.sender, 0, _nftIds, _amounts, outputAmount, new uint256[](0), new uint256[](0), tokenRecipient);
     }
@@ -335,27 +333,19 @@ contract SeacowsPairERC1155 is SeacowsPair {
         nftIds = _nftIds;
     }
 
-    /**
-     * @dev Add new NFTs to the pool
-     * @param _nftAmount total amount of nfts
-     */
-    function addNFTAmount(uint256 _nftAmount) external onlyFactory {
-        nftAmount += _nftAmount;
-    }
-
-    /**
-     * @dev Remove NFTs from the pool
-     * @param _nftAmount total amount of nfts
-     */
-    function removeNFTAmount(uint256 _nftAmount) external onlyFactory {
-        nftAmount -= _nftAmount;
-    }
-
     // update reserves and, on the first call per block, price accumulators
     function syncReserve() public override {
         // we update reserves accordingly
         uint256 _tokenBalance = token.balanceOf(address(this));
+        uint256 _nftBalance;
+        // calculate total nft balance
+        for (uint256 i; i < nftIds.length; ) {
+            _nftBalance += IERC1155(nft).balanceOf(address(this), nftIds[i]);
+            unchecked {
+                ++i;
+            }
+        }
 
-        _updateReserve(nftAmount, _tokenBalance);
+        _updateReserve(_nftBalance, _tokenBalance);
     }
 }
