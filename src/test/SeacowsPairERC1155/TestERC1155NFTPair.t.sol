@@ -339,7 +339,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
         vm.startPrank(alice);
         testSeacowsSFT.setApprovalForAll(address(linearPair), true);
 
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         linearPair.depositERC1155(depositIds, depositAmounts);
         vm.stopPrank();
     }
@@ -399,7 +399,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
 
         vm.startPrank(alice);
         testSeacowsSFT.setApprovalForAll(address(exponentialPair), true);
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         exponentialPair.depositERC1155(depositIds, depositAmounts);
         vm.stopPrank();
     }
@@ -471,7 +471,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert("Caller should be an owner");
+        vm.expectRevert("Caller is not the owner");
         linearPair.withdrawERC1155(alice, withdrawIds, withdrawAmounts);
         vm.stopPrank();
     }
@@ -528,7 +528,7 @@ contract TestERC1155NFTPair is WhenCreatePair {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert("Caller should be an owner");
+        vm.expectRevert("Caller is not the owner");
         exponentialPair.withdrawERC1155(alice, withdrawIds, withdrawAmounts);
         vm.stopPrank();
     }
