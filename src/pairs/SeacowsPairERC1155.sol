@@ -273,12 +273,18 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(totalAmount, maxExpectedTokenInput, bondingCurve, factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
-        _sendNFTsToRecipient(nft, nftRecipient, _nftIds, _amounts);
+
+        // make sure we recieved correct amount of tokens by checking reserves
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
+
         _refundTokenToSender(inputAmount);
 
-        // decrease total nft balance
-        nftReserve -= totalAmount;
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+
+        _sendNFTsToRecipient(nft, nftRecipient, _nftIds, _amounts);
+
+        // sync reserves
+        syncReserve();
 
         emit Swap(msg.sender, inputAmount, new uint256[](0), new uint256[](0), 0, _nftIds, _amounts, nftRecipient);
     }
