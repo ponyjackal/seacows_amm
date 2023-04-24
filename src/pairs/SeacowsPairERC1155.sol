@@ -320,13 +320,15 @@ contract SeacowsPairERC1155 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(totalAmount, minExpectedTokenOutput, bondingCurve, factory);
 
-        _sendTokenOutput(tokenRecipient, outputAmount);
-
         _payProtocolFeeFromPair(factory, protocolFee);
 
+        // make sure we recieved correct amount of nfts by checking reserves
+        require(nftReserve + totalAmount <= _nftBalance(), "Invalid NFT amount");
+
         _takeNFTsFromSender(nft, _nftIds, _amounts, factory);
-        // increase total nft balance
-        nftReserve += totalAmount;
+
+        // we sync reserves after sending tokens
+        _sendTokenOutput(tokenRecipient, outputAmount);
 
         emit Swap(msg.sender, 0, _nftIds, _amounts, outputAmount, new uint256[](0), new uint256[](0), tokenRecipient);
     }
@@ -342,16 +344,18 @@ contract SeacowsPairERC1155 is SeacowsPair {
     // update reserves and, on the first call per block, price accumulators
     function syncReserve() public override {
         // we update reserves accordingly
-        uint256 _tokenBalance = token.balanceOf(address(this));
-        uint256 _nftBalance;
-        // calculate total nft balance
+        uint256 tokenBalance = token.balanceOf(address(this));
+        uint256 nftBalance = _nftBalance();
+
+        _updateReserve(nftBalance, tokenBalance);
+    }
+
+    function _nftBalance() internal view returns (uint256 nftBalace) {
         for (uint256 i; i < nftIds.length; ) {
-            _nftBalance += IERC1155(nft).balanceOf(address(this), nftIds[i]);
+            nftBalace += IERC1155(nft).balanceOf(address(this), nftIds[i]);
             unchecked {
                 ++i;
             }
         }
-
-        _updateReserve(_nftBalance, _tokenBalance);
     }
 }

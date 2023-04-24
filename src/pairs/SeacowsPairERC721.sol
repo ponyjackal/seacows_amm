@@ -276,6 +276,7 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         _takeNFTsFromSender(nft, nftIds);
 
+        // we sync reserves after sending tokens
         _sendTokenOutput(tokenRecipient, outputAmount);
 
         // we update reserves accordingly
