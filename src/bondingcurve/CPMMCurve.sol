@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { ICurve } from "./ICurve.sol";
 import { CurveErrorCodes } from "./CurveErrorCodes.sol";
 import { FixedPointMathLib } from "./FixedPointMathLib.sol";
-import { ISeacowsPair } from "../interfaces/ISeacowsPair.sol";
+import { ISeacowsTradePair } from "../interfaces/ISeacowsTradePair.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 
 /*
@@ -16,8 +16,8 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
 
     function _isPair(address _pair) internal pure {
         require(
-            ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC721_ERC20 ||
-                ISeacowsPair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
+            ISeacowsTradePair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC721_ERC20 ||
+                ISeacowsTradePair(_pair).pairVariant() == ISeacowsPairFactoryLike.PairVariant.ERC1155_ERC20,
             "Not a seacows pair"
         );
     }
@@ -49,11 +49,11 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
     {
         _isPair(pair);
         // get pair properties
-        uint128 spotPrice = ISeacowsPair(pair).spotPrice();
-        uint128 delta = ISeacowsPair(pair).delta();
-        uint96 feeMultiplier = ISeacowsPair(pair).fee();
-        bool isProtocolFeeDisabled = ISeacowsPair(pair).isProtocolFeeDisabled();
-        (uint256 nftReserve, uint256 tokenReserve) = ISeacowsPair(pair).getReserve();
+        uint128 spotPrice = ISeacowsTradePair(pair).spotPrice();
+        uint128 delta = ISeacowsTradePair(pair).delta();
+        uint96 feeMultiplier = ISeacowsTradePair(pair).fee();
+        bool isProtocolFeeDisabled = ISeacowsTradePair(pair).isProtocolFeeDisabled();
+        (uint256 nftReserve, uint256 tokenReserve) = ISeacowsTradePair(pair).getReserve();
 
         // We only calculate changes for buying 1 or more NFTs
         if (numItems == 0) {
@@ -69,9 +69,8 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
         inputValue += inputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
         // if protocol fee is enabled
-        if (!isProtocolFeeDisabled) {
-            // Add the protocol fee to the required input amount
-            inputValue += protocolFee;
+        if (isProtocolFeeDisabled) {
+            protocolFee = 0;
         }
 
         // Keep delta the same
@@ -94,11 +93,11 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
     {
         _isPair(pair);
         // get pair properties
-        uint128 spotPrice = ISeacowsPair(pair).spotPrice();
-        uint128 delta = ISeacowsPair(pair).delta();
-        uint96 feeMultiplier = ISeacowsPair(pair).fee();
-        bool isProtocolFeeDisabled = ISeacowsPair(pair).isProtocolFeeDisabled();
-        (uint256 nftReserve, uint256 tokenReserve) = ISeacowsPair(pair).getReserve();
+        uint128 spotPrice = ISeacowsTradePair(pair).spotPrice();
+        uint128 delta = ISeacowsTradePair(pair).delta();
+        uint96 feeMultiplier = ISeacowsTradePair(pair).fee();
+        bool isProtocolFeeDisabled = ISeacowsTradePair(pair).isProtocolFeeDisabled();
+        (uint256 nftReserve, uint256 tokenReserve) = ISeacowsTradePair(pair).getReserve();
 
         // We only calculate changes for selling 1 or more NFTs
         if (numItems == 0) {
@@ -116,10 +115,12 @@ contract CPMMCurve is ICurve, CurveErrorCodes {
         outputValue -= outputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
         // if protocol fee is enabled
-        if (!isProtocolFeeDisabled) {
-            // Subtract the protocol fee from the output amount to the seller
-            outputValue -= protocolFee;
+        if (isProtocolFeeDisabled) {
+            protocolFee = 0;
         }
+
+        // Subtract the protocol fee from the output amount to the seller
+        outputValue -= protocolFee;
 
         // For a CPMM curve, the spot price is updated based on x * y = k
         newSpotPrice = uint128((tokenReserve - outputValue) / (nftReserve + numItems));

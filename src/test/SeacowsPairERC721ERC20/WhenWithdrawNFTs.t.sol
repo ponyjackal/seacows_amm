@@ -110,7 +110,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         uint256[] memory nftIdsForAlice = new uint256[](2);
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
-        vm.expectRevert("Caller is not the owner");
+        vm.expectRevert("Caller should be an owner");
         ISeacowsPairERC721(address(erc721ETHPair)).withdrawERC721(nftIdsForAlice);
         vm.stopPrank();
     }
@@ -149,7 +149,7 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         uint256[] memory nftIdsForAlice = new uint256[](2);
         nftIdsForAlice[0] = 10;
         nftIdsForAlice[1] = 11;
-        vm.expectRevert("Caller is not the owner");
+        vm.expectRevert("Caller should be an owner");
         ISeacowsPairERC721(address(erc721ERC20Pair)).withdrawERC721(nftIdsForAlice);
         vm.stopPrank();
     }

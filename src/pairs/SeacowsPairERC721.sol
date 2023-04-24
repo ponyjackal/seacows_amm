@@ -6,6 +6,7 @@ import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableS
 
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
+import { ISeacowsERC721Router } from "../interfaces/ISeacowsERC721Router.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
@@ -17,16 +18,19 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     event WithdrawERC721(address indexed recipient, uint256[] ids);
     event ERC721Deposit(address indexed depositer, uint256[] ids);
+    event Swap(address indexed sender, uint256 tokenIn, uint256[] nftIdsIn, uint256 tokenOut, uint256[] nftIdsOut, address indexed recipient);
 
     /** Internal Functions */
 
-    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal {
+    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal returns (uint256[] memory) {
+        uint256[] memory nftIds = new uint256[](numNFTs);
         // Send NFTs to recipient
         // We're missing enumerable, so we also update the pair's own ID set
         // NOTE: We start from last index to first index to save on gas
         uint256 lastIndex = idSet.length() - 1;
         for (uint256 i; i < numNFTs; ) {
             uint256 nftId = idSet.at(lastIndex);
+            nftIds[i] = nftId;
             IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftId);
             idSet.remove(nftId);
 
@@ -35,6 +39,8 @@ contract SeacowsPairERC721 is SeacowsPair {
                 ++i;
             }
         }
+
+        return nftIds;
     }
 
     function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal {
@@ -98,12 +104,12 @@ contract SeacowsPairERC721 is SeacowsPair {
 
         // Emit spot price update if it has been updated
         if (currentSpotPrice != newSpotPrice) {
-            emit SpotPriceUpdate(newSpotPrice);
+            emit SpotPriceUpdate(currentSpotPrice, newSpotPrice);
         }
 
         // Emit delta update if it has been updated
         if (currentDelta != newDelta) {
-            emit DeltaUpdate(newDelta);
+            emit DeltaUpdate(currentDelta, newDelta);
         }
     }
 
@@ -150,9 +156,10 @@ contract SeacowsPairERC721 is SeacowsPair {
         address _assetRecipient = getAssetRecipient();
         uint256 numNFTs = nftIds.length;
 
-        // Pull NFTs directly from sender
+        // we assume they already sent the assets to the pair
+        // we transfer nfts from the pair to the asset recipient
         for (uint256 i; i < numNFTs; ) {
-            IERC721(_nft).safeTransferFrom(msg.sender, _assetRecipient, nftIds[i]);
+            IERC721(_nft).safeTransferFrom(address(this), _assetRecipient, nftIds[i]);
 
             unchecked {
                 ++i;
@@ -164,9 +171,9 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     /**
         @dev Used as read function to query the bonding curve for buy pricing info
-        @param nftIds The nftIds to buy from the pair
+        @param numOfNfts The number of nfts to buy
      */
-    function getBuyNFTQuote(uint256[] memory nftIds)
+    function getBuyNFTQuote(uint256 numOfNfts)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
@@ -174,7 +181,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 currentSpotPrice;
         (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve.getBuyInfo(
             address(this),
-            nftIds.length,
+            numOfNfts,
             factory.protocolFeeMultiplier()
         );
         newSpotPrice = currentSpotPrice;
@@ -182,9 +189,9 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     /**
         @dev Used as read function to query the bonding curve for sell pricing info
-        @param nftIds The nftIds to buy from the pair
+        @param numOfNfts The number of nfts to sell
      */
-    function getSellNFTQuote(uint256[] memory nftIds)
+    function getSellNFTQuote(uint256 numOfNfts)
         external
         view
         returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
@@ -192,7 +199,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 currentSpotPrice;
         (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve.getSellInfo(
             address(this),
-            nftIds.length,
+            numOfNfts,
             factory.protocolFeeMultiplier()
         );
         newSpotPrice = currentSpotPrice;
@@ -233,7 +240,8 @@ contract SeacowsPairERC721 is SeacowsPair {
     /**
         @notice Sends token to the pair in exchange for any `numNFTs` NFTs
         @dev To compute the amount of token to send, call bondingCurve.getBuyInfo.
-        This swap function is meant for users who are ID agnostic
+        This swap function is meant for users who are ID agnostic, 
+        we assume this function is called through the router
         @param numNFTs The number of NFTs to purchase
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
@@ -255,16 +263,26 @@ contract SeacowsPairERC721 is SeacowsPair {
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
-        _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
+
+        // make sure we recieved correct amount of tokens by checking reserves
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
+
         _refundTokenToSender(inputAmount);
 
-        emit SwapNFTOutPair();
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+
+        uint256[] memory nftIds = _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
+
+        // we update reserves accordingly
+        syncReserve();
+
+        emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
 
     /**
         @notice Sends a set of NFTs to the pair in exchange for token
         @dev To compute the amount of token to that will be received, call bondingCurve.getSellInfo.
+        we assume this function is called through the router
         @param nftIds The list of IDs of the NFTs to sell to the pair
         @param minExpectedTokenOutput The minimum acceptable token received by the sender. If the actual
         amount is less than this value, the transaction will be reverted.
@@ -287,13 +305,19 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(nftIds, minExpectedTokenOutput, bondingCurve, factory);
 
-        _sendTokenOutput(tokenRecipient, outputAmount);
-
         _payProtocolFeeFromPair(factory, protocolFee);
+
+        // make sure we recieved correct amount of nfts by checking reserves
+        require(nftReserve + nftIds.length <= IERC721(nft).balanceOf(address(this)), "Invalid NFT amount");
 
         _takeNFTsFromSender(nft, nftIds);
 
-        emit SwapNFTInPair();
+        _sendTokenOutput(tokenRecipient, outputAmount);
+
+        // we update reserves accordingly
+        syncReserve();
+
+        emit Swap(msg.sender, 0, nftIds, outputAmount, new uint256[](0), tokenRecipient);
     }
 
     /**
@@ -301,6 +325,7 @@ contract SeacowsPairERC721 is SeacowsPair {
         @dev To compute the amount of token to send, call bondingCurve.getBuyInfo
         This swap is meant for users who want specific IDs. Also higher chance of
         reverting if some of the specified IDs leave the pool before the swap goes through.
+        we assume this function is called through the router
         @param nftIds The list of IDs of the NFTs to purchase
         @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
         amount is greater than this value, the transaction will be reverted.
@@ -324,16 +349,22 @@ contract SeacowsPairERC721 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(nftIds, maxExpectedTokenInput, bondingCurve, factory);
 
+        // make sure we recieved correct amount of tokens by checking reserves
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
+
+        _refundTokenToSender(inputAmount);
+
         _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
 
         _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
 
-        _refundTokenToSender(inputAmount);
+        // we sync rerseves
+        syncReserve();
 
-        emit SwapNFTOutPair();
+        emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
     }
 
-    function withdrawERC721(uint256[] calldata nftIds) external onlyOwner {
+    function withdrawERC721(uint256[] calldata nftIds) external onlyWithdrawable {
         IERC721 _nft = IERC721(nft);
         uint256 numNFTs = nftIds.length;
 
@@ -347,6 +378,9 @@ contract SeacowsPairERC721 is SeacowsPair {
             }
         }
 
+        // sync reserves
+        syncReserve();
+
         emit WithdrawERC721(msg.sender, nftIds);
     }
 
@@ -354,7 +388,7 @@ contract SeacowsPairERC721 is SeacowsPair {
       @dev Used to deposit NFTs into a pair after creation and emit an event for indexing 
       (if recipient is indeed a pair)
     */
-    function depositERC721(uint256[] calldata ids) external {
+    function depositERC721(uint256[] calldata ids) external onlyOwner {
         require(owner() == msg.sender, "Not a pair owner");
         require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
 
@@ -367,6 +401,19 @@ contract SeacowsPairERC721 is SeacowsPair {
                 ++i;
             }
         }
+
+        // sync reserves
+        syncReserve();
+
         emit ERC721Deposit(msg.sender, ids);
+    }
+
+    // update reserves and, on the first call per block, price accumulators
+    function syncReserve() public override {
+        // we update reserves accordingly
+        uint256 _nftBalance = IERC721(nft).balanceOf(address(this));
+        uint256 _tokenBalance = token.balanceOf(address(this));
+
+        _updateReserve(_nftBalance, _tokenBalance);
     }
 }

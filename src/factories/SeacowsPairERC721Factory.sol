@@ -40,6 +40,7 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
     // Units are in base 1e18
     uint256 public override protocolFeeMultiplier;
 
+    // used for bondingCurve validation
     mapping(ICurve => bool) public bondingCurveAllowed;
 
     struct CreateERC721ERC20PairParams {
@@ -142,6 +143,10 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+
+        // sync reserve
+        pair.syncReserve();
+
         emit NewPair(address(pair));
     }
 
@@ -182,6 +187,10 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
                 ++i;
             }
         }
+
+        // sync reserve
+        pair.syncReserve();
+
         emit NewPair(address(pair));
     }
 

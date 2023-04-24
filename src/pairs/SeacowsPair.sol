@@ -16,6 +16,7 @@ import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.s
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 import { SeacowsCollectionRegistry } from "../priceoracle/SeacowsCollectionRegistry.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
+import { ISeacowsRouter } from "../interfaces/ISeacowsRouter.sol";
 
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
@@ -52,9 +53,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
     IERC20 public token;
 
-    // 90%, must <= 1 - MAX_PROTOCOL_FEE (set in PairFactory)
-    uint256 internal constant MAX_FEE = 0.90e18;
-
     // The current price of the NFT
     // @dev This is generally used to mean the immediate sell price for the next marginal NFT.
     // However, this should NOT be assumed, as future bonding curves may use spotPrice in different ways.
@@ -79,15 +77,18 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
     address public weth;
 
+    uint256 internal nftReserve; // reserves for nft
+    uint256 internal tokenReserve; // reserves for token
+    uint256 internal blockTimestampLast;
+
     // Events
-    event SwapNFTInPair();
-    event SwapNFTOutPair();
-    event SpotPriceUpdate(uint128 newSpotPrice);
+    event SpotPriceUpdate(uint128 oldSpotPrice, uint128 newSpotPrice);
     event TokenWithdrawal(address indexed recipient, uint256 amount);
     event TokenDeposit(address indexed sender, uint256 amount);
-    event DeltaUpdate(uint128 newDelta);
-    event FeeUpdate(uint96 newFee);
-    event AssetRecipientChange(address a);
+    event DeltaUpdate(uint128 oldDelta, uint128 newDelta);
+    event FeeUpdate(uint96 oldFee, uint96 newFee);
+    event AssetRecipientChange(address oldRecipient, address newRecipient);
+    event Sync(uint256 reserve0, uint256 reserve1);
 
     // Parameterized Errors
     error BondingCurveError(CurveErrorCodes.Error error);
@@ -159,6 +160,9 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
         token.transfer(_recipient, _amount);
 
+        // sync reserves
+        syncReserve();
+
         // emit event since it is the pair token
         emit TokenWithdrawal(_recipient, _amount);
     }
@@ -184,6 +188,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
             // Tokens will be transferred to address(this)
             _assetRecipient = payable(address(this));
         }
+    }
+
+    function getReserves() public view returns (uint256 _nftReserve, uint256 _tokenReserve, uint256 _blockTimestampLast) {
+        _nftReserve = nftReserve;
+        _tokenReserve = tokenReserve;
+        _blockTimestampLast = blockTimestampLast;
     }
 
     /**
@@ -215,12 +225,12 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
         // Emit spot price update if it has been updated
         if (currentSpotPrice != newSpotPrice) {
-            emit SpotPriceUpdate(newSpotPrice);
+            emit SpotPriceUpdate(currentSpotPrice, newSpotPrice);
         }
 
         // Emit delta update if it has been updated
         if (currentDelta != newDelta) {
-            emit DeltaUpdate(newDelta);
+            emit DeltaUpdate(currentDelta, newDelta);
         }
     }
 
@@ -235,22 +245,27 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
 
         address _assetRecipient = getAssetRecipient();
 
-        // Transfer tokens directly
-        token.transferFrom(msg.sender, _assetRecipient, inputAmount - protocolFee);
+        // for the routers, we assume they already sent the assets to the pair
+        token.transfer(_assetRecipient, inputAmount - protocolFee);
 
         // Take protocol fee (if it exists)
         if (protocolFee > 0) {
-            token.transferFrom(msg.sender, address(_factory), protocolFee);
+            token.transfer(address(_factory), protocolFee);
         }
     }
 
     /**
         @notice Sends excess tokens back to the caller (if applicable)
-        @dev We send ETH back to the caller even when called from SeacowsRouter because we do an aggregate slippage check for certain bulk swaps. (Instead of sending directly back to the router caller) 
-        Excess ETH sent for one swap can then be used to help pay for the next swap.
+        @dev If not router, we dont need to refund since we grab the exact amount, for the routers, we refund tokens
      */
     function _refundTokenToSender(uint256 inputAmount) internal {
-        // Do nothing since we transferred the exact input amount
+        // make sure that we dont lose any tokens
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid swap");
+
+        // refund tokens
+        uint256 refundAmount = token.balanceOf(address(this)) - tokenReserve - inputAmount;
+        // we will refund remaining amount
+        token.transfer(msg.sender, refundAmount);
     }
 
     /**
@@ -282,6 +297,18 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         }
     }
 
+    // update reserves and, on the first call per block, price accumulators
+    function _updateReserve(uint256 _nftReserve, uint256 _tokenReserve) internal {
+        nftReserve = _nftReserve;
+        tokenReserve = _tokenReserve;
+        blockTimestampLast = block.timestamp;
+
+        emit Sync(nftReserve, tokenReserve);
+    }
+
+    // update reserves and, on the first call per block, price accumulators
+    function syncReserve() public virtual {}
+
     /**
      * Admin functions
      */
@@ -293,8 +320,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     function changeSpotPrice(uint128 newSpotPrice) external onlyOwner {
         require(bondingCurve.validateSpotPrice(newSpotPrice), "Invalid new spot price for curve");
         if (spotPrice != newSpotPrice) {
+            emit SpotPriceUpdate(spotPrice, newSpotPrice);
             spotPrice = newSpotPrice;
-            emit SpotPriceUpdate(newSpotPrice);
         }
     }
 
@@ -305,8 +332,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
     function changeDelta(uint128 newDelta) external onlyOwner {
         require(bondingCurve.validateDelta(newDelta), "Invalid delta for curve");
         if (delta != newDelta) {
+            emit DeltaUpdate(delta, newDelta);
             delta = newDelta;
-            emit DeltaUpdate(newDelta);
         }
     }
 
@@ -319,8 +346,8 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
         require(newRecipient != address(0), "Invalid address");
 
         if (assetRecipient != newRecipient) {
+            emit AssetRecipientChange(assetRecipient, newRecipient);
             assetRecipient = newRecipient;
-            emit AssetRecipientChange(newRecipient);
         }
     }
 
@@ -350,11 +377,13 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
       @dev Used to deposit ERC20s into a pair after creation and emit an event for indexing 
       (if recipient is indeed an ERC20 pair and the token matches)
      */
-    function depositERC20(uint256 amount) external {
+    function depositERC20(uint256 amount) external onlyOwner {
         token.transferFrom(msg.sender, address(this), amount);
 
         require(poolType == PoolType.TOKEN, "Not a token pair");
-        require(owner() == msg.sender, "Not a pair owner");
+
+        // we update reserves accordingly
+        syncReserve();
 
         emit TokenDeposit(msg.sender, amount);
     }
@@ -363,11 +392,13 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
       @dev Used to deposit ETH into a pair after creation and emit an event for indexing 
       (if recipient is indeed an ETH pair and the token matches)
      */
-    function depositETH() external payable {
+    function depositETH() external payable onlyOwner {
         IWETH(weth).deposit{ value: msg.value }();
 
         require(poolType == PoolType.TOKEN, "Not a token pair");
-        require(owner() == msg.sender, "Not a pair owner");
+
+        // we update reserves accordingly
+        syncReserve();
 
         emit TokenDeposit(msg.sender, msg.value);
     }

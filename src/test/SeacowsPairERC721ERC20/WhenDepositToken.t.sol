@@ -85,7 +85,7 @@ contract WhenDepositToken is WhenCreatePair {
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
         token.approve(address(erc721ERC20Pair), 1000 ether);
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         erc721ERC20Pair.depositERC20(100 ether);
         vm.stopPrank();
     }
@@ -110,7 +110,7 @@ contract WhenDepositToken is WhenCreatePair {
 
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         erc721WETHPair.depositETH{ value: 4 ether }();
         vm.stopPrank();
     }

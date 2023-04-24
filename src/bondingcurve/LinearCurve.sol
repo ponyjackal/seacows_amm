@@ -87,9 +87,8 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         inputValue += inputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
         // if protocol fee is enabled
-        if (!isProtocolFeeDisabled) {
-            // Add the protocol fee to the required input amount
-            inputValue += protocolFee;
+        if (isProtocolFeeDisabled) {
+            protocolFee = 0;
         }
 
         // Keep delta the same
@@ -147,11 +146,12 @@ contract LinearCurve is ICurve, CurveErrorCodes {
         outputValue -= outputValue.fmul(feeMultiplier, FixedPointMathLib.WAD);
 
         // if protocol fee is enabled
-        if (!isProtocolFeeDisabled) {
-            // Subtract the protocol fee from the output amount to the seller
-            outputValue -= protocolFee;
+        if (isProtocolFeeDisabled) {
+            protocolFee = 0;
         }
 
+        // Subtract the protocol fee from the output amount to the seller
+        outputValue -= protocolFee;
         // Keep delta the same
         newDelta = delta;
 

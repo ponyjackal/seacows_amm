@@ -90,7 +90,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         uint256 spotPrice = linearPair.spotPrice();
         assertEq(spotPrice, 1 ether);
 
-        ERC20 _token = linearPair.token();
+        IERC20 _token = linearPair.token();
         assertEq(address(_token), address(token));
 
         SeacowsPair.PoolType poolType = linearPair.poolType();
@@ -129,7 +129,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         uint256 spotPrice = exponentialPair.spotPrice();
         assertEq(spotPrice, 1 ether);
 
-        ERC20 _token = exponentialPair.token();
+        IERC20 _token = exponentialPair.token();
         assertEq(address(_token), address(weth));
 
         SeacowsPair.PoolType poolType = exponentialPair.poolType();
@@ -302,7 +302,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
 
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         _linearPair.depositETH{ value: 4 ether }();
         vm.stopPrank();
     }
@@ -349,7 +349,7 @@ contract TestERC1155TokenPair is WhenCreatePair {
         /** alice is trying to deposit tokens */
         vm.startPrank(alice);
         token.approve(address(_exponentialPair), 1000 ether);
-        vm.expectRevert("Not a pair owner");
+        vm.expectRevert("Caller is not the owner");
         _exponentialPair.depositERC20(100 ether);
         vm.stopPrank();
     }
