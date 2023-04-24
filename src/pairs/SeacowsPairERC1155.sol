@@ -96,7 +96,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         address _assetRecipient = getAssetRecipient();
         // Pull NFTs directly from sender
         for (uint256 i; i < _nftIds.length; ) {
-            IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftIds[i], _amounts[i], "");
+            IERC1155(_nft).safeTransferFrom(address(this), _assetRecipient, _nftIds[i], _amounts[i], "");
             unchecked {
                 ++i;
             }
