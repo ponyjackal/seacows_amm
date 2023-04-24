@@ -7,6 +7,7 @@ import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ISeacowsPairFactoryLike } from "./ISeacowsPairFactoryLike.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
 import { SeacowsPair } from "../pairs/SeacowsPair.sol";
+import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
 interface ISeacowsPair {
     function initialize(address _owner, address payable _assetRecipient, uint128 _delta, uint96 _fee, uint128 _spotPrice) external payable;
@@ -36,6 +37,16 @@ interface ISeacowsPair {
     function isProtocolFeeDisabled() external view returns (bool isProtocolFeeDisabled);
 
     function getAssetRecipient() external view returns (address payable _assetRecipient);
+
+    function getReserves() external view returns (uint256 _nftReserve, uint256 _tokenReserve, uint256 _blockTimestampLast);
+
+    function getBuyNFTQuote(uint256 numOfNfts)
+        external
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee);
+
+    function getSellNFTQuote(uint256 numOfNfts)
+        external
+        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee);
 
     /** mutative functions */
 

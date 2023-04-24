@@ -169,42 +169,6 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     /** View Functions */
 
-    /**
-        @dev Used as read function to query the bonding curve for buy pricing info
-        @param numOfNfts The number of nfts to buy
-     */
-    function getBuyNFTQuote(uint256 numOfNfts)
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee)
-    {
-        uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, inputAmount, protocolFee) = bondingCurve.getBuyInfo(
-            address(this),
-            numOfNfts,
-            factory.protocolFeeMultiplier()
-        );
-        newSpotPrice = currentSpotPrice;
-    }
-
-    /**
-        @dev Used as read function to query the bonding curve for sell pricing info
-        @param numOfNfts The number of nfts to sell
-     */
-    function getSellNFTQuote(uint256 numOfNfts)
-        external
-        view
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee)
-    {
-        uint256 currentSpotPrice;
-        (error, currentSpotPrice, newDelta, outputAmount, protocolFee) = bondingCurve.getSellInfo(
-            address(this),
-            numOfNfts,
-            factory.protocolFeeMultiplier()
-        );
-        newSpotPrice = currentSpotPrice;
-    }
-
     function getAllHeldIds() external view returns (uint256[] memory) {
         uint256 numNFTs = idSet.length();
         uint256[] memory ids = new uint256[](numNFTs);
