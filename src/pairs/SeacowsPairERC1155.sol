@@ -333,8 +333,10 @@ contract SeacowsPairERC1155 is SeacowsPair {
 
         _takeNFTsFromSender(nft, _nftIds, _amounts, factory);
 
-        // we sync reserves after sending tokens
         _sendTokenOutput(tokenRecipient, outputAmount);
+
+        // sync reserves
+        syncReserve();
 
         emit Swap(msg.sender, 0, _nftIds, _amounts, outputAmount, new uint256[](0), new uint256[](0), tokenRecipient);
     }
