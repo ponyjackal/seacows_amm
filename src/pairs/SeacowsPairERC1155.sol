@@ -210,6 +210,9 @@ contract SeacowsPairERC1155 is SeacowsPair {
             }
         }
 
+        // sync reserves
+        syncReserve();
+
         emit ERC1155Deposit(msg.sender, ids, amounts);
     }
 
@@ -226,6 +229,9 @@ contract SeacowsPairERC1155 is SeacowsPair {
                 ++i;
             }
         }
+
+        // sync reserves
+        syncReserve();
 
         emit WithdrawERC1155(_recipient, _nftIds, _amounts);
     }
