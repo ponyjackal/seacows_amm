@@ -22,7 +22,7 @@ contract SeacowsRouterV2 {
         uint256[] nftIds;
     }
 
-    struct PairSwap {
+    struct ERC1155PairSwap {
         ISeacowsPairERC1155 pair;
         uint256[] nftIds;
         uint256[] amounts;
@@ -131,7 +131,7 @@ contract SeacowsRouterV2 {
         @param _minOutput The minimum expected ERC20 token amount
         @param _recipient Token recipient address
      */
-    function swapNFTsForTokenERC1155(PairSwap calldata _swap, uint256 _minOutput, address payable _recipient)
+    function swapNFTsForTokenERC1155(ERC1155PairSwap calldata _swap, uint256 _minOutput, address payable _recipient)
         external
         returns (uint256 outputAmount)
     {
@@ -154,7 +154,7 @@ contract SeacowsRouterV2 {
         @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
      */
-    function swapTokenForNFTsERC1155(PairSwap[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+    function swapTokenForNFTsERC1155(ERC1155PairSwap[] calldata _swapList, uint256 _tokenAmount, address _recipient)
         external
         returns (uint256 remainingValue)
     {
@@ -166,7 +166,7 @@ contract SeacowsRouterV2 {
         @param _swapList ERC1155 pair swap list
         @param _recipient NFT recipient address
      */
-    function swapTokenForNFTsETHERC1155(PairSwap[] calldata _swapList, address _recipient) external payable returns (uint256 remainingValue) {
+    function swapTokenForNFTsETHERC1155(ERC1155PairSwap[] calldata _swapList, address _recipient) external payable returns (uint256 remainingValue) {
         // convert eth to weth
         IWETH(weth).deposit{ value: msg.value }();
 
@@ -185,7 +185,7 @@ contract SeacowsRouterV2 {
         @param _recipient NFT recipient address
         @param _from Token owner
      */
-    function _swapTokenForNFTsERC1155(PairSwap[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
+    function _swapTokenForNFTsERC1155(ERC1155PairSwap[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
         internal
         returns (uint256 remainingValue)
     {
