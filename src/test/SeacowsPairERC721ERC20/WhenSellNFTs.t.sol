@@ -81,7 +81,7 @@ contract WhenSellNFTs is WhenCreatePair {
         uint256 tokenBalancePair = token.balanceOf(address(linearPair));
 
         SeacowsRouterV1.ERC721PairSwapSpecific memory param = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(linearPair)), nftIds);
-        seacowsRouterV1.swapNFTsForToken(param, 9 ether, payable(alice));
+        seacowsRouterV1.swapNFTsForTokenERC721(param, 9 ether, payable(alice));
 
         /** Check nft owners */
         assertEq(nft.ownerOf(1), owner);
@@ -114,7 +114,7 @@ contract WhenSellNFTs is WhenCreatePair {
             ISeacowsPairERC721(address(exponentialPair)),
             nftIds
         );
-        seacowsRouterV1.swapNFTsForToken(param, 9 ether, payable(alice));
+        seacowsRouterV1.swapNFTsForTokenERC721(param, 9 ether, payable(alice));
 
         /** Check nft owners */
         assertEq(nft.ownerOf(1), owner);
@@ -150,14 +150,14 @@ contract WhenSellNFTs is WhenCreatePair {
         );
 
         vm.expectRevert("ERC20: transfer amount exceeds balance");
-        seacowsRouterV1.swapNFTsForToken(linearParam, 9 ether, payable(alice));
+        seacowsRouterV1.swapNFTsForTokenERC721(linearParam, 9 ether, payable(alice));
 
         SeacowsRouterV1.ERC721PairSwapSpecific memory exponentialParam = SeacowsRouterV1.ERC721PairSwapSpecific(
             ISeacowsPairERC721(address(exponentialPair)),
             nftIds
         );
         vm.expectRevert("Out too little tokens");
-        seacowsRouterV1.swapNFTsForToken(exponentialParam, 100 ether, payable(alice));
+        seacowsRouterV1.swapNFTsForTokenERC721(exponentialParam, 100 ether, payable(alice));
 
         vm.stopPrank();
     }
@@ -177,7 +177,7 @@ contract WhenSellNFTs is WhenCreatePair {
         );
 
         vm.expectRevert();
-        seacowsRouterV1.swapNFTsForToken(param, 1 ether, payable(alice));
+        seacowsRouterV1.swapNFTsForTokenERC721(param, 1 ether, payable(alice));
         vm.stopPrank();
     }
 
@@ -195,7 +195,7 @@ contract WhenSellNFTs is WhenCreatePair {
         );
 
         vm.expectRevert("ERC721: caller is not token owner or approved");
-        seacowsRouterV1.swapNFTsForToken(param, 9 ether, payable(alice));
+        seacowsRouterV1.swapNFTsForTokenERC721(param, 9 ether, payable(alice));
 
         vm.stopPrank();
     }

@@ -94,7 +94,7 @@ contract WhenBuyNFTs is WhenCreatePair {
 
         SeacowsRouterV1.ERC721PairSwapSpecific[] memory params = new SeacowsRouterV1.ERC721PairSwapSpecific[](1);
         params[0] = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(erc721ETHPair)), nftIds);
-        seacowsRouterV1.swapTokenForSpecificNFTsETH{ value: 15 ether }(params, address(alice));
+        seacowsRouterV1.swapTokenForSpecificNFTsETHERC721{ value: 15 ether }(params, address(alice));
         /** Check nft owners */
         assertEq(nft.ownerOf(1), alice);
         assertEq(nft.ownerOf(2), alice);
@@ -124,7 +124,7 @@ contract WhenBuyNFTs is WhenCreatePair {
 
         SeacowsRouterV1.ERC721PairSwapSpecific[] memory params = new SeacowsRouterV1.ERC721PairSwapSpecific[](1);
         params[0] = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(erc721ERC20Pair)), nftIds);
-        seacowsRouterV1.swapTokenForSpecificNFTs(params, 15 ether, address(alice));
+        seacowsRouterV1.swapTokenForSpecificNFTsERC721(params, 15 ether, address(alice));
 
         /** Check nft owners */
         assertEq(nft.ownerOf(3), alice);
@@ -154,7 +154,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         ethParams[0] = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(erc721ETHPair)), nftETHIds);
 
         vm.expectRevert();
-        seacowsRouterV1.swapTokenForSpecificNFTsETH{ value: 10000005 ether }(ethParams, address(alice));
+        seacowsRouterV1.swapTokenForSpecificNFTsETHERC721{ value: 10000005 ether }(ethParams, address(alice));
 
         uint256[] memory nftIds = new uint256[](2);
         nftIds[0] = 1;
@@ -164,7 +164,7 @@ contract WhenBuyNFTs is WhenCreatePair {
         params[0] = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(erc721ERC20Pair)), nftIds);
 
         vm.expectRevert("In too many tokens");
-        seacowsRouterV1.swapTokenForSpecificNFTs(params, 10 ether, address(alice));
+        seacowsRouterV1.swapTokenForSpecificNFTsERC721(params, 10 ether, address(alice));
 
         vm.stopPrank();
     }
