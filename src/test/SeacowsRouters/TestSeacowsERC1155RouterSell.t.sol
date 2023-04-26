@@ -14,11 +14,11 @@ import { ISeacowsPairERC1155 } from "../../interfaces/ISeacowsPairERC1155.sol";
 import { WhenCreatePair } from "../base/WhenCreatePair.t.sol";
 import { ICurve } from "../../bondingcurve/ICurve.sol";
 import { IWETH } from "../../interfaces/IWETH.sol";
-import { SeacowsERC1155Router } from "../../routers/SeacowsERC1155Router.sol";
+import { SeacowsRouterV2 } from "../../routers/SeacowsRouterV2.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
-contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
+contract TestTestSeacowsRouterV2Sell is WhenCreatePair {
     TestSeacowsSFT internal testSeacowsSFT;
     ISeacowsPairERC1155 internal linearPair;
     ISeacowsPairERC1155 internal exponentialPair;
@@ -64,7 +64,7 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
         vm.stopPrank();
     }
 
-    function testSwapNFTsForTokenLinearPair() public {
+    function testSwapNFTsForTokenERC1155LinearPair() public {
         vm.startPrank(owner);
         uint256[] memory nftIds = new uint256[](3);
         nftIds[0] = 1;
@@ -89,7 +89,7 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
 
         vm.startPrank(alice);
         // approve erc1155 tokens to the router
-        testSeacowsSFT.setApprovalForAll(address(seacowsERC1155Router), true);
+        testSeacowsSFT.setApprovalForAll(address(seacowsRouterV2), true);
         // nft and token balance before swap
         uint256 tokenBeforeBalance = token.balanceOf(alice);
         uint256 sftBeforeBalanceOne = testSeacowsSFT.balanceOf(alice, 1);
@@ -103,9 +103,9 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
         swapNFTAmounts[1] = 1;
 
         // create param
-        SeacowsERC1155Router.PairSwap memory param = SeacowsERC1155Router.PairSwap(linearPair, swapNFTIds, swapNFTAmounts);
+        SeacowsRouterV2.PairSwap memory param = SeacowsRouterV2.PairSwap(linearPair, swapNFTIds, swapNFTAmounts);
 
-        uint256 outputAmount = seacowsERC1155Router.swapNFTsForToken(param, 4 ether, payable(alice));
+        uint256 outputAmount = seacowsRouterV2.swapNFTsForTokenERC1155(param, 4 ether, payable(alice));
         // check balances after swap
         uint256 tokenAfterBalance = token.balanceOf(alice);
         uint256 sftAfterBalanceOne = testSeacowsSFT.balanceOf(alice, 1);
@@ -123,20 +123,16 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
 
         vm.expectRevert("Out too little tokens");
         // create param
-        SeacowsERC1155Router.PairSwap memory paramLittleAmounts = SeacowsERC1155Router.PairSwap(linearPair, swapLittleNFTIds, swapLittleNFTAmounts);
-        seacowsERC1155Router.swapNFTsForToken(paramLittleAmounts, 5 ether, payable(alice));
+        SeacowsRouterV2.PairSwap memory paramLittleAmounts = SeacowsRouterV2.PairSwap(linearPair, swapLittleNFTIds, swapLittleNFTAmounts);
+        seacowsRouterV2.swapNFTsForTokenERC1155(paramLittleAmounts, 5 ether, payable(alice));
 
         // expect SPOT_PRICE_OVERFLOW
         swapLittleNFTAmounts[0] = 10;
 
         vm.expectRevert();
         // create param
-        SeacowsERC1155Router.PairSwap memory paramLittleNFTAmounts = SeacowsERC1155Router.PairSwap(
-            linearPair,
-            swapLittleNFTIds,
-            swapLittleNFTAmounts
-        );
-        seacowsERC1155Router.swapNFTsForToken(paramLittleNFTAmounts, 5 ether, payable(alice));
+        SeacowsRouterV2.PairSwap memory paramLittleNFTAmounts = SeacowsRouterV2.PairSwap(linearPair, swapLittleNFTIds, swapLittleNFTAmounts);
+        seacowsRouterV2.swapNFTsForTokenERC1155(paramLittleNFTAmounts, 5 ether, payable(alice));
 
         // trying to swap with invalid nft amount
         vm.expectRevert("Must ask for > 0 NFTs");
@@ -145,8 +141,8 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
         invalidNFTAmounts[1] = 0;
 
         // create param
-        SeacowsERC1155Router.PairSwap memory paramInvalidNFTAmounts = SeacowsERC1155Router.PairSwap(linearPair, swapNFTIds, invalidNFTAmounts);
-        seacowsERC1155Router.swapNFTsForToken(paramInvalidNFTAmounts, 1 ether, payable(alice));
+        SeacowsRouterV2.PairSwap memory paramInvalidNFTAmounts = SeacowsRouterV2.PairSwap(linearPair, swapNFTIds, invalidNFTAmounts);
+        seacowsRouterV2.swapNFTsForTokenERC1155(paramInvalidNFTAmounts, 1 ether, payable(alice));
 
         // trying to swap with invalid nft ids
         vm.expectRevert("Invalid nft id");
@@ -158,13 +154,13 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
         invalidNFTAmounts[1] = 10;
 
         // create param
-        SeacowsERC1155Router.PairSwap memory paramInvalidNFTIds = SeacowsERC1155Router.PairSwap(linearPair, invalidNFTIds, invalidNFTAmounts);
-        seacowsERC1155Router.swapNFTsForToken(paramInvalidNFTIds, 1 ether, payable(alice));
+        SeacowsRouterV2.PairSwap memory paramInvalidNFTIds = SeacowsRouterV2.PairSwap(linearPair, invalidNFTIds, invalidNFTAmounts);
+        seacowsRouterV2.swapNFTsForTokenERC1155(paramInvalidNFTIds, 1 ether, payable(alice));
 
         vm.stopPrank();
     }
 
-    function testSwapNFTsForTokenExponentialPair() public {
+    function testSwapNFTsForTokenERC1155ExponentialPair() public {
         vm.startPrank(owner);
 
         uint256[] memory nftIds = new uint256[](1);
@@ -191,7 +187,7 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
 
         vm.startPrank(alice);
         // approve erc1155 tokens to the router
-        testSeacowsSFT.setApprovalForAll(address(seacowsERC1155Router), true);
+        testSeacowsSFT.setApprovalForAll(address(seacowsRouterV2), true);
         // nft and token balance before swap
         uint256 tokenBeforeBalance = IERC20(weth).balanceOf(alice);
         uint256 sftBeforeBalanceNine = testSeacowsSFT.balanceOf(alice, 9);
@@ -202,9 +198,9 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
         swapNFTAmounts[0] = 10;
 
         // create param
-        SeacowsERC1155Router.PairSwap memory param = SeacowsERC1155Router.PairSwap(exponentialPair, swapNFTIds, swapNFTAmounts);
+        SeacowsRouterV2.PairSwap memory param = SeacowsRouterV2.PairSwap(exponentialPair, swapNFTIds, swapNFTAmounts);
 
-        uint256 outputAmount = seacowsERC1155Router.swapNFTsForToken(param, 4 ether, payable(alice));
+        uint256 outputAmount = seacowsRouterV2.swapNFTsForTokenERC1155(param, 4 ether, payable(alice));
         // check balances after swap
         uint256 tokenAfterBalance = IERC20(weth).balanceOf(alice);
         uint256 sftAfterBalanceNine = testSeacowsSFT.balanceOf(alice, 9);
@@ -219,19 +215,15 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
         swapLittleNFTAmounts[0] = 1;
 
         vm.expectRevert("Out too little tokens");
-        SeacowsERC1155Router.PairSwap memory paramLittleNFTIds = SeacowsERC1155Router.PairSwap(
-            exponentialPair,
-            swapLittleNFTIds,
-            swapLittleNFTAmounts
-        );
-        seacowsERC1155Router.swapNFTsForToken(paramLittleNFTIds, 5 ether, payable(alice));
+        SeacowsRouterV2.PairSwap memory paramLittleNFTIds = SeacowsRouterV2.PairSwap(exponentialPair, swapLittleNFTIds, swapLittleNFTAmounts);
+        seacowsRouterV2.swapNFTsForTokenERC1155(paramLittleNFTIds, 5 ether, payable(alice));
 
         // trying to swap with invalid nft amount
         vm.expectRevert("Must ask for > 0 NFTs");
         uint256[] memory invalidNFTAmounts = new uint256[](1);
         invalidNFTAmounts[0] = 0;
-        SeacowsERC1155Router.PairSwap memory paramInvalidNFTAmounts = SeacowsERC1155Router.PairSwap(exponentialPair, swapNFTIds, invalidNFTAmounts);
-        seacowsERC1155Router.swapNFTsForToken(paramInvalidNFTAmounts, 1 ether, payable(alice));
+        SeacowsRouterV2.PairSwap memory paramInvalidNFTAmounts = SeacowsRouterV2.PairSwap(exponentialPair, swapNFTIds, invalidNFTAmounts);
+        seacowsRouterV2.swapNFTsForTokenERC1155(paramInvalidNFTAmounts, 1 ether, payable(alice));
 
         // trying to swap with invalid nft ids
         vm.expectRevert("Invalid nft id");
@@ -240,8 +232,8 @@ contract TestTestSeacowsERC1155RouterSell is WhenCreatePair {
 
         invalidNFTAmounts[0] = 10;
 
-        SeacowsERC1155Router.PairSwap memory paramInvalidNFTIds = SeacowsERC1155Router.PairSwap(exponentialPair, invalidNFTIds, invalidNFTAmounts);
-        seacowsERC1155Router.swapNFTsForToken(paramInvalidNFTIds, 1 ether, payable(alice));
+        SeacowsRouterV2.PairSwap memory paramInvalidNFTIds = SeacowsRouterV2.PairSwap(exponentialPair, invalidNFTIds, invalidNFTAmounts);
+        seacowsRouterV2.swapNFTsForTokenERC1155(paramInvalidNFTIds, 1 ether, payable(alice));
 
         vm.stopPrank();
     }

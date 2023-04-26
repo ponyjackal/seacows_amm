@@ -13,7 +13,7 @@ import { LinearCurve } from "../../bondingcurve/LinearCurve.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
 import { ISeacowsPairFactoryLike } from "../../interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsRouterV1 } from "../../routers/SeacowsRouterV1.sol";
-import { SeacowsERC1155Router } from "../../routers/SeacowsERC1155Router.sol";
+import { SeacowsRouterV2 } from "../../routers/SeacowsRouterV2.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
@@ -28,7 +28,7 @@ contract BaseFactorySetup is Test {
     SeacowsPairERC1155 internal seacowsPairERC1155;
 
     SeacowsRouterV1 internal seacowsRouterV1;
-    SeacowsERC1155Router internal seacowsERC1155Router;
+    SeacowsRouterV2 internal seacowsRouterV2;
 
     function setUp() public virtual {
         weth = address(new TestWETH());
@@ -50,7 +50,7 @@ contract BaseFactorySetup is Test {
         /** deploy SeacowsRouterV1 */
         seacowsRouterV1 = new SeacowsRouterV1(weth);
 
-        /** deploy SeacowsERC1155Router */
-        seacowsERC1155Router = new SeacowsERC1155Router(weth);
+        /** deploy SeacowsRouterV2 */
+        seacowsRouterV2 = new SeacowsRouterV2(weth);
     }
 }
