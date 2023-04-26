@@ -3,18 +3,21 @@ pragma solidity ^0.8.0;
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import { SeacowsPairERC721 } from "../pairs/SeacowsPairERC721.sol";
 import { ISeacowsPairERC721 } from "../interfaces/ISeacowsPairERC721.sol";
+import { SeacowsPairERC1155 } from "../pairs/SeacowsPairERC1155.sol";
+import { ISeacowsPairERC1155 } from "../interfaces/ISeacowsPairERC1155.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
 
-contract SeacowsERC721Router {
-    struct PairSwapAny {
+contract SeacowsRouterV1 {
+    struct ERC721PairSwapAny {
         ISeacowsPairERC721 pair;
         uint256 numItems;
     }
 
-    struct PairSwapSpecific {
+    struct ERC721PairSwapSpecific {
         ISeacowsPairERC721 pair;
         uint256[] nftIds;
     }
@@ -35,7 +38,7 @@ contract SeacowsERC721Router {
         @param _minOutput The minimum expected ERC20 token amount
         @param _recipient Token recipient address
      */
-    function swapNFTsForToken(PairSwapSpecific calldata _swap, uint256 _minOutput, address payable _recipient)
+    function swapNFTsForToken(ERC721PairSwapSpecific calldata _swap, uint256 _minOutput, address payable _recipient)
         external
         returns (uint256 outputAmount)
     {
@@ -58,7 +61,7 @@ contract SeacowsERC721Router {
         @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
      */
-    function swapTokenForSpecificNFTs(PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+    function swapTokenForSpecificNFTs(ERC721PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient)
         external
         returns (uint256 remainingValue)
     {
@@ -70,7 +73,7 @@ contract SeacowsERC721Router {
         @param _swapList ERC721 pair swap list
         @param _recipient NFT recipient address
      */
-    function swapTokenForSpecificNFTsETH(PairSwapSpecific[] calldata _swapList, address _recipient)
+    function swapTokenForSpecificNFTsETH(ERC721PairSwapSpecific[] calldata _swapList, address _recipient)
         external
         payable
         returns (uint256 remainingValue)
@@ -89,7 +92,7 @@ contract SeacowsERC721Router {
         @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
      */
-    function swapTokenForAnyNFTs(PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+    function swapTokenForAnyNFTs(ERC721PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient)
         external
         returns (uint256 remainingValue)
     {
@@ -101,7 +104,7 @@ contract SeacowsERC721Router {
         @param _swapList ERC721 pair swap list
         @param _recipient NFT recipient address
      */
-    function swapTokenForAnyNFTsETH(PairSwapAny[] calldata _swapList, address _recipient) external payable returns (uint256 remainingValue) {
+    function swapTokenForAnyNFTsETH(ERC721PairSwapAny[] calldata _swapList, address _recipient) external payable returns (uint256 remainingValue) {
         // convert eth to weth
         IWETH(weth).deposit{ value: msg.value }();
 
@@ -120,7 +123,7 @@ contract SeacowsERC721Router {
         @param _recipient NFT recipient address
         @param _from Token owner
      */
-    function _swapTokenForSpecificNFTs(PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
+    function _swapTokenForSpecificNFTs(ERC721PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
         internal
         returns (uint256 remainingValue)
     {
@@ -146,7 +149,7 @@ contract SeacowsERC721Router {
         @param _recipient NFT recipient address
         @param _from Token owner
      */
-    function _swapTokenForAnyNFTs(PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
+    function _swapTokenForAnyNFTs(ERC721PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
         internal
         returns (uint256 remainingValue)
     {

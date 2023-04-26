@@ -6,7 +6,6 @@ import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableS
 
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
-import { ISeacowsERC721Router } from "../interfaces/ISeacowsERC721Router.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
