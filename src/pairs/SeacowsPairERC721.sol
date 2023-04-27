@@ -15,7 +15,7 @@ contract SeacowsPairERC721 is SeacowsPair, ERC721Holder {
     event Swap(address indexed sender, uint256 tokenIn, uint256[] nftIdsIn, uint256 tokenOut, uint256[] nftIdsOut, address indexed recipient);
 
     /** Internal Functions */
-    function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal {
+    function _sendNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal {
         // Send NFTs to caller
         // If missing enumerable, update pool's own ID set
         uint256 numNFTs = nftIds.length;
@@ -199,7 +199,7 @@ contract SeacowsPairERC721 is SeacowsPair, ERC721Holder {
         @param nftRecipient The recipient of the NFTs
         @return inputAmount The amount of token used for purchase
      */
-    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
+    function swapTokenForNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
         external
         payable
         virtual
@@ -223,7 +223,7 @@ contract SeacowsPairERC721 is SeacowsPair, ERC721Holder {
 
         _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
 
-        _sendSpecificNFTsToRecipient(nft, nftRecipient, nftIds);
+        _sendNFTsToRecipient(nft, nftRecipient, nftIds);
 
         // we sync rerseves
         syncReserve();
