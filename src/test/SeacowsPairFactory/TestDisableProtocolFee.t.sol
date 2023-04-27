@@ -99,7 +99,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory param = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(tokenPair)), nftIds);
+        SeacowsRouterV1.ERC721PairSwap memory param = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(tokenPair)), nftIds);
         seacowsRouterV1.swapNFTsForTokenERC721(param, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
@@ -136,7 +136,7 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory param = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(tokenPair)), nftIds);
+        SeacowsRouterV1.ERC721PairSwap memory param = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(tokenPair)), nftIds);
         seacowsRouterV1.swapNFTsForTokenERC721(param, 9 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
@@ -168,9 +168,13 @@ contract TestDisableProtocolFee is WhenCreatePair {
         vm.startPrank(alice);
         uint256 aliceTokenBalance = token.balanceOf(alice);
 
-        SeacowsRouterV1.ERC721PairSwapAny[] memory params = new SeacowsRouterV1.ERC721PairSwapAny[](1);
-        params[0] = SeacowsRouterV1.ERC721PairSwapAny(ISeacowsPairERC721(address(nftPair)), 2);
-        seacowsRouterV1.swapTokenForAnyNFTsERC721(params, 25 ether, payable(alice));
+        uint256[] memory nftIds = new uint256[](2);
+        nftIds[0] = 1;
+        nftIds[1] = 3;
+
+        SeacowsRouterV1.ERC721PairSwap[] memory params = new SeacowsRouterV1.ERC721PairSwap[](1);
+        params[0] = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(nftPair)), nftIds);
+        seacowsRouterV1.swapTokenForSpecificNFTsERC721(params, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);
         assertEq(aliceTokenBalanceUpdated, aliceTokenBalance - 21.525 ether);
@@ -204,8 +208,8 @@ contract TestDisableProtocolFee is WhenCreatePair {
         nftIds[0] = 1;
         nftIds[1] = 3;
 
-        SeacowsRouterV1.ERC721PairSwapSpecific[] memory params = new SeacowsRouterV1.ERC721PairSwapSpecific[](1);
-        params[0] = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(nftPair)), nftIds);
+        SeacowsRouterV1.ERC721PairSwap[] memory params = new SeacowsRouterV1.ERC721PairSwap[](1);
+        params[0] = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(nftPair)), nftIds);
         seacowsRouterV1.swapTokenForSpecificNFTsERC721(params, 25 ether, payable(alice));
         /** Check alice token balance */
         uint256 aliceTokenBalanceUpdated = token.balanceOf(alice);

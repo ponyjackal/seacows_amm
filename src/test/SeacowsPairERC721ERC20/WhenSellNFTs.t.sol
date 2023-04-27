@@ -80,7 +80,7 @@ contract WhenSellNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalancePair = token.balanceOf(address(linearPair));
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory param = SeacowsRouterV1.ERC721PairSwapSpecific(ISeacowsPairERC721(address(linearPair)), nftIds);
+        SeacowsRouterV1.ERC721PairSwap memory param = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(linearPair)), nftIds);
         seacowsRouterV1.swapNFTsForTokenERC721(param, 9 ether, payable(alice));
 
         /** Check nft owners */
@@ -110,10 +110,7 @@ contract WhenSellNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalancePair = token.balanceOf(address(exponentialPair));
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory param = SeacowsRouterV1.ERC721PairSwapSpecific(
-            ISeacowsPairERC721(address(exponentialPair)),
-            nftIds
-        );
+        SeacowsRouterV1.ERC721PairSwap memory param = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(exponentialPair)), nftIds);
         seacowsRouterV1.swapNFTsForTokenERC721(param, 9 ether, payable(alice));
 
         /** Check nft owners */
@@ -144,18 +141,12 @@ contract WhenSellNFTs is WhenCreatePair {
         uint256 tokenBalanceAlice = token.balanceOf(alice);
         uint256 tokenBalancePair = token.balanceOf(address(linearPair));
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory linearParam = SeacowsRouterV1.ERC721PairSwapSpecific(
-            ISeacowsPairERC721(address(linearPair)),
-            nftIds
-        );
+        SeacowsRouterV1.ERC721PairSwap memory linearParam = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(linearPair)), nftIds);
 
         vm.expectRevert("ERC20: transfer amount exceeds balance");
         seacowsRouterV1.swapNFTsForTokenERC721(linearParam, 9 ether, payable(alice));
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory exponentialParam = SeacowsRouterV1.ERC721PairSwapSpecific(
-            ISeacowsPairERC721(address(exponentialPair)),
-            nftIds
-        );
+        SeacowsRouterV1.ERC721PairSwap memory exponentialParam = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(exponentialPair)), nftIds);
         vm.expectRevert("Out too little tokens");
         seacowsRouterV1.swapNFTsForTokenERC721(exponentialParam, 100 ether, payable(alice));
 
@@ -171,10 +162,7 @@ contract WhenSellNFTs is WhenCreatePair {
             nftIds[i] = i;
         }
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory param = SeacowsRouterV1.ERC721PairSwapSpecific(
-            ISeacowsPairERC721(address(linearPairS3)),
-            nftIds
-        );
+        SeacowsRouterV1.ERC721PairSwap memory param = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(linearPairS3)), nftIds);
 
         vm.expectRevert();
         seacowsRouterV1.swapNFTsForTokenERC721(param, 1 ether, payable(alice));
@@ -189,10 +177,7 @@ contract WhenSellNFTs is WhenCreatePair {
         nftIds[0] = 11;
         nftIds[1] = 12;
 
-        SeacowsRouterV1.ERC721PairSwapSpecific memory param = SeacowsRouterV1.ERC721PairSwapSpecific(
-            ISeacowsPairERC721(address(exponentialPair)),
-            nftIds
-        );
+        SeacowsRouterV1.ERC721PairSwap memory param = SeacowsRouterV1.ERC721PairSwap(ISeacowsPairERC721(address(exponentialPair)), nftIds);
 
         vm.expectRevert("ERC721: caller is not token owner or approved");
         seacowsRouterV1.swapNFTsForTokenERC721(param, 9 ether, payable(alice));
