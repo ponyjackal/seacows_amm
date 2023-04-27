@@ -2,15 +2,15 @@
 pragma solidity >=0.8.4;
 
 import { Script } from "forge-std/Script.sol";
-import { SeacowsERC721Router } from "../routers/SeacowsERC721Router.sol";
+import { SeacowsRouterV1 } from "../routers/SeacowsRouterV1.sol";
 import { SeacowsPairERC721Factory } from "../factories/SeacowsPairERC721Factory.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 import { SeacowsPairERC721 } from "../pairs/SeacowsPairERC721.sol";
 import { TestWETH } from "../TestCollectionToken/TestWETH.sol";
 
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
-contract DeploySeacowsERC721Router is Script {
-    SeacowsERC721Router internal router;
+contract DeploySeacowsRouterV1 is Script {
+    SeacowsRouterV1 internal router;
     SeacowsPairERC721 internal pairTemplate;
     SeacowsPairERC721Factory internal factory;
     TestWETH internal weth;
@@ -26,7 +26,7 @@ contract DeploySeacowsERC721Router is Script {
         // deploy erc721 factory
         factory = new SeacowsPairERC721Factory(address(weth), pairTemplate, protocolFeeRecipient, 0.050e18);
         // deploy router
-        router = new SeacowsERC721Router(address(weth));
+        router = new SeacowsRouterV1(address(weth));
 
         vm.stopBroadcast();
     }

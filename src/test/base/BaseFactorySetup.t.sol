@@ -11,8 +11,9 @@ import { SeacowsPairERC721 } from "../../pairs/SeacowsPairERC721.sol";
 import { SeacowsPairERC1155 } from "../../pairs/SeacowsPairERC1155.sol";
 import { LinearCurve } from "../../bondingcurve/LinearCurve.sol";
 import { TestWETH } from "../../TestCollectionToken/TestWETH.sol";
-import { SeacowsERC721Router } from "../../routers/SeacowsERC721Router.sol";
 import { ISeacowsPairFactoryLike } from "../../interfaces/ISeacowsPairFactoryLike.sol";
+import { SeacowsRouterV1 } from "../../routers/SeacowsRouterV1.sol";
+import { SeacowsRouterV2 } from "../../routers/SeacowsRouterV2.sol";
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
@@ -26,7 +27,8 @@ contract BaseFactorySetup is Test {
     SeacowsPairERC721 internal seacowsPairERC721;
     SeacowsPairERC1155 internal seacowsPairERC1155;
 
-    SeacowsERC721Router internal seacowsERC721Router;
+    SeacowsRouterV1 internal seacowsRouterV1;
+    SeacowsRouterV2 internal seacowsRouterV2;
 
     function setUp() public virtual {
         weth = address(new TestWETH());
@@ -45,7 +47,10 @@ contract BaseFactorySetup is Test {
         /** deploy SeacowsPairERC1155Factory */
         seacowsPairERC1155Factory = new SeacowsPairERC1155Factory(weth, seacowsPairERC1155, protocolFeeRecipient, protocolFeeMultiplier);
 
-        /** deploy SeacowsERC721Router */
-        seacowsERC721Router = new SeacowsERC721Router(weth);
+        /** deploy SeacowsRouterV1 */
+        seacowsRouterV1 = new SeacowsRouterV1(weth);
+
+        /** deploy SeacowsRouterV2 */
+        seacowsRouterV2 = new SeacowsRouterV2(weth);
     }
 }

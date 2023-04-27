@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import { ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
+import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
@@ -15,11 +17,10 @@ import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
     @title An NFT/Token pair for an NFT that implements ERC721Enumerable
     Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
  */
-contract SeacowsPairERC1155 is SeacowsPair {
+contract SeacowsPairERC1155 is SeacowsPair, ERC1155Holder {
     using SafeERC20 for ERC20;
 
     uint256[] public nftIds;
-    uint256 public nftAmount;
 
     event WithdrawERC1155(address indexed recipient, uint256[] ids, uint256[] amounts);
     event ERC1155Deposit(address indexed depositer, uint256[] ids, uint256[] amounts);
@@ -97,7 +98,7 @@ contract SeacowsPairERC1155 is SeacowsPair {
         address _assetRecipient = getAssetRecipient();
         // Pull NFTs directly from sender
         for (uint256 i; i < _nftIds.length; ) {
-            IERC1155(_nft).safeTransferFrom(msg.sender, _assetRecipient, _nftIds[i], _amounts[i], "");
+            IERC1155(_nft).safeTransferFrom(address(this), _assetRecipient, _nftIds[i], _amounts[i], "");
             unchecked {
                 ++i;
             }
@@ -195,9 +196,8 @@ contract SeacowsPairERC1155 is SeacowsPair {
       @dev Used to deposit ERC1155 NFTs into a pair after creation and emit an event for indexing 
       (if recipient is indeed a pair)
     */
-    function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external {
+    function depositERC1155(uint256[] calldata ids, uint256[] calldata amounts) external onlyOwner {
         require(ids.length > 0 && ids.length == amounts.length, "Invalid amounts");
-        require(owner() == msg.sender, "Not a pair owner");
         require(poolType == SeacowsPair.PoolType.NFT, "Not a nft pair");
 
         // transfer NFTs from caller to recipient
@@ -212,10 +212,13 @@ contract SeacowsPairERC1155 is SeacowsPair {
             }
         }
 
+        // sync reserves
+        syncReserve();
+
         emit ERC1155Deposit(msg.sender, ids, amounts);
     }
 
-    function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyWithdrawable {
+    function withdrawERC1155(address _recipient, uint256[] memory _nftIds, uint256[] memory _amounts) external onlyOwner {
         require(poolType == PoolType.NFT, "Invalid pool type");
         require(_nftIds.length == _amounts.length, "Invalid amounts");
 
@@ -228,6 +231,9 @@ contract SeacowsPairERC1155 is SeacowsPair {
                 ++i;
             }
         }
+
+        // sync reserves
+        syncReserve();
 
         emit WithdrawERC1155(_recipient, _nftIds, _amounts);
     }
@@ -269,12 +275,18 @@ contract SeacowsPairERC1155 is SeacowsPair {
         // Call bonding curve for pricing information
         uint256 protocolFee;
         (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(totalAmount, maxExpectedTokenInput, bondingCurve, factory);
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
-        _sendNFTsToRecipient(nft, nftRecipient, _nftIds, _amounts);
+
+        // make sure we recieved correct amount of tokens by checking reserves
+        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
+
         _refundTokenToSender(inputAmount);
 
-        // decrease total nft balance
-        nftAmount -= totalAmount;
+        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
+
+        _sendNFTsToRecipient(nft, nftRecipient, _nftIds, _amounts);
+
+        // sync reserves
+        syncReserve();
 
         emit Swap(msg.sender, inputAmount, new uint256[](0), new uint256[](0), 0, _nftIds, _amounts, nftRecipient);
     }
@@ -316,13 +328,17 @@ contract SeacowsPairERC1155 is SeacowsPair {
         uint256 protocolFee;
         (protocolFee, outputAmount) = _calculateSellInfoAndUpdatePoolParams(totalAmount, minExpectedTokenOutput, bondingCurve, factory);
 
-        _sendTokenOutput(tokenRecipient, outputAmount);
-
         _payProtocolFeeFromPair(factory, protocolFee);
 
+        // make sure we recieved correct amount of nfts by checking reserves
+        require(nftReserve + totalAmount <= _nftBalance(), "Invalid NFT amount");
+
         _takeNFTsFromSender(nft, _nftIds, _amounts, factory);
-        // increase total nft balance
-        nftAmount += totalAmount;
+
+        _sendTokenOutput(tokenRecipient, outputAmount);
+
+        // sync reserves
+        syncReserve();
 
         emit Swap(msg.sender, 0, _nftIds, _amounts, outputAmount, new uint256[](0), new uint256[](0), tokenRecipient);
     }
@@ -335,27 +351,28 @@ contract SeacowsPairERC1155 is SeacowsPair {
         nftIds = _nftIds;
     }
 
-    /**
-     * @dev Add new NFTs to the pool
-     * @param _nftAmount total amount of nfts
-     */
-    function addNFTAmount(uint256 _nftAmount) external onlyFactory {
-        nftAmount += _nftAmount;
-    }
-
-    /**
-     * @dev Remove NFTs from the pool
-     * @param _nftAmount total amount of nfts
-     */
-    function removeNFTAmount(uint256 _nftAmount) external onlyFactory {
-        nftAmount -= _nftAmount;
-    }
-
     // update reserves and, on the first call per block, price accumulators
     function syncReserve() public override {
         // we update reserves accordingly
-        uint256 _tokenBalance = token.balanceOf(address(this));
+        uint256 tokenBalance = token.balanceOf(address(this));
+        uint256 nftBalance = _nftBalance();
 
-        _updateReserve(nftAmount, _tokenBalance);
+        _updateReserve(nftBalance, tokenBalance);
+    }
+
+    function _nftBalance() internal view returns (uint256 nftBalace) {
+        for (uint256 i; i < nftIds.length; ) {
+            nftBalace += IERC1155(nft).balanceOf(address(this), nftIds[i]);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }

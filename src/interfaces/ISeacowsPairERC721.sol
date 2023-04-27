@@ -6,9 +6,7 @@ import { ISeacowsPair } from "./ISeacowsPair.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
 interface ISeacowsPairERC721 is ISeacowsPair {
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient) external payable returns (uint256 inputAmount);
-
-    function swapTokenForSpecificNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
+    function swapTokenForNFTs(uint256[] calldata nftIds, uint256 maxExpectedTokenInput, address nftRecipient)
         external
         payable
         returns (uint256 inputAmount);
@@ -16,14 +14,6 @@ interface ISeacowsPairERC721 is ISeacowsPair {
     function swapNFTsForToken(uint256[] calldata nftIds, uint256 minExpectedTokenOutput, address payable tokenRecipient)
         external
         returns (uint256 outputAmount);
-
-    function getBuyNFTQuote(uint256 numOfNfts)
-        external
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 inputAmount, uint256 protocolFee);
-
-    function getSellNFTQuote(uint256 numOfNfts)
-        external
-        returns (CurveErrorCodes.Error error, uint256 newSpotPrice, uint256 newDelta, uint256 outputAmount, uint256 protocolFee);
 
     function getAllHeldIds() external view returns (uint256[] memory);
 
