@@ -9,12 +9,7 @@ import { ISeacowsPairERC721 } from "../interfaces/ISeacowsPairERC721.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
 
 contract SeacowsRouterV1 {
-    struct ERC721PairSwapAny {
-        ISeacowsPairERC721 pair;
-        uint256 numItems;
-    }
-
-    struct ERC721PairSwapSpecific {
+    struct ERC721PairSwap {
         ISeacowsPairERC721 pair;
         uint256[] nftIds;
     }
@@ -35,7 +30,7 @@ contract SeacowsRouterV1 {
         @param _minOutput The minimum expected ERC20 token amount
         @param _recipient Token recipient address
      */
-    function swapNFTsForTokenERC721(ERC721PairSwapSpecific calldata _swap, uint256 _minOutput, address payable _recipient)
+    function swapNFTsForTokenERC721(ERC721PairSwap calldata _swap, uint256 _minOutput, address payable _recipient)
         external
         returns (uint256 outputAmount)
     {
@@ -58,7 +53,7 @@ contract SeacowsRouterV1 {
         @param _tokenAmount ERC20 token amount to swap
         @param _recipient NFT recipient address
      */
-    function swapTokenForSpecificNFTsERC721(ERC721PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient)
+    function swapTokenForSpecificNFTsERC721(ERC721PairSwap[] calldata _swapList, uint256 _tokenAmount, address _recipient)
         external
         returns (uint256 remainingValue)
     {
@@ -70,7 +65,7 @@ contract SeacowsRouterV1 {
         @param _swapList ERC721 pair swap list
         @param _recipient NFT recipient address
      */
-    function swapTokenForSpecificNFTsETHERC721(ERC721PairSwapSpecific[] calldata _swapList, address _recipient)
+    function swapTokenForSpecificNFTsETHERC721(ERC721PairSwap[] calldata _swapList, address _recipient)
         external
         payable
         returns (uint256 remainingValue)
@@ -79,37 +74,6 @@ contract SeacowsRouterV1 {
         IWETH(weth).deposit{ value: msg.value }();
 
         remainingValue = _swapTokenForSpecificNFTsERC721(_swapList, msg.value, _recipient, address(this));
-
-        _refundEth(remainingValue);
-    }
-
-    /**
-        @notice Buy specific NFTs in ERC20 token
-        @param _swapList ERC721 pair swap list
-        @param _tokenAmount ERC20 token amount to swap
-        @param _recipient NFT recipient address
-     */
-    function swapTokenForAnyNFTsERC721(ERC721PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient)
-        external
-        returns (uint256 remainingValue)
-    {
-        remainingValue = _swapTokenForAnyNFTsERC721(_swapList, _tokenAmount, _recipient, msg.sender);
-    }
-
-    /**
-        @notice Buy specific NFTs in ETH
-        @param _swapList ERC721 pair swap list
-        @param _recipient NFT recipient address
-     */
-    function swapTokenForAnyNFTsETHERC721(ERC721PairSwapAny[] calldata _swapList, address _recipient)
-        external
-        payable
-        returns (uint256 remainingValue)
-    {
-        // convert eth to weth
-        IWETH(weth).deposit{ value: msg.value }();
-
-        remainingValue = _swapTokenForAnyNFTsERC721(_swapList, msg.value, _recipient, address(this));
 
         _refundEth(remainingValue);
     }
@@ -124,7 +88,7 @@ contract SeacowsRouterV1 {
         @param _recipient NFT recipient address
         @param _from Token owner
      */
-    function _swapTokenForSpecificNFTsERC721(ERC721PairSwapSpecific[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
+    function _swapTokenForSpecificNFTsERC721(ERC721PairSwap[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
         internal
         returns (uint256 remainingValue)
     {
@@ -136,33 +100,6 @@ contract SeacowsRouterV1 {
             _swapList[i].pair.token().transferFrom(_from, address(_swapList[i].pair), inputAmount);
 
             remainingValue -= _swapList[i].pair.swapTokenForSpecificNFTs(_swapList[i].nftIds, _tokenAmount, _recipient);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
-    /**
-        @dev Internal function for swapTokenForAnyNFTs
-        @notice Buy any NFTs in ERC20 token
-        @param _swapList ERC721 pair swap list
-        @param _tokenAmount ERC20 token amount to swap
-        @param _recipient NFT recipient address
-        @param _from Token owner
-     */
-    function _swapTokenForAnyNFTsERC721(ERC721PairSwapAny[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
-        internal
-        returns (uint256 remainingValue)
-    {
-        remainingValue = _tokenAmount;
-        uint256 numOfSwaps = _swapList.length;
-
-        for (uint256 i; i < numOfSwaps; ) {
-            // transfer tokens to the pair
-            (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].numItems);
-            _swapList[i].pair.token().transferFrom(_from, address(_swapList[i].pair), inputAmount);
-
-            remainingValue -= _swapList[i].pair.swapTokenForAnyNFTs(_swapList[i].numItems, _tokenAmount, _recipient);
             unchecked {
                 ++i;
             }

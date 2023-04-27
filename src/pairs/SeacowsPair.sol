@@ -4,9 +4,6 @@ pragma solidity ^0.8.0;
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import { ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol";
-import { ERC1155Holder } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { OwnableWithTransferCallback } from "../lib/OwnableWithTransferCallback.sol";
@@ -21,7 +18,7 @@ import { ISeacowsRouter } from "../interfaces/ISeacowsRouter.sol";
 /// @title The base contract for an NFT/TOKEN AMM pair
 /// Inspired by 0xmons; Modified from https://github.com/sudoswap/lssvm
 /// @notice This implements the core swap logic from NFT to TOKEN
-abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, ERC1155Holder {
+abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard {
     using SafeERC20 for ERC20;
 
     enum PoolType {
@@ -385,13 +382,6 @@ abstract contract SeacowsPair is OwnableWithTransferCallback, ReentrancyGuard, E
             emit AssetRecipientChange(assetRecipient, newRecipient);
             assetRecipient = newRecipient;
         }
-    }
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
-        return super.supportsInterface(interfaceId);
     }
 
     // -----------------------------------------

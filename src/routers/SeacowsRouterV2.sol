@@ -12,11 +12,6 @@ import { ISeacowsPairERC1155 } from "../interfaces/ISeacowsPairERC1155.sol";
 import { IWETH } from "../interfaces/IWETH.sol";
 
 contract SeacowsRouterV2 {
-    struct ERC721PairSwapAny {
-        ISeacowsPairERC721 pair;
-        uint256 numItems;
-    }
-
     struct ERC721PairSwapSpecific {
         ISeacowsPairERC721 pair;
         uint256[] nftIds;

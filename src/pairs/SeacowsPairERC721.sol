@@ -2,54 +2,25 @@
 pragma solidity ^0.8.0;
 
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import { EnumerableSet } from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import { ERC721Holder } from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 import { SeacowsPair } from "./SeacowsPair.sol";
 import { ISeacowsPairFactoryLike } from "../interfaces/ISeacowsPairFactoryLike.sol";
 import { ICurve } from "../bondingcurve/ICurve.sol";
 import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
-contract SeacowsPairERC721 is SeacowsPair {
-    using EnumerableSet for EnumerableSet.UintSet;
-
-    // Used for internal ID tracking
-    EnumerableSet.UintSet private idSet;
-
+contract SeacowsPairERC721 is SeacowsPair, ERC721Holder {
     event WithdrawERC721(address indexed recipient, uint256[] ids);
     event ERC721Deposit(address indexed depositer, uint256[] ids);
     event Swap(address indexed sender, uint256 tokenIn, uint256[] nftIdsIn, uint256 tokenOut, uint256[] nftIdsOut, address indexed recipient);
 
     /** Internal Functions */
-
-    function _sendAnyNFTsToRecipient(address _nft, address nftRecipient, uint256 numNFTs) internal returns (uint256[] memory) {
-        uint256[] memory nftIds = new uint256[](numNFTs);
-        // Send NFTs to recipient
-        // We're missing enumerable, so we also update the pair's own ID set
-        // NOTE: We start from last index to first index to save on gas
-        uint256 lastIndex = idSet.length() - 1;
-        for (uint256 i; i < numNFTs; ) {
-            uint256 nftId = idSet.at(lastIndex);
-            nftIds[i] = nftId;
-            IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftId);
-            idSet.remove(nftId);
-
-            unchecked {
-                --lastIndex;
-                ++i;
-            }
-        }
-
-        return nftIds;
-    }
-
     function _sendSpecificNFTsToRecipient(address _nft, address nftRecipient, uint256[] calldata nftIds) internal {
         // Send NFTs to caller
         // If missing enumerable, update pool's own ID set
         uint256 numNFTs = nftIds.length;
         for (uint256 i; i < numNFTs; ) {
             IERC721(_nft).safeTransferFrom(address(this), nftRecipient, nftIds[i]);
-            // Remove from id set
-            idSet.remove(nftIds[i]);
 
             unchecked {
                 ++i;
@@ -168,79 +139,11 @@ contract SeacowsPairERC721 is SeacowsPair {
 
     /** View Functions */
 
-    function getAllHeldIds() external view returns (uint256[] memory) {
-        uint256 numNFTs = idSet.length();
-        uint256[] memory ids = new uint256[](numNFTs);
-        for (uint256 i; i < numNFTs; ) {
-            ids[i] = idSet.at(i);
-
-            unchecked {
-                ++i;
-            }
-        }
-        return ids;
-    }
-
     function pairVariant() public pure override returns (ISeacowsPairFactoryLike.PairVariant) {
         return ISeacowsPairFactoryLike.PairVariant.ERC721_ERC20;
     }
 
-    /**
-        @dev When safeTransfering an ERC721 in, we add ID to the idSet
-        if it's the same collection used by pool. (As it doesn't auto-track because no ERC721Enumerable)
-     */
-    function onERC721Received(address, address, uint256 id, bytes memory) public virtual returns (bytes4) {
-        IERC721 _nft = IERC721(nft);
-        // If it's from the pair's NFT, add the ID to ID set
-        if (msg.sender == address(_nft)) {
-            idSet.add(id);
-        }
-        return this.onERC721Received.selector;
-    }
-
     /** Mutative Functions */
-
-    /**
-        @notice Sends token to the pair in exchange for any `numNFTs` NFTs
-        @dev To compute the amount of token to send, call bondingCurve.getBuyInfo.
-        This swap function is meant for users who are ID agnostic, 
-        we assume this function is called through the router
-        @param numNFTs The number of NFTs to purchase
-        @param maxExpectedTokenInput The maximum acceptable cost from the sender. If the actual
-        amount is greater than this value, the transaction will be reverted.
-        @param nftRecipient The recipient of the NFTs
-        @return inputAmount The amount of token used for purchase
-     */
-    function swapTokenForAnyNFTs(uint256 numNFTs, uint256 maxExpectedTokenInput, address nftRecipient)
-        external
-        payable
-        virtual
-        nonReentrant
-        returns (uint256 inputAmount)
-    {
-        // Input validation
-        {
-            require(poolType == PoolType.NFT, "Wrong Pool type");
-            require(numNFTs > 0, "Invalid nft amount");
-        }
-        // Call bonding curve for pricing information
-        uint256 protocolFee;
-        (protocolFee, inputAmount) = _calculateBuyInfoAndUpdatePoolParams(new uint256[](numNFTs), maxExpectedTokenInput, bondingCurve, factory);
-
-        // make sure we recieved correct amount of tokens by checking reserves
-        require(tokenReserve + inputAmount <= token.balanceOf(address(this)), "Invalid token amount");
-
-        _refundTokenToSender(inputAmount);
-
-        _pullTokenInputAndPayProtocolFee(inputAmount, factory, protocolFee);
-
-        uint256[] memory nftIds = _sendAnyNFTsToRecipient(nft, nftRecipient, numNFTs);
-
-        // we update reserves accordingly
-        syncReserve();
-
-        emit Swap(msg.sender, inputAmount, new uint256[](0), 0, nftIds, nftRecipient);
-    }
 
     /**
         @notice Sends a set of NFTs to the pair in exchange for token
@@ -335,7 +238,6 @@ contract SeacowsPairERC721 is SeacowsPair {
         // Otherwise, withdraw and also remove the ID from the ID set
         for (uint256 i; i < numNFTs; ) {
             _nft.safeTransferFrom(address(this), msg.sender, nftIds[i]);
-            idSet.remove(nftIds[i]);
 
             unchecked {
                 ++i;
