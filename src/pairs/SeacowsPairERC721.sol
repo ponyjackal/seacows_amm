@@ -11,7 +11,7 @@ import { CurveErrorCodes } from "../bondingcurve/CurveErrorCodes.sol";
 
 contract SeacowsPairERC721 is SeacowsPair, ERC721Holder {
     event WithdrawERC721(address indexed recipient, uint256[] ids);
-    event ERC721Deposit(address indexed depositer, uint256[] ids);
+    event ERC721Deposit(address indexed depositor, uint256[] ids);
     event Swap(address indexed sender, uint256 tokenIn, uint256[] nftIdsIn, uint256 tokenOut, uint256[] nftIdsOut, address indexed recipient);
 
     /** Internal Functions */

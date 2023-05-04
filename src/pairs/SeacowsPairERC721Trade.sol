@@ -16,7 +16,7 @@ contract SeacowsPairERC721Trade is SeacowsPairTrade {
     EnumerableSet.UintSet private idSet;
 
     event WithdrawERC721(address indexed recipient, uint256[] ids);
-    event ERC721Deposit(address indexed depositer, uint256[] ids);
+    event ERC721Deposit(address indexed depositor, uint256[] ids);
 
     /** Internal Functions */
 

@@ -22,7 +22,7 @@ contract SeacowsPairERC1155Trade is SeacowsPairTrade {
     uint256 public nftAmount;
 
     event WithdrawERC1155(address indexed recipient, uint256[] ids, uint256[] amounts);
-    event ERC1155Deposit(address indexed depositer, uint256[] ids, uint256[] amounts);
+    event ERC1155Deposit(address indexed depositor, uint256[] ids, uint256[] amounts);
 
     /** View Functions */
 
