@@ -37,15 +37,10 @@ jobs:
     - name: install modules
       run: yarn install
 
-    - name: Run Test cases
+    - name: build typescript
       run: |
         yarn compile
-      # env:
-      #   SKIP_LOAD: true
-      #   NODE_OPTIONS: '--openssl-legacy-provider'
-
-    - name: build typescript
-      run: yarn build
+        yarn build
 
     - name: update version
       run: |
