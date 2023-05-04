@@ -56,7 +56,7 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
         uint256 initialTokenBalance;
     }
 
-    event NewPair(address poolAddress);
+    event NewPair(address poolAddress, uint256[] initialNFTIDs, uint256 initialTokenBalance);
     event ProtocolFeeRecipientUpdate(address recipientAddress);
     event ProtocolFeeMultiplierUpdate(uint256 newMultiplier);
     event BondingCurveStatusUpdate(ICurve bondingCurve, bool isAllowed);
@@ -147,7 +147,7 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
         // sync reserve
         pair.syncReserve();
 
-        emit NewPair(address(pair));
+        emit NewPair(address(pair), _initialNFTIDs, msg.value);
     }
 
     /**
@@ -191,7 +191,7 @@ contract SeacowsPairERC721Factory is Ownable, ISeacowsPairFactoryLike {
         // sync reserve
         pair.syncReserve();
 
-        emit NewPair(address(pair));
+        emit NewPair(address(pair), params.initialNFTIDs, params.initialTokenBalance);
     }
 
     /**
