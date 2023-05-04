@@ -37,7 +37,7 @@ function getRemappings() {
 subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
   const paths = await runSuper();
 
-  return paths.filter((p) => !p.endsWith(".t.sol"));
+  return paths.filter((p) => !p.endsWith(".t.sol") && !p.endsWith(".s.sol"));
 });
 
 // You need to export an object to set up your config
@@ -96,16 +96,16 @@ const config: HardhatUserConfig = {
     path: "./dist/abis",
     runOnCompile: true,
     clear: true,
-    // flat: false,
+    flat: true,
     except: [":ERC*"],
     // solmate and openzeppelin have duplicated ERC20 contracts. Need special handling.
-    rename: (sourceName: string, contractName: string) => {
-      if (contractName.match(/^IERC/)) {
-        return contractName.replace(/^IERC/, "ERC");
-      } else {
-        return contractName;
-      }
-    },
+    // rename: (sourceName: string, contractName: string) => {
+    //   if (contractName.match(/^IERC/)) {
+    //     return contractName.replace(/^IERC/, "ERC");
+    //   } else {
+    //     return contractName;
+    //   }
+    // },
     spacing: 2,
     pretty: false,
   },
