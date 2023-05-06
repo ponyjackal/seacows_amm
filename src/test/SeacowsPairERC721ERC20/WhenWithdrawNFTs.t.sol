@@ -31,15 +31,11 @@ contract WhenWithdrawNFTs is WhenCreatePair {
         token.mint(owner, 1000 ether);
 
         nft = new TestERC721();
-        uint256 i;
-        for (; i < 10; i++) {
-            nft.safeMint(owner);
-        }
-        nft.safeMint(alice);
-        nft.safeMint(alice);
+        nft.safeMint(owner, 10);
+        nft.safeMint(alice, 2);
 
         nftEnumerable = new TestERC721Enumerable();
-        for (i = 0; i < 10; i++) {
+        for (uint256 i; i < 10; i++) {
             nftEnumerable.safeMint(owner);
         }
         nftEnumerable.safeMint(alice);

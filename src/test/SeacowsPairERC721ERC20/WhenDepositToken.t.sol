@@ -30,7 +30,7 @@ contract WhenDepositToken is WhenCreatePair {
         token.mint(owner, 1000 ether);
 
         nft = new TestERC721();
-        nft.safeMint(owner);
+        nft.safeMint(owner, 1);
 
         /** Approve Bonding Curve */
         seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);
@@ -40,13 +40,13 @@ contract WhenDepositToken is WhenCreatePair {
         nft.setApprovalForAll(address(seacowsPairERC721Factory), true);
         token.approve(address(seacowsPairERC721Factory), 1000 ether);
         /** Create ERC721-WETH Token Pair */
-        nft.safeMint(owner);
+        nft.safeMint(owner, 1);
         uint256[] memory nftIdsforWETHPair = new uint256[](1);
         nftIdsforWETHPair[0] = 0;
         erc721WETHPair = createTokenPairETH(nft, linearCurve, payable(owner), 0.1 ether, 5 ether, nftIdsforWETHPair, 14 ether);
 
         /** Create ERC721-ERC20 Token Pair */
-        nft.safeMint(owner);
+        nft.safeMint(owner, 1);
         uint256[] memory nftIdsforERC20Pair = new uint256[](1);
         nftIdsforERC20Pair[0] = 1;
         erc721ERC20Pair = createTokenPair(token, nft, exponentialCurve, payable(owner), 1.01 ether, 20 ether, nftIdsforERC20Pair, 100 ether);
@@ -54,7 +54,7 @@ contract WhenDepositToken is WhenCreatePair {
 
         /** mint nft and tokens to alice */
         token.mint(alice, 1000 ether);
-        nft.safeMint(alice);
+        nft.safeMint(alice, 1);
         /** approve tokens and nft to factory */
         vm.startPrank(alice);
         nft.setApprovalForAll(address(seacowsPairERC721Factory), true);

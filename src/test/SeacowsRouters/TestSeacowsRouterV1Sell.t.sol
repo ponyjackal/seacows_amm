@@ -36,12 +36,8 @@ contract TestSeacowsRouterV1Sell is WhenCreatePair {
         token.mint(alice, 1000 ether);
 
         nft = new TestERC721();
-        uint256 i;
-        for (; i < 10; i++) {
-            nft.safeMint(alice);
-        }
-        nft.safeMint(owner);
-        nft.safeMint(owner);
+        nft.safeMint(alice, 10);
+        nft.safeMint(owner, 2);
 
         /** Approve Bonding Curve */
         seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);

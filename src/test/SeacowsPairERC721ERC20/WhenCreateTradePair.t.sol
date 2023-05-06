@@ -32,7 +32,7 @@
 //         token.mint(owner, 1000 ether);
 
 //         nft = new TestERC721();
-//         nft.safeMint(owner);
+//         nft.safeMint(owner, 1);
 
 //         nftEnumerable = new TestERC721Enumerable();
 //         nftEnumerable.safeMint(owner);
@@ -88,7 +88,7 @@
 //         uint256[] memory nftIds = new uint256[](1);
 //         nftIds[0] = 1;
 
-//         nft.safeMint(owner);
+//         nft.safeMint(owner, 1);
 //         nft.setApprovalForAll(address(seacowsPairFactory), true);
 //         SeacowsPair pair = createTradePairETH(nft, linearCurve, 0.2 ether, 0.2 ether, 2 ether, nftIds, 1 ether);
 //         assertEq(address(pair.nft()), address(nft));

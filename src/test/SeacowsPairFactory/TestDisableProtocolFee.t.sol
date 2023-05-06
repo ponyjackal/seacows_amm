@@ -34,12 +34,8 @@ contract TestDisableProtocolFee is WhenCreatePair {
 
         nft = new TestERC721();
 
-        for (uint256 i; i < 10; i++) {
-            nft.safeMint(owner);
-        }
-        for (uint256 i; i < 10; i++) {
-            nft.safeMint(alice);
-        }
+        nft.safeMint(owner, 10);
+        nft.safeMint(alice, 10);
 
         /** Approve Bonding Curve */
         seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);

@@ -57,7 +57,18 @@ contract SeacowsRouterV1 {
         external
         returns (uint256 remainingValue)
     {
-        remainingValue = _swapTokenForNFTsERC721(_swapList, _tokenAmount, _recipient, msg.sender);
+        remainingValue = _tokenAmount;
+        uint256 numOfSwaps = _swapList.length;
+        for (uint256 i; i < numOfSwaps; ) {
+            // transfer tokens to the pair
+            (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].nftIds.length);
+            _swapList[i].pair.token().transferFrom(msg.sender, address(_swapList[i].pair), inputAmount);
+
+            remainingValue -= _swapList[i].pair.swapTokenForNFTs(_swapList[i].nftIds, _tokenAmount, _recipient);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /**
@@ -69,38 +80,23 @@ contract SeacowsRouterV1 {
         // convert eth to weth
         IWETH(weth).deposit{ value: msg.value }();
 
-        remainingValue = _swapTokenForNFTsERC721(_swapList, msg.value, _recipient, address(this));
+        remainingValue = msg.value;
+        uint256 numOfSwaps = _swapList.length;
+        for (uint256 i; i < numOfSwaps; ) {
+            // transfer tokens to the pair
+            (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].nftIds.length);
+            _swapList[i].pair.token().transfer(address(_swapList[i].pair), inputAmount);
+
+            remainingValue -= _swapList[i].pair.swapTokenForNFTs(_swapList[i].nftIds, msg.value, _recipient);
+            unchecked {
+                ++i;
+            }
+        }
 
         _refundEth(remainingValue);
     }
 
     /** Internal functions */
-
-    /**
-        @dev Internal function for swapTokenForNFTs
-        @notice Buy specific NFTs in ERC20 token
-        @param _swapList ERC721 pair swap list
-        @param _tokenAmount ERC20 token amount to swap
-        @param _recipient NFT recipient address
-        @param _from Token owner
-     */
-    function _swapTokenForNFTsERC721(ERC721PairSwap[] calldata _swapList, uint256 _tokenAmount, address _recipient, address _from)
-        internal
-        returns (uint256 remainingValue)
-    {
-        remainingValue = _tokenAmount;
-        uint256 numOfSwaps = _swapList.length;
-        for (uint256 i; i < numOfSwaps; ) {
-            // transfer tokens to the pair
-            (, , , uint256 inputAmount, ) = _swapList[i].pair.getBuyNFTQuote(_swapList[i].nftIds.length);
-            _swapList[i].pair.token().transferFrom(_from, address(_swapList[i].pair), inputAmount);
-
-            remainingValue -= _swapList[i].pair.swapTokenForNFTs(_swapList[i].nftIds, _tokenAmount, _recipient);
-            unchecked {
-                ++i;
-            }
-        }
-    }
 
     function _refundEth(uint256 amount) internal {
         // we refund the remaining eth

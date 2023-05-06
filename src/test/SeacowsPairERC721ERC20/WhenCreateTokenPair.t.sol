@@ -36,11 +36,11 @@ contract WhenCreateTokenPair is WhenCreatePair {
         nftEnumerable.safeMint(owner);
 
         nft = new TestERC721();
-        nft.safeMint(owner);
+        nft.safeMint(owner, 1);
+        nft.safeMint(alice, 10);
 
         for (uint256 i; i < 10; ) {
             nftEnumerable.safeMint(alice);
-            nft.safeMint(alice);
 
             unchecked {
                 ++i;

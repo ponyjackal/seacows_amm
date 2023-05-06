@@ -9,5 +9,6 @@ contract HelperConfig {
     constructor() {
         chainNames[1] = "mainnet";
         chainNames[5] = "goerli";
+        chainNames[80001] = "mumbai";
     }
 }

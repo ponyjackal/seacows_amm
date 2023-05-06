@@ -33,7 +33,7 @@ contract WhenCreateNFTPair is WhenCreatePair {
         nftEnumerable.safeMint(owner);
 
         nft = new TestERC721();
-        nft.safeMint(owner);
+        nft.safeMint(owner, 1);
 
         /** Approve Bonding Curve */
         seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);

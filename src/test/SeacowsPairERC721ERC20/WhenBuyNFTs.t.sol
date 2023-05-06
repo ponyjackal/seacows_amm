@@ -35,12 +35,8 @@ contract WhenBuyNFTs is WhenCreatePair {
         token.mint(alice, 1000 ether);
 
         nft = new TestERC721();
-        uint256 i;
-        for (; i < 10; i++) {
-            nft.safeMint(owner);
-        }
-        nft.safeMint(alice);
-        nft.safeMint(alice);
+        nft.safeMint(owner, 10);
+        nft.safeMint(alice, 2);
         /** Approve Bonding Curve */
         seacowsPairERC721Factory.setBondingCurveAllowed(linearCurve, true);
         seacowsPairERC721Factory.setBondingCurveAllowed(exponentialCurve, true);
